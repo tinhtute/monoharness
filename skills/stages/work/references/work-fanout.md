@@ -62,8 +62,10 @@ Spawn the whole wave in one message, in the background, each with its own worktr
 
 The target is the main checkout the session started in, addressed by absolute path. A host notice that your shell moved into a worker worktree changes neither that target nor the wave: integrate there and continue.
 
-1. Merge accepted branches one at a time; resolve conflicts against the plan, never by taking one side blindly.
+An accepted result is not yet `done`: log a worker task's `done` only after its output is in the main checkout and the combined tree passes step 3.
+
+1. Merge accepted branches one at a time; resolve conflicts against the plan, never by taking one side blindly. A worker that left its change uncommitted → bring over exactly its SCOPE paths, new files included, by absolute path.
 2. Edit the held shared files once, after the merges.
 3. Review the shared interfaces, then run the full phase check on the combined tree.
 4. `high-risk` phases: a verifier on a different model family from the workers reviews the combined diff before the gate.
-5. Each `done` names the worker's model, branch and commit SHA. Removing worker worktrees and branches is a delete: do it only with the owner's approval.
+5. Each `done` names the worker's model, branch and commit SHA, and the combined tree it passed on. Removing worker worktrees and branches is a delete: do it only with the owner's approval.
