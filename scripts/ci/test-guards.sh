@@ -611,6 +611,51 @@ else
 fi
 rm -rf "$s7" "$s7tmp"
 
+# HG (issue #210): CI's hook-guard enforces the base revision's guard. Commit B
+# neuters R2 (proofs always pass) and lands an APPROVED entry whose proof
+# fails; the head guard alone accepts it, the base-pinned guard must not.
+HG="$PWD/scripts/ci/hook-guard.sh"
+hg=$(mktemp -d)
+gfix "$hg"
+mkdir -p "$hg/scripts"
+cp scripts/install-git-hooks.sh "$hg/scripts/install-git-hooks.sh"
+printf 'seed\n' > "$hg/seed.txt"
+git -C "$hg" add -A >/dev/null && git -C "$hg" commit -qm base
+hgbase=$(git -C "$hg" rev-parse HEAD)
+awk '{print} /^zharness_run_proof\(\) \{/{print "  return 0"}' scripts/install-git-hooks.sh \
+	> "$hg/scripts/install-git-hooks.sh"
+gplan "$hg/.harness/plans/active/p.md" 'MARKER-HG; false'
+git -C "$hg" add -A >/dev/null && git -C "$hg" commit -qm "neuter R2 + failing proof"
+hghead=$(git -C "$hg" rev-parse HEAD)
+hgtmp=$(mktemp -d)
+awk '$0=="# ZGUARD-CORE-BEGIN"{on=1;next} $0=="# ZGUARD-CORE-END"{on=0} on' \
+	"$hg/scripts/install-git-hooks.sh" > "$hgtmp/head.sh"
+# shellcheck disable=SC1091
+( cd "$hg" && source "$hgtmp/head.sh" &&
+	zhuards_guard_plans .harness/plans/active/p.md "$hgbase" "$hghead" "$hgtmp" ) >/dev/null 2>&1 &&
+	ok "HG fixture: the neutered head guard accepts the failing proof" ||
+	bad "HG fixture is not exercising the gap: the head guard rejected"
+( cd "$hg" && ZHARNESS_BEFORE_SHA="$hgbase" ZHARNESS_HEAD_SHA="$hghead" bash "$HG" push ) >/dev/null 2>&1 &&
+	bad "HG push: a commit that neuters its own guard must be rejected" ||
+	ok "HG push: the base-pinned guard rejects the neutered commit"
+( cd "$hg" && ZHARNESS_BASE_REF="$hgbase" ZHARNESS_HEAD_SHA="$hghead" bash "$HG" pr ) >/dev/null 2>&1 &&
+	bad "HG pr: a commit that neuters its own guard must be rejected" ||
+	ok "HG pr: the base-pinned guard rejects the neutered commit"
+
+# HG control: an honest installer edit with a passing proof runs both guards
+# and passes.
+git -C "$hg" reset -q --hard "$hgbase"
+printf '# honest edit\n' >> "$hg/scripts/install-git-hooks.sh"
+gplan "$hg/.harness/plans/active/p.md" MARKER-HG-OK
+git -C "$hg" add -A >/dev/null && git -C "$hg" commit -qm "honest edit"
+hgout=$( cd "$hg" && ZHARNESS_BEFORE_SHA="$hgbase" ZHARNESS_HEAD_SHA="$(git rev-parse HEAD)" bash "$HG" push 2>&1 )
+hgrc=$?
+[ "$hgrc" -eq 0 ] && printf '%s' "$hgout" | grep -q '== base guard' &&
+	printf '%s' "$hgout" | grep -q '== head guard' &&
+	ok "HG an honest installer edit passes both base and head guards" ||
+	bad "HG honest edit expected rc 0 with both guards, got $hgrc (out: $hgout)"
+rm -rf "$hg" "$hgtmp"
+
 # S8: the index is what becomes the commit, so the one-active-plan gate reads
 # staged blobs. An unstaged second plan is worktree noise, not a claim.
 s8=$(mktemp -d)
