@@ -4,7 +4,7 @@ Owns only the plan's `## Goal` at `.harness/plans/active/{slug}.md`; a `high-ris
 
 ## Modes
 
-A leading subcommand sets the mode; else infer it and ask only when truly ambiguous. Grill/interview/stress-test → route to `grill`; decisions that span sessions → route to `wayfinder`.
+A leading subcommand sets the mode; else infer it and ask only when truly ambiguous. Grill/interview/stress-test → route to `grill`; decisions that span sessions → route to `wayfinder`; IF that skill is unavailable → clarify through step 4 instead of stopping.
 
 | Mode | Use for | Durable effect |
 |---|---|---|
