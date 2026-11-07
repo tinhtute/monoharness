@@ -5,15 +5,9 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 const STAGES: &[(&str, &[&str])] = &[
-    (
-        "brainstorm",
-        &[
-            "brainstorm",
-            "brainstorm-chart",
-            "brainstorm-grill",
-            "brainstorm-lock",
-        ],
-    ),
+    ("brainstorm", &["brainstorm", "brainstorm-lock"]),
+    ("grill", &["grill"]),
+    ("wayfinder", &["wayfinder"]),
     ("to-plan", &["to-plan"]),
     (
         "work",

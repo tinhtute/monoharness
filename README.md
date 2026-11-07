@@ -90,7 +90,7 @@ its steps into a todo list, and calls the skill each step names.
 
 | Playbook | Steps |
 |---|---|
-| feature | brainstorm → to-plan (high-risk only) → work → check → git (on request) → handoff |
+| feature | brainstorm (grill or wayfinder first when needed) → to-plan (high-risk only) → work → check → git (on request) → handoff |
 | bug-fix | hunt → failing test → work (bounded) → check → git (on request) |
 | refactoring | think → pin behavior → work (subtract, then reshape) → check |
 | perf | baseline → hunt → mantras, cheapest first → work → check before/after |
@@ -180,7 +180,7 @@ for workflow execution; retained legacy files are not a fallback. Other skills
 are optional extensions.
 
 `mono` sits at `skills/mono`; the other skills live in three groups: `stages`
-(the six workflow skills plus retro), `reason` (think, hunt, arena, learn, ambition) and `tools` (git,
+(the six workflow skills plus grill, wayfinder and retro), `reason` (think, hunt, arena, learn, ambition) and `tools` (git,
 librarian, mono-write, read). `retro` is gated: it runs only from a mono playbook
 step or when the user names it. `mono-write` covers only what the playbooks need:
 polishing a research draft and writing CHANGELOG entries and release notes.
