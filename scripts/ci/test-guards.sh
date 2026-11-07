@@ -1184,7 +1184,7 @@ fn audit_hollow_always_passes() {}' && bad "R7 a cargo filter matching only an e
 r7range '#[cfg(test)]
 mod t {
     #[tokio::test]
-    #[ignore]
+    #[allow(dead_code)]
     async fn audit_hollow_two() {
         // nothing here
     }

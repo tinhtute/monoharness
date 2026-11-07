@@ -231,7 +231,7 @@ zharness_cargo_tests_passed() {            # <output> -> sum of "N passed" over 
 
 zharness_hollow_tests() {                  # <base> <head>; ":" = index + branch commits -> path: fn
   # A Rust #[test] added in the range whose body holds only whitespace or
-  # comments. Attributes between #[test] and fn (#[ignore], ...) are allowed.
+  # comments. Attributes between #[test] and fn (#[should_panic], ...) are allowed.
   local base="$1" head="$2" fork
   {
     if [ "$head" = ":" ]; then
