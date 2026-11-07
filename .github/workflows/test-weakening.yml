@@ -1,0 +1,26 @@
+name: test-weakening
+
+# Issue #212: block a PR that deletes test files, adds skip markers or trivial
+# assertions, or removes assertions, unless the owner applied the
+# `allow-test-weakening` label. Label events re-run the check.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  test-weakening:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Block weakened tests without the override label
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOW_TEST_WEAKENING: ${{ contains(github.event.pull_request.labels.*.name, 'allow-test-weakening') }}
+        run: bash scripts/ci/test-weakening.sh "$BASE_SHA" "$HEAD_SHA"

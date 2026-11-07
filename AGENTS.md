@@ -44,6 +44,9 @@ bash scripts/ci/validate-skills.sh
 
 # [CI] Skill script and check-panel tests — .github/workflows/skills-ci.yml, jobs `skill-scripts`, `risk-facts`, `panel-merge`
 bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/test-risk-facts.sh && python3 -I scripts/ci/test-panel-merge.py
+
+# [CI] Test-weakening gate (PRs only; the `allow-test-weakening` label overrides) — .github/workflows/test-weakening.yml, job `test-weakening`
+bash scripts/ci/test-weakening.sh origin/master HEAD
 ```
 
 The pre-commit hook also runs `scripts/ci/validate-skill.sh` on changed skills
@@ -90,4 +93,5 @@ Read by the land step of `skills/mono/playbooks/ship.md` and the rubric in `skil
 
 - Auto-merge: low-risk
 - Always-review paths: scripts/install-git-hooks.sh, scripts/ci/**, .github/**, cli/src/installer/**, cli/Cargo.toml, cli/Cargo.lock
+- Test-weakening override: the `allow-test-weakening` label, applied only by the owner after reading the weakened tests; agents never apply it
 - Merge method: merge (the repo disables GitHub auto-merge, so wait for green with `gh pr checks --watch`, never `gh pr merge --auto`)
