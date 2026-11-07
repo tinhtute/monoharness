@@ -1,0 +1,38 @@
+name: risk-verdict
+
+# Issue #213: a PR merges only on a low-risk verdict bound to its head SHA and
+# signed by an allowlisted independent judge, or with the owner's
+# `owner-reviewed` label. Body edits and label events re-run the check; the body
+# and labels are read from the API so a re-run sees the current PR.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: risk-verdict-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  risk-verdict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require a head-bound low-risk verdict or the owner's label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" > "$RUNNER_TEMP/pr.json"
+          jq -r '.body // ""' "$RUNNER_TEMP/pr.json" > "$RUNNER_TEMP/body.md"
+          OWNER_REVIEWED=$(jq '[.labels[].name] | index("owner-reviewed") != null' "$RUNNER_TEMP/pr.json")
+          export OWNER_REVIEWED
+          bash scripts/ci/risk-verdict.sh "$BASE_SHA" "$HEAD_SHA" "$RUNNER_TEMP/body.md"

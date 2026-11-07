@@ -19,6 +19,9 @@ on:
       - "scripts/ci/test-skill-scripts.sh"
       - "scripts/ci/test-risk-facts.sh"
       - "scripts/ci/test-weakening.sh"
+      - "scripts/ci/risk-verdict.sh"
+      - "scripts/ci/test-risk-verdict.sh"
+      - "models.json"
       - "scripts/ci/fixtures/skill-scripts/**"
       - "skills/**/scripts/**"
       - ".github/workflows/skills-ci.yml"
@@ -69,3 +72,6 @@ jobs:
 
       - name: Risk facts fixtures
         run: bash scripts/ci/test-risk-facts.sh
+
+      - name: Risk verdict gate fixtures
+        run: bash scripts/ci/test-risk-verdict.sh
