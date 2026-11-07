@@ -18,6 +18,7 @@ on:
       - "scripts/ci/test-panel-merge.py"
       - "scripts/ci/test-skill-scripts.sh"
       - "scripts/ci/test-risk-facts.sh"
+      - "scripts/ci/test-weakening.sh"
       - "scripts/ci/fixtures/skill-scripts/**"
       - "skills/**/scripts/**"
       - ".github/workflows/skills-ci.yml"

@@ -194,5 +194,90 @@ check_rc "bad ref exits 2" 2 bash -c 'cd "$1" && bash "$2" main no-such-ref' _ "
 check_rc "missing argument exits 2" 2 bash -c 'cd "$1" && bash "$2" main' _ "$REPO" "$SCRIPT"
 check_rc "outside a repository exits 2" 2 bash -c 'cd "$1" && bash "$2" main change' _ "$ROOT" "$SCRIPT"
 
+# Issue #212: assertion and test-case removal, trivial assertions, and the CI
+# gate built on them. Fixture text is assembled with printf so this file's own
+# diff carries no marker the gate would flag.
+
+# on_base CMD...: run CMD on main, commit it as base, recreate the change branch.
+on_base() {
+  g checkout -q main
+  "$@"
+  g add -A
+  g commit -q -m "base fixture"
+  g checkout -q -B change
+}
+
+rust_tests() { # <file>: one test function with two assertions
+  printf '#[test]\nfn t() {\n    assert_eq!(1, 1);\n    assert_eq!(2, 2);\n}\n' >"$REPO/$1"
+}
+
+new_repo adel
+on_base rust_tests src/lib.rs
+printf '#[test]\nfn t() {\n    assert_eq!(1, 1);\n}\n' >"$REPO/src/lib.rs"
+commit
+check "a deleted assertion is an assertion removed" \
+  '.test_changes.assertions_removed == ["src/lib.rs: -1"]'
+
+new_repo aloose
+on_base rust_tests src/lib.rs
+printf '#[test]\nfn t() {\n    assert_eq!(1, 1);\n    assert!(%s);\n}\n' true >"$REPO/src/lib.rs"
+commit
+check "an assertion loosened to a literal true is a skip marker" \
+  '(.test_changes.skip_markers_added | length == 1) and (.test_changes.skip_markers_added[0] | startswith("src/lib.rs:4:"))'
+
+bash_fixture() { # <file> <case>...: one ok/bad block per case
+  local f=$1 c
+  shift
+  mkdir -p "$(dirname "$REPO/$f")"
+  : >"$REPO/$f"
+  for c in "$@"; do
+    printf '[ -n "%s" ] &&\n\tok "%s" ||\n\tbad "%s"\n' "$c" "$c" "$c" >>"$REPO/$f"
+  done
+}
+
+new_repo blockdel
+on_base bash_fixture scripts/ci/test-x.sh one two
+bash_fixture scripts/ci/test-x.sh one
+commit
+check "a test block deleted from a bash fixture is an assertion removed" \
+  '.test_changes.assertions_removed == ["scripts/ci/test-x.sh: -2"]'
+
+new_repo amove
+on_base rust_tests src/a.rs
+printf '#[test]\nfn t() {\n    assert_eq!(1, 1);\n}\n' >"$REPO/src/a.rs"
+printf '#[test]\nfn u() {\n    assert_eq!(2, 2);\n}\n' >"$REPO/src/b.rs"
+commit
+check "assertions moved between files are not removed" \
+  '.test_changes.assertions_removed == [] and .test_changes.skip_markers_added == []'
+
+# The gate itself: base-pinned risk-facts.sh, label override.
+GATE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/test-weakening.sh"
+with_facts() {
+  mkdir -p "$REPO/skills/stages/check/scripts"
+  cp "$SCRIPT" "$REPO/skills/stages/check/scripts/risk-facts.sh"
+  rust_tests src/lib.rs
+}
+gate() { (cd "$REPO" && bash "$GATE" main change); }
+
+new_repo gate
+on_base with_facts
+printf '#[test]\nfn t() {\n    assert_eq!(1, 1);\n}\n' >"$REPO/src/lib.rs"
+commit
+check_rc "gate rejects a deleted assertion" 1 gate
+check_rc "gate passes it with the owner's label" 0 env ALLOW_TEST_WEAKENING=true bash -c 'cd "$1" && bash "$2" main change' _ "$REPO" "$GATE"
+
+new_repo gateok
+on_base with_facts
+printf '#[test]\nfn renamed() {\n    assert_eq!(1, 1);\n    assert_eq!(2, 2);\n}\n' >"$REPO/src/lib.rs"
+commit
+check_rc "gate passes a refactor that keeps every assertion" 0 gate
+
+new_repo gateneuter
+on_base with_facts
+printf '#!/usr/bin/env bash\necho %s\n' "'{\"test_changes\": {}}'" >"$REPO/skills/stages/check/scripts/risk-facts.sh"
+printf '#[test]\nfn t() {\n    assert_eq!(1, 1);\n}\n' >"$REPO/src/lib.rs"
+commit
+check_rc "gate runs the base risk-facts.sh, so a PR cannot neuter it" 1 gate
+
 echo "passed: $PASSED  failed: $FAILED"
 [ "$FAILED" -eq 0 ]

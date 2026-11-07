@@ -6,7 +6,8 @@
 # Diffs "<base>...<sha>" (merge base to <sha>) and prints:
 #   {"counted_lines": N, "excluded_lines": N, "excluded_paths": [...],
 #    "always_review_hits": [...],
-#    "test_changes": {"removed_files": [...], "skip_markers_added": [...]},
+#    "test_changes": {"removed_files": [...], "skip_markers_added": [...],
+#                     "assertions_removed": [...]},
 #    "ci_config_touched": bool, "manifest_or_lockfile_touched": bool}
 #
 # Lines are added plus deleted from --numstat; a binary file counts 0. Renames
@@ -24,6 +25,14 @@
 # removed_files: test-pattern paths deleted outright (a rename is not a removal).
 # skip_markers_added: "path:line: text" for each added line outside docs that
 #   matches #[ignore, @skip, .skip(, pytest.mark.skip, t.Skip(, xit(, xdescribe(.
+#   Trivial assertions count as markers too: Rust assert! or JS expect on the
+#   literal true, Python assert on True.
+# assertions_removed: "path: -N" for each file outside docs whose diff removes
+#   N more assertion or test-case lines than it adds: assert*!( (not debug_),
+#   #[test], Python assert / self.assert* / def test_, expect(, it( / test(,
+#   Go t.Error*/t.Fatal* / func Test, and fixture helpers ok/bad/check/check_rc
+#   followed by a quote. A line both removed and re-added nets to zero, and
+#   files are listed only when the whole diff removes more than it adds.
 # ci_config_touched: .github/**, .gitlab-ci.yml, .circleci/**.
 # manifest_or_lockfile_touched: a lockfile above or a manifest basename
 #   (Cargo.toml, package.json, go.mod, pyproject.toml, setup.py, setup.cfg,
@@ -191,12 +200,20 @@ done < <(gitq diff --name-status -z --diff-filter=D "$base...$sha")
 # Skip or ignore markers on added lines, outside docs.
 markers=()
 marker_re='#\[ignore|@skip|\.skip\(|pytest\.mark\.skip|t\.Skip\(|(^|[^A-Za-z0-9_])xit\(|(^|[^A-Za-z0-9_])xdescribe\('
+trivial_re='(^|[^A-Za-z0-9_])assert!\(true\)|(^|[^A-Za-z0-9_.])assert[[:space:]]+True([^A-Za-z0-9_]|$)|(^|[^A-Za-z0-9_])expect\(true\)'
+# Assertion or test-case lines; removing more than a file adds is a weakening.
+assert_re='(^|[^A-Za-z0-9_])assert(_[a-z]+)?!\(|#\[(tokio::)?test|(^|[^A-Za-z0-9_.])assert[ (]|self\.assert[A-Z]|def test_|(^|[^A-Za-z0-9_.])(expect|it|test)\(|t\.(Error|Errorf|Fatal|Fatalf)\(|func Test|^[[:space:]]*(ok|bad|check|check_rc)[[:space:]]+["'"'"']'
+asserts=()
+all_add=0
+all_del=0
 # One diff per path: the path comes from --numstat -z, never from a header that
 # git may C-quote or tab-suffix.
 for file in ${paths[@]+"${paths[@]}"}; do
   is_doc "$file" && continue
   line=0
   hunk=false
+  a_add=0
+  a_del=0
   while IFS= read -r l; do
     case $l in
       '@@ '*)
@@ -207,20 +224,32 @@ for file in ${paths[@]+"${paths[@]}"}; do
       '+'*)
         $hunk || continue
         text=${l#+}
-        [[ $text =~ $marker_re ]] && markers+=("$file:$line: $text")
+        if [[ $text =~ $marker_re ]] || [[ $text =~ $trivial_re ]]; then markers+=("$file:$line: $text"); fi
+        [[ $text =~ $assert_re ]] && a_add=$((a_add + 1))
         line=$((line + 1))
+        ;;
+      '-'*)
+        $hunk || continue
+        text=${l#-}
+        [[ $text =~ $assert_re ]] && a_del=$((a_del + 1))
         ;;
     esac
   done < <(gitq diff -U0 --no-renames --no-color --no-ext-diff "$base...$sha" -- ":(literal)$file")
+  [ "$a_del" -gt "$a_add" ] && asserts+=("$file: -$((a_del - a_add))")
+  all_add=$((all_add + a_add))
+  all_del=$((all_del + a_del))
 done
+# Assertions moved between files are a refactor: report only a net loss.
+[ "$all_del" -gt "$all_add" ] || asserts=()
 
 printf '{\n'
 printf '  "counted_lines": %d,\n' "$counted"
 printf '  "excluded_lines": %d,\n' "$excluded"
 printf '  "excluded_paths": %s,\n' "$(json_arr ${excluded_paths[@]+"${excluded_paths[@]}"})"
 printf '  "always_review_hits": %s,\n' "$(json_arr ${review_hits[@]+"${review_hits[@]}"})"
-printf '  "test_changes": {"removed_files": %s, "skip_markers_added": %s},\n' \
-  "$(json_arr ${removed[@]+"${removed[@]}"})" "$(json_arr ${markers[@]+"${markers[@]}"})"
+printf '  "test_changes": {"removed_files": %s, "skip_markers_added": %s, "assertions_removed": %s},\n' \
+  "$(json_arr ${removed[@]+"${removed[@]}"})" "$(json_arr ${markers[@]+"${markers[@]}"})" \
+  "$(json_arr ${asserts[@]+"${asserts[@]}"})"
 printf '  "ci_config_touched": %s,\n' "$ci"
 printf '  "manifest_or_lockfile_touched": %s\n' "$manifest"
 printf '}\n'

@@ -31,6 +31,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `session-digest.py --json`; token usage now counts each API message once and
   skips sub-agent records in stream-json traces.
+- CI `test-weakening` gate (#212): a PR that deletes a test file, adds a skip marker
+  or trivial assertion, or removes more assertion/test-case lines than it adds fails
+  unless the owner applies the `allow-test-weakening` label; agents never apply it.
+  `risk-facts.sh` reports the new `test_changes.assertions_removed` and runs from the
+  base revision in the gate, so a PR cannot neuter it.
 
 ### Fixed
 
