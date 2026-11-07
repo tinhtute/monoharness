@@ -226,6 +226,7 @@ mod tests {
                 required: &[
                     "read [brainstorm-grill.md](brainstorm-grill.md) now",
                     "read [brainstorm-lock.md](brainstorm-lock.md) and [brainstorm-grill.md](brainstorm-grill.md) now",
+                    "`chart`: read [brainstorm-chart.md](brainstorm-chart.md) and [brainstorm-grill.md](brainstorm-grill.md) now",
                     "## Goal",
                     "explore creates no plans, reports, changesets, or markdown artifacts",
                     "`tiny` → stop and route to `work bounded`",
@@ -259,6 +260,26 @@ mod tests {
                     "phase_slug: `main`",
                     "exact_next_action: work full phase main",
                     "`## Log` is the sole task execution-status source",
+                ],
+                forbidden: &[
+                    "story_id",
+                    "intake_id",
+                    "## Progress",
+                    "## Decisions",
+                    "new-spec",
+                ],
+            },
+            PlaybookContract {
+                name: "brainstorm-chart keeps a decision map until the Goal can lock",
+                path: "brainstorm/references/brainstorm-chart.md",
+                required: &[
+                    "Loaded by [brainstorm.md](brainstorm.md) for `chart`",
+                    "## Map",
+                    "exact_next_action: brainstorm chart",
+                    "at most one HITL question per session",
+                    "never answer your own grill",
+                    "no `fog:` line remains",
+                    "confirm no non-empty plan exists under `.harness/plans/active/`",
                 ],
                 forbidden: &[
                     "story_id",

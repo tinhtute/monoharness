@@ -56,7 +56,7 @@ with `exact_next_action: work full phase main`. Each later section belongs to it
 
 5. **Slug** — short and stable. The canonical active path is `.harness/plans/active/{slug}.md`; never a second file for the same work.
 6. **Project identity** — IF `.harness/PROJECT.md` is absent → copy `cli/docs/embedded/templates/project.identity.md` (consumer repo: `zharness install`). Answer every question; the lock never completes while a `<...>` remains.
-7. **Lock** — confirm no non-empty plan exists under `.harness/plans/active/`; IF one exists → stop and name it. Write the skeleton with the lane and `## Goal` filled.
+7. **Lock** — confirm no non-empty plan exists under `.harness/plans/active/`; IF one exists → stop and name it, unless it is this effort's chart with a fully decided `## Map` ([brainstorm-chart.md](brainstorm-chart.md) step 4). Write the skeleton with the lane and `## Goal` filled.
 8. **Refine** — edit only `## Goal` (lane changes need approval); update `.harness/PROJECT.md` IF what the project is or how it is verified changed.
 9. **Self-review** — no `<...>` left; requirements numbered, falsifiable, each with `acceptance:`; `success_signal:` checkable; Goal parts agree.
 10. **Review gate** — show the plan path, the answered `.harness/PROJECT.md`, and a decision summary; wait for approval before the next stage, unless the user already asked to proceed, scope is bounded, and nothing destructive, outward-facing, or undecided remains.

@@ -1,9 +1,9 @@
 ---
 name: brainstorm
-version: "5.1.2"
-description: "Explore trade-offs, grill fuzzy intent or a plan, and lock the Goal into `.harness/plans/active/{slug}.md`. Use for ideation, architecture decisions, grill/interview requests, and RFC/PRD-to-spec work."
+version: "5.2.0"
+description: "Explore trade-offs, grill fuzzy intent or a plan, chart a multi-session decision map, and lock the Goal into `.harness/plans/active/{slug}.md`. Use for ideation, architecture decisions, grill/interview requests, and RFC/PRD-to-spec work."
 license: MIT
-argument-hint: "[explore|grill|raw|lock|refine] [idea, @file refs, plan path, or trade-off question]"
+argument-hint: "[explore|grill|raw|chart|lock|refine] [idea, @file refs, plan path, or trade-off question]"
 compatibility: Designed for Claude Code
 ---
 

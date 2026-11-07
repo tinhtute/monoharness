@@ -29,6 +29,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `brainstorm` 5.2.0: `chart` mode for a Goal whose decisions span sessions. It
+  keeps a `## Map` of typed questions (`grill`/`prototype`/`research`/`task`, HITL or
+  AFK, `blocked_by`) and `fog:` lines in the active plan, fans out AFK research to
+  sub-agents, settles at most one HITL question per session, and locks the same plan
+  once every question is decided. The `feature` playbook charts first when needed.
 - `session-digest.py --json`; token usage now counts each API message once and
   skips sub-agent records in stream-json traces.
 - CI `test-weakening` gate (#212): a PR that deletes a test file, adds a skip marker
