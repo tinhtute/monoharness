@@ -25,5 +25,10 @@ for a in $listed; do
     case ", $tools," in *", Edit,"*|*", Write,"*|*", NotebookEdit,"*) echo "$a: read-only agent allows an edit tool: $tools"; fail=1 ;; esac
   fi
 done
+# judges: models allowed to sign a low-risk verdict (scripts/ci/risk-verdict.sh).
+jq -e '.judges | length > 0' "$policy" >/dev/null || { echo "models.json: judges is empty"; fail=1; }
+for m in $(jq -r '.judges[]?' "$policy"); do
+  jq -e --arg m "$m" '.available|index($m)' "$policy" >/dev/null || { echo "judge model '$m' not in available"; fail=1; }
+done
 [ "$fail" -eq 0 ] && echo "agent models OK ($(echo "$listed" | wc -l | tr -d ' ') agents)"
 exit "$fail"

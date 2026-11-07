@@ -36,6 +36,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   unless the owner applies the `allow-test-weakening` label; agents never apply it.
   `risk-facts.sh` reports the new `test_changes.assertions_removed` and runs from the
   base revision in the gate, so a PR cannot neuter it.
+- CI `risk-verdict` gate (#213): a PR merges only when its `## Risk` section says
+  low risk, judged on the head SHA by an independent judge whose `judge_model` is in
+  the base branch's `models.json` `judges` (fable, opus), and the base revision's
+  `risk-facts.sh` reports no hit; otherwise the owner applies the `owner-reviewed`
+  label after review. The Risk verdict line now carries `judge_model: <model>`.
 
 ### Fixed
 

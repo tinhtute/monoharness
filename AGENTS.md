@@ -47,6 +47,9 @@ bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/test-risk-facts.sh && p
 
 # [CI] Test-weakening gate (PRs only; the `allow-test-weakening` label overrides) — .github/workflows/test-weakening.yml, job `test-weakening`
 bash scripts/ci/test-weakening.sh origin/master HEAD
+
+# [CI] Risk-verdict gate (PRs only; the `owner-reviewed` label overrides) — .github/workflows/risk-verdict.yml, job `risk-verdict`; fixtures run in skills-ci job `risk-facts`
+bash scripts/ci/test-risk-verdict.sh
 ```
 
 The pre-commit hook also runs `scripts/ci/validate-skill.sh` on changed skills
@@ -94,4 +97,5 @@ Read by the land step of `skills/mono/playbooks/ship.md` and the rubric in `skil
 - Auto-merge: low-risk
 - Always-review paths: scripts/install-git-hooks.sh, scripts/ci/**, .github/**, cli/src/installer/**, cli/Cargo.toml, cli/Cargo.lock
 - Test-weakening override: the `allow-test-weakening` label, applied only by the owner after reading the weakened tests; agents never apply it
+- Review override: the `owner-reviewed` label, applied only by the owner after reading the PR; it satisfies the required `risk-verdict` check for a PR without a valid low-risk verdict; agents never apply it
 - Merge method: merge (the repo disables GitHub auto-merge, so wait for green with `gh pr checks --watch`, never `gh pr merge --auto`)
