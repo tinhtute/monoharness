@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 lane: normal
 ---
 # Move non-ADLC skills to monoclaudian
@@ -28,6 +28,8 @@ lane: normal
 
 ## Log
 - 2026-11-06: R1 monoclaudian PR #1 merged 2c8e946, CI green (agent-models, mods, skills). R2-R4 committed e2adba3; verifier fixes (site skill count 17, CHANGELOG trash step, mono-write trigger) in follow-up commit. Deferred: tldraw diagrams still show `extras` group (PNGs already stale pre-change).
+- 2026-11-06: shipped — PR #242 merged to master at 35217bf after CI passed.
+- 2026-11-07T15:00Z — main — decision — absorb: none
 
 ## Validation
 - APPROVE_WITH_REQUESTS (judge: independent, claude-fable-5-1) on e2adba3; requests addressed except diagrams (deferred, low).
@@ -35,7 +37,7 @@ lane: normal
 
 ## Current State and Next Action
 - active_phase: none
-- lifecycle_status: validated
+- lifecycle_status: completed
 - blockers: none
 - open_items: none
-- exact_next_action: open PR, merge after green, handoff
+- exact_next_action: none
