@@ -32,6 +32,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `session-digest.py --json`; token usage now counts each API message once and
   skips sub-agent records in stream-json traces.
 
+### Fixed
+
+- CI `hook-guard` runs the guard core from the base revision instead of the commit
+  under test (`scripts/ci/hook-guard.sh`), so a commit can no longer neuter its own
+  proof guard; a range that edits `scripts/install-git-hooks.sh` must pass both the
+  base and the head guard (#210).
+
 ## [v0.33.0] — 2026-10-29
 
 ### Added

@@ -9,6 +9,7 @@ on:
       - "skills/stages/**"
       - ".harness/WORKFLOW.md"
       - "scripts/install-git-hooks.sh"
+      - "scripts/ci/hook-guard.sh"
       - "agents/**"
       - "models.json"
       - "scripts/ci/test-agent-models.sh"
@@ -111,21 +112,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract guard core from installer
-        run: |
-          awk '$0=="# ZGUARD-CORE-BEGIN"{on=1;next} $0=="# ZGUARD-CORE-END"{on=0} on' scripts/install-git-hooks.sh > /tmp/guard.sh
-          grep -q '^zharness_guard_entries_of_file()' /tmp/guard.sh
-          grep -q '^zharness_guard_at_most_one_active_plan()' /tmp/guard.sh
-          grep -q '^zharness_guard_completed_plan_phases_done()' /tmp/guard.sh
-          grep -q '^zharness_guard_revspec()' /tmp/guard.sh
-          grep -q '^zharness_guard_plan_paths()' /tmp/guard.sh
-
       - name: Guard fixture tests (guard-v3)
         run: bash scripts/ci/test-guards.sh
-      - name: At most one active plan
-        run: |
-          source /tmp/guard.sh
-          zharness_guard_at_most_one_active_plan "$GITHUB_WORKSPACE"
       # A pull_request checkout has only origin/<default>; proofs may name the
       # default branch bare (`git show master:…`), so provide the local ref.
       - name: Provide the default branch ref for proofs
@@ -161,23 +149,9 @@ jobs:
           ZHARNESS_BEFORE_SHA: ${{ github.event.before }}
           ZHARNESS_BASE_REF: ${{ github.event.pull_request.base.sha }}
           ZHARNESS_DEFAULT_BRANCH: origin/${{ github.event.repository.default_branch }}
+        # Issue #210: the guard runs from the base revision's installer, so a
+        # commit cannot neuter its own guard; an installer edit runs both.
         run: |
-          source /tmp/guard.sh
           event=push
           [ "${{ github.event_name }}" = "pull_request" ] && event="pr"
-          revspec=$(zharness_guard_revspec "$event") || exit 1
-          gbase=$(printf '%s' "$revspec" | cut -f1)
-          ghead=$(printf '%s' "$revspec" | cut -f2)
-          echo "guarding range $gbase..$ghead"
-          plans=$(zharness_guard_plan_paths "$gbase" "$ghead")
-          if [ -z "$plans" ]; then echo "no plan changes in range"; exit 0; fi
-          printf 'plans in range:\n%s\n' "$plans"
-          failed=0
-          tmpdir=$(mktemp -d)
-          zhuards_guard_plans "$plans" "$gbase" "$ghead" "$tmpdir" || failed=1
-          while IFS= read -r f; do
-            case "$f" in .harness/plans/completed/*) ;; *) continue ;; esac
-            git show "$ghead:$f" > /tmp/completed.md
-            zharness_guard_completed_plan_phases_done "$f" /tmp/completed.md || failed=1
-          done <<< "$plans"
-          exit $failed
+          bash scripts/ci/hook-guard.sh "$event"
