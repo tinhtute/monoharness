@@ -65,7 +65,7 @@ Defer to: {one line naming the skills this stage hands off to or resumes from}
 
 | Skill | Owns | Mechanism |
 | :--- | :--- | :--- |
-| `brainstorm` | Goal: outcome, success_signal, actors, requirements with `acceptance:`, non-goals (lane in frontmatter) | skill reference + hand-edited markdown |
+| `brainstorm` | Goal: outcome, success_signal, actors, requirements with `acceptance:`, non-goals (lane in frontmatter); Map while charting | skill reference + hand-edited markdown |
 | `to-plan` | Phases and Verification: approach, risks, tasks with `output:`/`check:`/`stop_if:`, `escalate_when:` on high-risk; every requirement traced to a check | skill reference + hand-edited markdown |
 | `work` | Log (append-only) | skill reference + hand-edited markdown |
 | `check` | Validation (append-only): proofs, `requirements:` coverage, `rollback_point:` | skill reference + nested proof sub-bullets |

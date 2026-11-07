@@ -1,6 +1,6 @@
 # Playbook: brainstorm
 
-Owns only the plan's `## Goal` at `.harness/plans/active/{slug}.md`; a `high-risk` plan's phases belong to `to-plan`, code to `work`.
+Owns only the plan's `## Goal` (and `## Map` while charting) at `.harness/plans/active/{slug}.md`; a `high-risk` plan's phases belong to `to-plan`, code to `work`.
 
 ## Modes
 
@@ -11,10 +11,11 @@ A leading subcommand sets the mode; else infer it (grill/interview/stress-test â
 | `explore` (default) | Trade-off or recommendation | None |
 | `grill` | Fuzzy idea, or a plan to validate | None until the user approves a lock or refine |
 | `raw` | Fast first pass | None |
+| `chart` | A Goal that needs decisions across sessions before it can lock | One new active plan: partial Goal + `## Map` |
 | `lock` | Create the initiative | One new active plan |
 | `refine` | Change an active plan's scope | Same plan, Goal only |
 
-`grill`/`raw`: read [brainstorm-grill.md](brainstorm-grill.md) now. `lock`/`refine`: read [brainstorm-lock.md](brainstorm-lock.md) and [brainstorm-grill.md](brainstorm-grill.md) now.
+`grill`/`raw`: read [brainstorm-grill.md](brainstorm-grill.md) now. `chart`: read [brainstorm-chart.md](brainstorm-chart.md) and [brainstorm-grill.md](brainstorm-grill.md) now. `lock`/`refine`: read [brainstorm-lock.md](brainstorm-lock.md) and [brainstorm-grill.md](brainstorm-grill.md) now.
 
 A reference implementation the user names is read before any shape is recommended.
 
