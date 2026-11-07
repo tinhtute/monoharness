@@ -34,7 +34,7 @@ bad() { fail=$((fail + 1)); echo "  FAIL - $1"; }
 # entry's own first-line verdict (the guard-v3 first-line rule).
 v=$(zharness_anchored_verdict '- `2026-08-28T00:00:00Z` — gate verdict `APPROVED` (mode: gate)
   - quoted prior review: verdict: REQUEST_CHANGES
-  - `true`')
+  - `test -d .`')
 [ "$v" = "APPROVED" ] &&
 	ok "S1 sub-bullet prose does not shadow first-line APPROVED" ||
 	bad "S1 expected APPROVED, got '$v'"
@@ -79,10 +79,10 @@ lane: high-risk
 
 - undated APPROVED entry for the fixture, verdict `APPROVED`
   - proof_classes: output, unit, integration
-  - `true`
+  - `test -d .`
 
 - `2026-08-28T00:00:00Z` — dated sibling entry
-  - `true`
+  - `test -d .`
 
 ## Current State and Next Action
 
@@ -111,7 +111,7 @@ lane: high-risk
 ## Validation
 
 - `2026-08-27T00:00:00Z` — older entry, already on record
-  - `true`
+  - `test -d .`
 EOF
 cat > "$tmp/new-fail.md" <<'EOF'
 ---
@@ -121,7 +121,7 @@ lane: high-risk
 ## Validation
 
 - `2026-08-27T00:00:00Z` — older entry, already on record
-  - `true`
+  - `test -d .`
 
 - `2026-08-28T00:00:00Z` — new gate verdict `APPROVED` with a sabotaged proof
   - proof_classes: output, unit, integration
@@ -141,11 +141,11 @@ lane: high-risk
 ## Validation
 
 - `2026-08-27T00:00:00Z` — older entry, already on record
-  - `true`
+  - `test -d .`
 
 - `2026-08-28T00:00:00Z` — new gate verdict `APPROVED` with a clean proof
   - proof_classes: output, unit, integration
-  - `true`
+  - `test -d .`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-pass.md" 2>/dev/null; then
 	ok "S3 pass-case accepts"
@@ -161,12 +161,12 @@ lane: high-risk
 ## Validation
 
 - `2026-08-27T00:00:00Z` — older entry, already on record
-  - `true`
+  - `test -d .`
 
 - `2026-08-28T00:00:00Z` — gate verdict `APPROVED` judged same-session
   - proof_classes: output, unit, integration
   - judge: `same-session`
-  - `true`
+  - `test -d .`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-judge.md" 2>/dev/null; then
 	bad "S3 same-session on high-risk lane must reject"
@@ -182,11 +182,11 @@ lane: normal
 ## Validation
 
 - `2026-08-27T00:00:00Z` — older entry, already on record
-  - `true`
+  - `test -d .`
 
 - [2026-08-30 (initiative close)] mode `full` verdict `APPROVED` — judge: `same-session`
   - proof_classes: output, unit, integration
-  - `true`
+  - `test -d .`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-full-ss.md" 2>/dev/null; then
 	bad "H3 mode full + same-session must reject"
@@ -202,11 +202,11 @@ lane: normal
 ## Validation
 
 - `2026-08-27T00:00:00Z` — older entry, already on record
-  - `true`
+  - `test -d .`
 
 - [2026-08-30 (gate)] mode `gate` verdict `APPROVED` — judge: `same-session`
   - proof_classes: output, unit, integration
-  - `true`
+  - `test -d .`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-gate-ss.md" 2>/dev/null; then
 	ok "H3 mode gate + same-session on normal lane accepts"
@@ -222,12 +222,12 @@ lane: normal
 ## Validation
 
 - `2026-08-27T00:00:00Z` — older entry, already on record
-  - `true`
+  - `test -d .`
 
 - [2026-08-30 (gate)] mode `gate` verdict `APPROVED` — judge: `same-session`
   - proof_classes: output, unit, integration
   - prior close quoted: mode: full
-  - `true`
+  - `test -d .`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-gate-quote-full.md" 2>/dev/null; then
 	ok "H3 quoted mode-full in a gate sub-bullet still accepts"
@@ -245,7 +245,7 @@ lane: high-risk
 ## Validation
 
 - `2026-08-27T00:00:00Z` — older entry, already on record
-  - `true`
+  - `test -d .`
 
 - undated entry, verdict `APPROVED`, invisible to the v2 guard
   - proof_classes: output, unit, integration
@@ -276,7 +276,7 @@ for lane in tiny normal high-risk; do
 		classes="$req"; j=independent
 		[ "$kind" = miss ] && classes=$(printf '%s' "$req" | sed -E 's/(, )?[a-z]+$//')
 		[ "$kind" = ss ] && j=same-session
-		printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-08-27T00:00:00Z` — older entry, already on record\n  - `true`\n\n- `2026-09-03T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `true`\n  - proof_classes: %s\n  - judge: %s\n' \
+		printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-08-27T00:00:00Z` — older entry, already on record\n  - `test -d .`\n\n- `2026-09-03T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: %s\n  - judge: %s\n' \
 			"$lane" "$classes" "$j" > "$tmp/lane-$kind.md"
 	done
 	zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/lane-pos.md" >/dev/null 2>&1 &&
@@ -302,7 +302,7 @@ done
 # PATH: final-mode rule. A normal single-phase plan closes on a same-session
 # gate; high-risk and explicit full both demand an independent judge.
 mk_final() {
-	printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-08-27T00:00:00Z` — older entry, already on record\n  - `true`\n\n- `2026-09-03T00:00:00Z` — phase `main` — verdict: APPROVED — mode: %s\n  - `true`\n  - proof_classes: output, unit, integration\n  - judge: same-session\n' "$1" "$2" > "$3"
+	printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-08-27T00:00:00Z` — older entry, already on record\n  - `test -d .`\n\n- `2026-09-03T00:00:00Z` — phase `main` — verdict: APPROVED — mode: %s\n  - `test -d .`\n  - proof_classes: output, unit, integration\n  - judge: same-session\n' "$1" "$2" > "$3"
 }
 mk_final normal gate "$tmp/path-normal.md"
 mk_final high-risk full "$tmp/path-hr.md"
@@ -337,7 +337,7 @@ lane: high-risk
 ## Validation
 
 - `2026-08-27T00:00:00Z` — an entry already on record
-  - `true`
+  - `test -d .`
 EOF
 	cat > "$tmp/legacy-pass.md" <<'EOF'
 ---
@@ -347,11 +347,11 @@ lane: high-risk
 ## Validation
 
 - `2026-08-27T00:00:00Z` — an entry already on record
-  - `true`
+  - `test -d .`
 
 - `2026-08-28T00:00:00Z` — honest work, verdict `APPROVED`
   - proof_classes: output, unit, integration
-  - `true`
+  - `test -d .`
 EOF
 	cat > "$tmp/legacy-fail.md" <<'EOF'
 ---
@@ -361,7 +361,7 @@ lane: high-risk
 ## Validation
 
 - `2026-08-27T00:00:00Z` — an entry already on record
-  - `true`
+  - `test -d .`
 
 - `2026-08-28T00:00:00Z` — verdict `APPROVED` with a sabotaged proof
   - proof_classes: output, unit, integration
@@ -417,7 +417,7 @@ lane: normal
 
 - `2026-08-28T00:00:00Z` — newly appended entry, verdict `APPROVED`
   - proof_classes: output, unit, integration
-  - `true`
+  - `test -d .`
 EOF
 s5out=$(zharness_guard_entries_of_file p.md "$tmp/tail-old.md" "$tmp/tail-new.md" 2>&1)
 s5rc=$?
@@ -481,7 +481,7 @@ lane: normal
 
 - \`2026-09-01T00:00:00Z\` — first gate, verdict \`APPROVED\`
   - proof_classes: output, unit, integration
-  - \`echo $2\`
+  - \`test -d . && echo $2\`
 EOF
 }
 
@@ -1093,7 +1093,7 @@ r6case() {                                  # <extra-path> -> guard rc
 	return $rc
 }
 printf -- '---\nlane: normal\n---\n\n## Validation\n' > "$tmp/r6-old.md"
-printf -- '---\nlane: normal\n---\n\n## Validation\n\n- `2026-10-29T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `true`\n  - proof_classes: output, unit\n  - judge: same-session\n' > "$tmp/r6-new.md"
+printf -- '---\nlane: normal\n---\n\n## Validation\n\n- `2026-10-29T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: output, unit\n  - judge: same-session\n' > "$tmp/r6-new.md"
 r6case .github/workflows/ci.yml && bad "R6 guard must reject a same-session entry once a CI path raises the lane" ||
 	ok "R6 guard rejects a raised-lane same-session entry end to end"
 r6case docs/a.md && ok "R6 guard accepts the same entry on a docs-only diff" ||
@@ -1121,6 +1121,83 @@ r6branch master && bad "R6 an earlier branch commit on a CI path must raise a do
 	ok "R6 branch history since the default branch raises the lane"
 r6branch no-such-ref && bad "R6 must fail closed to high-risk when no default branch resolves" ||
 	ok "R6 fails closed when no range resolves"
+
+# R7 HOLLOW-PROOF (issue #211): a proof that cannot fail is rejected.
+for c in 'true' ':' 'exit 0' '/bin/true' 'echo ok' 'printf done && true' 'echo a; exit'; do
+	zharness_proof_is_trivial "$c" && ok "R7 trivial: $c" || bad "R7 must call '$c' trivial"
+done
+for c in 'false' 'test -d .' 'echo x | grep -q x' 'echo a && false' 'cd cli && cargo test' 'truecheck'; do
+	zharness_proof_is_trivial "$c" && bad "R7 must not call '$c' trivial" || ok "R7 real: $c"
+done
+zharness_proof_runs_cargo_test 'cd cli && cargo test --test x' && ok "R7 sees cargo test" ||
+	bad "R7 must see a cargo test proof"
+zharness_proof_runs_cargo_test 'cargo testx; mycargo test' && bad "R7 must not see cargo test in 'cargo testx; mycargo test'" ||
+	ok "R7 ignores lookalike commands"
+n=$(zharness_cargo_tests_passed 'test result: ok. 2 passed; 0 failed; 0 ignored
+running 0 tests
+test result: ok. 0 passed; 0 failed; 0 ignored')
+[ "$n" = 2 ] && ok "R7 sums libtest passes across summaries" || bad "R7 expected 2 passed, got '$n'"
+
+r7entry() { # <proof> -> plan file with one new APPROVED entry
+	printf -- '---\nlane: normal\n---\n\n## Validation\n\n- `2026-11-07T00:00:00Z` — gate verdict `APPROVED`\n  - proof_classes: output, unit, integration\n  - `%s`\n' "$1" > "$tmp/r7-new.md"
+}
+printf -- '---\nlane: normal\n---\n\n## Validation\n' > "$tmp/r7-old.md"
+r7entry true
+r7out=$(zharness_guard_entries_of_file p.md "$tmp/r7-old.md" "$tmp/r7-new.md" 2>&1) &&
+	bad "R7 an entry citing \`true\` must be rejected" ||
+	{ printf '%s' "$r7out" | grep -q "R7 HOLLOW-PROOF" && ok "R7 an entry citing \`true\` is rejected" ||
+		bad "R7 \`true\` rejected for the wrong reason: $r7out"; }
+
+# A fake cargo stands in for libtest so the fixture never builds Rust.
+mkdir -p "$tmp/bin"
+printf '#!/bin/sh\necho "running ${FAKE_PASSED} tests"\necho "test result: ok. ${FAKE_PASSED} passed; 0 failed; 0 ignored"\n' > "$tmp/bin/cargo"
+chmod +x "$tmp/bin/cargo"
+r7entry 'cargo test no_such_filter'
+PATH="$tmp/bin:$PATH" FAKE_PASSED=0 zharness_guard_entries_of_file p.md "$tmp/r7-old.md" "$tmp/r7-new.md" >/dev/null 2>&1 &&
+	bad "R7 a cargo test proof that passed 0 tests must be rejected" ||
+	ok "R7 a cargo test proof that passed 0 tests is rejected"
+PATH="$tmp/bin:$PATH" FAKE_PASSED=3 zharness_guard_entries_of_file p.md "$tmp/r7-old.md" "$tmp/r7-new.md" >/dev/null 2>&1 &&
+	ok "R7 a cargo test proof that passed tests is accepted" ||
+	bad "R7 a cargo test proof that passed 3 tests must be accepted"
+
+# Hollow tests: the range adds a #[test] with an empty body. End to end on the
+# staged range, like the pre-commit hook; the proof itself passes 1 test.
+r7range() { # <rust-source> -> guard rc
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			mkdir -p .harness/plans/active src && cp "$tmp/r7-old.md" .harness/plans/active/p.md &&
+			printf 'pub fn f() -> u8 { 1 }\n' > src/lib.rs && git add -A && git commit -qm base &&
+			cp "$tmp/r7-new.md" .harness/plans/active/p.md && printf '%s\n' "$1" >> src/lib.rs && git add -A &&
+			mkdir g && PATH="$tmp/bin:$PATH" FAKE_PASSED=1 ZHARNESS_DEFAULT_BRANCH=master \
+			zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g"
+	) >/dev/null 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+r7entry 'cargo test audit_hollow'
+r7range '#[test]
+fn audit_hollow_always_passes() {}' && bad "R7 a cargo filter matching only an empty new test must be rejected" ||
+	ok "R7 a cargo filter matching only an empty new test is rejected"
+r7range '#[cfg(test)]
+mod t {
+    #[tokio::test]
+    #[ignore]
+    async fn audit_hollow_two() {
+        // nothing here
+    }
+}' && bad "R7 a multi-line comment-only async test must be rejected" ||
+	ok "R7 a multi-line comment-only async test is rejected"
+r7range '#[test]
+fn audit_real() {
+    assert_eq!(crate::f(), 1);
+}' && ok "R7 a new test with a real body is accepted" ||
+	bad "R7 a new test with a real body must be accepted"
+r7range '#[test]
+fn audit_real_inline() { assert_eq!(crate::f(), 1); }' && ok "R7 a one-line test with a body is accepted" ||
+	bad "R7 a one-line test with a body must be accepted"
 
 # TRIP: each validator has a committed bad fixture that must make it fail.
 tl=$(mktemp -d)

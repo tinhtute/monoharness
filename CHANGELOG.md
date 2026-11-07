@@ -51,6 +51,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the base branch's `models.json` `judges` (fable, opus), and the base revision's
   `risk-facts.sh` reports no hit; otherwise the owner applies the `owner-reviewed`
   label after review. The Risk verdict line now carries `judge_model: <model>`.
+- Hook guard R7 (#211): an approving `## Validation` entry is rejected when a proof
+  cannot fail: only `true`, `:`, `exit 0`, `echo` or `printf`; a `cargo test` run that
+  passes 0 tests; or a range that adds a Rust `#[test]` with an empty body. Rerun
+  `bash scripts/install-git-hooks.sh --force`.
 
 ### Fixed
 
