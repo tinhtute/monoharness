@@ -25,7 +25,7 @@ Every Validation entry must include timestamp, stable phase slug, exact command/
 
 Validation is append-only from an entry's first commit; never replace committed evidence. The one exception is closing compaction (`handoff.md` step 6), which keeps the last entry per phase byte-identical. An uncommitted entry may still be reshaped.
 
-**Proof re-execution contract** — each proof re-runs from the repository root under `sh -c` on a bare checkout: no prior `cd`, virtualenv, or alias (carry them inline: `cd cli && cargo test`; bash-only syntax → `bash -c '…'`). It must not depend on environment variables, binary presence, or OS version. Timeout 300 s when `timeout`/`gtimeout` exists.
+**Proof re-execution contract** — each proof re-runs from the repository root under `sh -c` on a bare checkout: no prior `cd`, virtualenv, or alias (carry them inline: `cd cli && cargo test`; bash-only syntax → `bash -c '…'`). It must not depend on environment variables, binary presence, or OS version. Timeout 300 s when `timeout`/`gtimeout` exists. A proof must be able to fail: the hook rejects one built only from `true`, `:`, `exit 0`, `echo` or `printf`, a `cargo test` run that passes 0 tests, and any entry in a range that adds a Rust `#[test]` with an empty body.
 
 ## What the Guards Cannot Check
 

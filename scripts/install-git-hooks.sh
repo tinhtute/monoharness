@@ -46,6 +46,11 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       touches an always-review path (check-risk.md). The policy is AGENTS.md
 #       at both ends of the range, so one commit cannot weaken its own review.
 #       No range resolves → high-risk (fail closed).
+#   R7: HOLLOW-PROOF (#211) — an approvable new entry is rejected when a proof
+#       cannot fail: every `&&`/`;`/`||` segment is `true`, `:`, `exit 0`,
+#       `echo` or `printf` (not executed); a `cargo test` proof exits 0 having
+#       passed 0 tests; or the revision under test adds a Rust `#[test]` whose
+#       body is empty. A proof is not required to run a test changed in range.
 #   FLOOR: entries already committed at ZHARNESS_GUARD_HISTORICAL_FLOOR are
 #       never re-executed. A push whose before-SHA predates the v0.24 cutover
 #       makes the pre-cutover entries look new, and their proofs cannot run at
@@ -199,6 +204,66 @@ zharness_run_proof() {                     # <command>
   fi
 }
 
+zharness_proof_is_trivial() {              # <command>; 0 = cannot fail
+  # Every segment is a builtin that always succeeds. A segment with a pipe is
+  # real (`echo x | grep -q y`), so it counts as non-trivial.
+  printf '%s\n' "$1" | awk '{
+    gsub(/&&|\|\||;/, "\n")
+    n = split($0, seg, "\n")
+    for (i = 1; i <= n; i++) {
+      s = seg[i]; gsub(/^[ \t]+|[ \t]+$/, "", s)
+      if (s == "") continue
+      if (s ~ /\|/) { real = 1; continue }
+      if (s ~ /^(true|:|\/(usr\/)?bin\/true|exit|exit[ \t]+0)$/) continue
+      if (s ~ /^(echo|printf)([ \t]|$)/) continue
+      real = 1
+    }
+  } END { exit real ? 1 : 0 }'
+}
+
+zharness_proof_runs_cargo_test() {         # <command>
+  printf '%s\n' "$1" | grep -qE '(^|[^[:alnum:]_-])cargo([[:space:]]+\+[^[:space:]]+)?[[:space:]]+test([[:space:]]|$)'
+}
+
+zharness_cargo_tests_passed() {            # <output> -> sum of "N passed" over libtest summaries
+  printf '%s\n' "$1" | awk '/^test result: /{for (i = 2; i <= NF; i++) if ($i ~ /^passed;?$/) n += $(i - 1)} END {print n + 0}'
+}
+
+zharness_hollow_tests() {                  # <base> <head>; ":" = index + branch commits -> path: fn
+  # A Rust #[test] added in the range whose body holds only whitespace or
+  # comments. Attributes between #[test] and fn (#[should_panic], ...) are allowed.
+  local base="$1" head="$2" fork
+  {
+    if [ "$head" = ":" ]; then
+      git diff --cached -U0 "$base" -- '*.rs' 2>/dev/null
+      fork=$(git merge-base "${ZHARNESS_DEFAULT_BRANCH:-origin/master}" HEAD 2>/dev/null) &&
+        git diff -U0 "$fork" HEAD -- '*.rs' 2>/dev/null
+    else
+      git diff -U0 "$base" "$head" -- '*.rs' 2>/dev/null
+    fi
+  } | awk '
+    /^\+\+\+ / { file = substr($0, 5); sub(/^b\//, "", file); pend = 0; open = 0; next }
+    !/^\+/ { pend = 0; open = 0; next }
+    {
+      t = substr($0, 2)
+      if (open) {
+        if (t ~ /^[ \t]*(\/\/.*)?$/) next
+        if (t ~ /^[ \t]*}[ \t]*$/) print file ": " name
+        open = 0; next
+      }
+      if (t ~ /^[ \t]*#\[([a-z_]+::)?test(\]|\()/) { pend = 1; next }
+      if (pend && t ~ /^[ \t]*#\[/) next
+      if (pend && t ~ /^[ \t]*(pub[ \t]+)?(async[ \t]+)?fn[ \t]+[A-Za-z0-9_]+/) {
+        name = t; sub(/^[ \t]*(pub[ \t]+)?(async[ \t]+)?fn[ \t]+/, "", name); sub(/[^A-Za-z0-9_].*$/, "", name)
+        rest = t; if (sub(/^[^{]*\{/, "", rest)) {
+          if (rest ~ /^[ \t]*}[ \t]*$/) print file ": " name
+          else if (rest ~ /^[ \t]*(\/\/.*)?$/) open = 1
+        }
+      }
+      pend = 0
+    }' | sort -u
+}
+
 zharness_guard_historical_floor_hashes() {  # <root> <path> <out-file> <floor>
   # Append the sha256 of every Validation entry present in <path> at <floor>.
   # A floor that does not resolve, or a path absent there, appends nothing and
@@ -230,7 +295,7 @@ zharness_guard_historical_floor_hashes() {  # <root> <path> <out-file> <floor>
 }
 
 zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base> <head>]
-  local path="$1" old="$2" new="$3" failed=0 rc_cmd cmd out body verdict cmds scratch h efile header line missing lane paths
+  local path="$1" old="$2" new="$3" failed=0 rc_cmd cmd out body verdict cmds scratch h efile header line missing lane paths hollow=""
   # Old-side entry hashes live in a file, not an associative array: `local -A`
   # needs bash 4+, and macOS ships bash 3.2 as /bin/bash. There the declaration
   # fails, the hex subscript is then evaluated as arithmetic, and the shell dies
@@ -267,6 +332,8 @@ zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base
       lane=high-risk
     fi
   fi
+  # R7: hollow tests are a property of the range, read once per plan file.
+  if [ $# -ge 5 ]; then hollow=$(zharness_hollow_tests "$4" "$5"); fi
   for efile in "$scratch"/n/e*.txt; do
     [ -f "$efile" ] || continue
     h=$(sha256sum "$efile" | cut -d' ' -f1)
@@ -322,7 +389,24 @@ zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base
       continue
     fi
 
+    if [ -n "$hollow" ]; then
+      failed=$((failed + 1))
+      echo "" >&2
+      echo "❌ R7 HOLLOW-PROOF GUARD REJECTED: $path" >&2
+      echo "   the revision under test adds a #[test] with an empty body:" >&2
+      printf '%s\n' "$hollow" | sed 's/^/     /' >&2
+      echo "   offending entry starts: $header" >&2
+      continue
+    fi
+
     while IFS= read -r cmd; do
+      if zharness_proof_is_trivial "$cmd"; then
+        failed=$((failed + 1))
+        echo "" >&2
+        echo "❌ R7 HOLLOW-PROOF GUARD REJECTED: $path" >&2
+        echo "   proof cannot fail (only true/:/exit 0/echo/printf): $cmd" >&2
+        continue
+      fi
       echo "🧪 re-executing proof [$header]: $cmd"
       out=$(zharness_run_proof "$cmd") && rc_cmd=0 || rc_cmd=$?
       if [ "${rc_cmd:-0}" -ne 0 ]; then
@@ -333,6 +417,13 @@ zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base
         echo "   exit: $rc_cmd" >&2
         echo "   output tail:" >&2
         printf '%s\n' "$out" | tail -10 >&2
+      elif zharness_proof_runs_cargo_test "$cmd" && [ "$(zharness_cargo_tests_passed "$out")" -eq 0 ]; then
+        failed=$((failed + 1))
+        echo "" >&2
+        echo "❌ R7 HOLLOW-PROOF GUARD REJECTED: $path" >&2
+        echo "   cargo test proof passed 0 tests: $cmd" >&2
+        echo "   output tail:" >&2
+        printf '%s\n' "$out" | tail -5 >&2
       fi
     done <<< "$cmds"
   done

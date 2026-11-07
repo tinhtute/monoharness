@@ -33,7 +33,7 @@ The installer is also the onboarding probe: `install` prints a deterministic, re
 
 Fail-closed guarantees live in the pre-commit hook (`scripts/install-git-hooks.sh`, shared core between the `# ZGUARD-CORE` markers):
 
-1. **Proof re-execution** — a newly added `## Validation` entry with verdict `APPROVED` (or `APPROVE_WITH_REQUESTS`) has every nested proof command re-executed by the hook; any non-zero exit rejects the commit.
+1. **Proof re-execution** — a newly added `## Validation` entry with verdict `APPROVED` (or `APPROVE_WITH_REQUESTS`) has every nested proof command re-executed by the hook; any non-zero exit rejects the commit. A proof that cannot fail is rejected too (#211): one built only from `true`, `:`, `exit 0`, `echo` or `printf`, a `cargo test` run that passes 0 tests, or a range that adds a Rust `#[test]` with an empty body.
 2. **Independent judge (high-risk)** — on a `lane: high-risk` plan, a new Validation entry carrying `judge: same-session` is rejected.
 3. **Independent judge (full)** — a newly added Validation entry that declares `mode: full` and `judge: same-session` is rejected, on every lane.
 4. **At most one active plan** — more than one non-empty file under `.harness/plans/active/` is rejected; zero is a valid idle state.
