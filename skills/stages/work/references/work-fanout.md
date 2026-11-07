@@ -54,14 +54,18 @@ Spawn the whole wave in one message, in the background, each with its own worktr
 ## Aggregate
 
 1. A report is a claim: reject it unless it names the tested source and the acceptance output.
-2. Accept only after checking that source, its diff against SCOPE, and its acceptance check yourself.
+2. Accept only after checking that source, its diff against SCOPE, and its acceptance check yourself. Inspect a worker tree with `git -C <worktree>` or a subshell `(cd <worktree> && …)` so your shell stays in the main checkout.
 3. A rejected or missing result gets one fresh worker with consolidated scope (the original brief, later directives, the prior report and branch). A second miss → log `blocked` and plan around it; a gap never counts as a pass.
 4. Race: apply the rule declared up front. For a design bakeoff, score each candidate against a 3–6 point rubric, ask a cross-family judge for its pick, choose one base, and graft the best part of each loser by hand; wild divergence means the brief was under-specified, so reframe and re-run rather than averaging.
 
 ## Integrate
 
-1. Merge accepted branches one at a time; resolve conflicts against the plan, never by taking one side blindly.
+The target is the main checkout the session started in, addressed by absolute path. A host notice that your shell moved into a worker worktree changes neither that target nor the wave: integrate there and continue.
+
+An accepted result is not yet `done`: log a worker task's `done` only after its output is in the main checkout and the combined tree passes step 3.
+
+1. Merge accepted branches one at a time; resolve conflicts against the plan, never by taking one side blindly. A worker that left its change uncommitted → bring over exactly its SCOPE paths, new files included, by absolute path.
 2. Edit the held shared files once, after the merges.
 3. Review the shared interfaces, then run the full phase check on the combined tree.
 4. `high-risk` phases: a verifier on a different model family from the workers reviews the combined diff before the gate.
-5. Each `done` names the worker's model, branch and commit SHA. Removing worker worktrees and branches is a delete: do it only with the owner's approval.
+5. Each `done` names the worker's model, branch and commit SHA, and the combined tree it passed on. Removing worker worktrees and branches is a delete: do it only with the owner's approval.
