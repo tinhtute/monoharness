@@ -28,7 +28,7 @@ Resolve from a leading subcommand, else the request.
 | `twice` | Interface, module, or data-model shape | `references/design-it-twice.md`: 3+ radically different designs |
 | `lens <name>` | A named pattern ("pre-mortem this") | That lens only, from `references/lenses.md` |
 
-An error, crash, failing test, or "why is this broken" → one line: it belongs to `hunt`; route there. Fuzzy intent → `brainstorm grill`.
+An error, crash, failing test, or "why is this broken" → one line: it belongs to `hunt`; route there. Fuzzy intent → `grill`.
 
 ## Process (`decide`)
 
@@ -71,4 +71,4 @@ Next:           [the one concrete step: brainstorm lock / to-plan / work bounded
 
 `evaluate` and `triage` use their reference's format instead. Keep prose short; the block is the answer.
 
-Defer to: `brainstorm` (grill, lock), `to-plan` (locked plan), `hunt` (errors, regressions), `check` (built code).
+Defer to: `grill` (fuzzy intent), `brainstorm` (lock), `to-plan` (locked plan), `hunt` (errors, regressions), `check` (built code).

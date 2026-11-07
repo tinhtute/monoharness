@@ -35,7 +35,7 @@ Freeze the queue first as exact IDs plus counts. Present three buckets, oldest f
 2. **Split bundles.** One item with several asks gets one disposition per ask: core bug, existing affordance, cosmetic preference, out-of-scope.
 3. **Verify the claim.** For a bug, reproduce from the reporter's steps; that is `hunt` step 1, so a confirmed repro doubles as the loop. For a PR, check out the diff and run the relevant tests. Report: confirmed (with code path), failed, or insufficient detail (a strong `needs-info` signal). Missing logs or no repro never proves an item invalid.
 4. **Recommend.** Category + state + reasoning + a short relevant codebase summary. Wait for the maintainer unless they already gave the disposition.
-5. **Grill if needed.** An underspecified request goes through `brainstorm grill`, one round of questions at a time, before a brief is written.
+5. **Grill if needed.** An underspecified request goes through `grill`, one round of questions at a time, before a brief is written.
 6. **Apply the outcome** (only within the user's authorization for public writes):
    - `ready-for-agent` / `ready-for-human`: post an agent brief (template below).
    - `needs-info`: post triage notes (template below).

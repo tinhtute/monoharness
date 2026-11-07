@@ -44,7 +44,7 @@ The old `preflight` readiness call and its `MIN_ZHARNESS_VERSION` documentation 
 
 ### Non-spine skills do not stop on a missing binary
 
-`git` owns no plan sections, and `brainstorm grill`/`raw` write nothing until a lock is approved. A missing `zharness` binary is never a reason to refuse staging, committing, or grilling an intent. The 6 spine skills are the same: markdown plus git is the system of record.
+`git` owns no plan sections, and `grill` writes nothing until a lock is approved. A missing `zharness` binary is never a reason to refuse staging, committing, or grilling an intent. The 6 spine skills are the same: markdown plus git is the system of record.
 
 ## Thin-Trigger Template
 
@@ -65,7 +65,9 @@ Defer to: {one line naming the skills this stage hands off to or resumes from}
 
 | Skill | Owns | Mechanism |
 | :--- | :--- | :--- |
-| `brainstorm` | Goal: outcome, success_signal, actors, requirements with `acceptance:`, non-goals (lane in frontmatter) | skill reference + hand-edited markdown |
+| `brainstorm` | Goal: outcome, success_signal, actors, requirements with `acceptance:`, non-goals (lane in frontmatter); locks a decided `wayfinder` map in place | skill reference + hand-edited markdown |
+| `grill` | no plan sections, zero writes | non-spine; `skills/stages/grill/references/grill.md`; hands off to `brainstorm lock` or `wayfinder` |
+| `wayfinder` | partial Goal and `## Map` of one active plan until `brainstorm lock` | non-spine; `skills/stages/wayfinder/references/wayfinder.md`; one HITL decision per session |
 | `to-plan` | Phases and Verification: approach, risks, tasks with `output:`/`check:`/`stop_if:`, `escalate_when:` on high-risk; every requirement traced to a check | skill reference + hand-edited markdown |
 | `work` | Log (append-only) | skill reference + hand-edited markdown |
 | `check` | Validation (append-only): proofs, `requirements:` coverage, `rollback_point:` | skill reference + nested proof sub-bullets |

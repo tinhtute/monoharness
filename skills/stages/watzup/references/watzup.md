@@ -21,7 +21,7 @@ Read-only recap from Git and the plan at `.harness/plans/active/{slug}.md`.
    ```
 
    Then `git status -sb`, `git log --oneline "$base..HEAD"`, `git rev-list --left-right --count "$base...HEAD"`. IF base is the current branch → report status only.
-2. **Plan by section** — never the whole file (slice as in `work-full.md` step 1): `## Goal` head, Current State, the `## Log` and `## Validation` tails. Read task execution status only from append-only `## Log`, the sole task execution-status source.
+2. **Plan by section** — never the whole file (slice as in `work-full.md` step 1): `## Goal` head, Current State, the `## Log` and `## Validation` tails; a plan with `## Map` → also its frontier (`open` lines whose `blocked_by` lines are all `decided`) and the `fog:` count. Read task execution status only from append-only `## Log`, the sole task execution-status source.
 3. **WIP** — the working-tree diff, top five files; flag incomplete work or missing proof.
 4. **Risks** — blockers verbatim, missing tests, large uncommitted diffs, contract breaks, secrets. No invented reassurance.
 

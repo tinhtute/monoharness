@@ -22,6 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   [monoclaudian](https://github.com/tinhtute/monoclaudian); `skills/extras/` is gone.
   Install them with
   `npx skills add git@github.com:tinhtute/monoclaudian.git -a claude-code -g -y`; otherwise trash the old copies from `~/.claude/skills/` and `~/.agents/skills/`.
+- `brainstorm` 6.0.0 keeps only `explore`, `lock` and `refine`.
+  **Migration:** `/brainstorm grill` → `/grill`, `/brainstorm raw` → `/grill raw`.
+  Install the new `grill` and `wayfinder` skills.
 - The `research` and `ship` playbooks and `learn` now call `mono-write`, a slim skill
   that polishes a research draft and writes CHANGELOG entries and release notes. It
   hands any other writing to monoclaudian's `write` when that skill is installed.
@@ -29,6 +32,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `wayfinder` skill for a Goal whose decisions span sessions. It keeps a `## Map` of
+  typed questions (`grill`/`prototype`/`research`/`task`, HITL or AFK, `blocked_by`)
+  and `fog:` lines in the active plan, fans out AFK research to sub-agents, settles
+  at most one HITL question per session, caps prototypes, and resumes from
+  `exact_next_action: wayfinder`. `brainstorm lock` then locks the decided map in
+  place and writes the lane's phase. `watzup` shows the map's frontier.
+- `grill` skill: the grill loop as its own skill, with `raw` for a fast first pass.
 - `session-digest.py --json`; token usage now counts each API message once and
   skips sub-agent records in stream-json traces.
 - CI `test-weakening` gate (#212): a PR that deletes a test file, adds a skip marker
