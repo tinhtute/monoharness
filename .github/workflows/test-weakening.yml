@@ -3,8 +3,10 @@ name: test-weakening
 # Issue #212: block a PR that deletes test files, adds skip markers or trivial
 # assertions, or removes assertions, unless the owner applied the
 # `allow-test-weakening` label. Label events re-run the check.
+# pull_request_target runs this file and the scripts from the base branch, so a
+# PR cannot rewrite its own gate; the head is fetched as data and never run.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
@@ -16,7 +18,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
+
+      - name: Fetch the PR head as data
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags origin "+refs/pull/$PR/head:refs/remotes/pr/head"
 
       - name: Block weakened tests without the override label
         env:

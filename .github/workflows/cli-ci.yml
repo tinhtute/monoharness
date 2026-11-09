@@ -17,6 +17,9 @@ on:
       - ".github/workflows/cli-ci.yml"
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build-test:
     runs-on: ubuntu-latest

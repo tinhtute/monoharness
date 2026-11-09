@@ -4,8 +4,10 @@ name: risk-verdict
 # signed by an allowlisted independent judge, or with the owner's
 # `owner-reviewed` label. Body edits and label events re-run the check; the body
 # and labels are read from the API so a re-run sees the current PR.
+# pull_request_target runs this file and the scripts from the base branch, so a
+# PR cannot rewrite its own gate; the head is fetched as data and never run.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
 
 permissions:
@@ -22,7 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
+
+      - name: Fetch the PR head as data
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags origin "+refs/pull/$PR/head:refs/remotes/pr/head"
 
       - name: Require a head-bound low-risk verdict or the owner's label
         env:

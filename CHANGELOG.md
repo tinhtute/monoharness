@@ -76,6 +76,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Security: the `risk-verdict` and `test-weakening` gates run on `pull_request_target`
+  from the base branch, so a PR can no longer rewrite its own gate workflow or script;
+  the PR head is fetched as data and never executed, and `test-weakening` no longer runs
+  the head copy of `risk-facts.sh`. `cli-ci` jobs get a read-only token.
 - CI `hook-guard` runs the guard core from the base revision instead of the commit
   under test (`scripts/ci/hook-guard.sh`), so a commit can no longer neuter its own
   proof guard; a range that edits `scripts/install-git-hooks.sh` must pass both the
