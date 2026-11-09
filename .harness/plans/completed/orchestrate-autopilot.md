@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 lane: high-risk
 ---
 # Orchestrate and autopilot playbooks
@@ -40,7 +40,7 @@ lane: high-risk
 - constraints: the branch stacks on PR #252 (`feat/hillclimb-pause-playbooks`) because the router count goes 15 → 17, so rebase onto master after #252 merges. Follow `docs/guides/prompt-engineering-principles.md` for all playbook text. Make no edits under NG4 paths.
 - recovery: a failed phase check, or a judge verdict of REJECT, reverts the phase commit and records it as `blocked` in `## Log`.
 - phase_slug: `adr`
-  status: checked
+  status: done
   - goal: R1 | depends_on: none
   - surfaces: `docs/decisions/0020-orchestrate-and-autopilot.md` (new), `docs/decisions/README.md` index | avoided: skills
   - escalate_when: an owner decision conflicts with an accepted ADR (0016, 0018, 0019) in a way the ADR text cannot reconcile
@@ -48,7 +48,7 @@ lane: high-risk
     - T1 write ADR 0020 covering: context (upstream orchestrate/autopilot, the earlier skip); decisions (merge authority, owner force-push, retry by cause everywhere, 2 levels, in-session runtime, file shape); dropped pieces (cloud VMs, event subscriptions, sub-coordinators, Project store, Cursor-only skills); consequences. Owner: lead, writes the ADR and the README index line only. Output: the ADR. Check: `grep -c "force-with-lease\|ship.md#land\|session-pickup\|event" docs/decisions/0020-orchestrate-and-autopilot.md && bash scripts/ci/verify-doc-links.sh`. stop_if: the link check fails.
   - phase check: `test -f docs/decisions/0020-orchestrate-and-autopilot.md && bash scripts/ci/verify-doc-links.sh`
 - phase_slug: `orchestrate`
-  status: checked
+  status: done
   - goal: R2, R3, R4 | depends_on: adr
   - surfaces: `skills/mono/playbooks/orchestrate.md` (new), `skills/mono/playbooks/fanout.md`, `skills/stages/work/references/work-fanout.md` | avoided: `ship.md`, `babysit.md`, the router
   - escalate_when: a `cargo test` contract pins `work-fanout.md` wording that R4 must change
@@ -58,7 +58,7 @@ lane: high-risk
     - T3 write `orchestrate.md` per R2 (upstream orchestrate.md mapped to Claude Code: `mono-lead`/`mono-worker` owners, `mono-verifier`, plan `## Log`, `/loop`, `session-pickup`), and move fanout's Orchestrate-lite rules into it. Owner: lead, writes `orchestrate.md` and `fanout.md` only. Output: playbook and trimmed fanout. Check: `grep -c "canary\|session-pickup\|## Log\|/loop\|head SHA" skills/mono/playbooks/orchestrate.md && ! grep -q "Orchestrate-lite" skills/mono/playbooks/fanout.md && grep -q "orchestrate.md" skills/mono/playbooks/fanout.md`. stop_if: a rule would need state outside the plan or forge.
   - phase check: `bash scripts/ci/validate-skills.sh && bash scripts/ci/verify-doc-links.sh && (cd cli && cargo test)`
 - phase_slug: `autopilot`
-  status: checked
+  status: done
   - goal: R5, R6 | depends_on: orchestrate
   - surfaces: `skills/mono/playbooks/autopilot.md` (new), `skills/mono/SKILL.md`, `README.md`, `CHANGELOG.md`, `skills/mono/NOTICE.md` | avoided: `ship.md` § Land, `check-risk.md`, AGENTS.md § Unattended Shipping
   - escalate_when: `full` mode needs any change to Land or to AGENTS.md § Unattended Shipping
@@ -87,6 +87,9 @@ lane: high-risk
 - 2026-11-09T04:51Z — autopilot — decision — Takeover lease (T4 open item): an owner spawned onto an already-open PR has pushed nothing and is not a respawn. Coordinator decision: at spawn the coordinator logs that PR's head SHA, and the owner follows the respawn clause (pin the logged SHA only after `git ls-remote` shows it as the remote head; otherwise `blocked`, no push). Folded into T5: work-fanout.md exception paragraph and ADR 0020 decision 2. Owner may veto.
 - 2026-11-09T04:53Z — autopilot/T5 — done — mono-worker (sonnet), branch `worktree-agent-ac979c9276071d8a8` commit `5a2f566`, cherry-picked as `804c7ec`. Re-checked on the main checkout: router says seventeen (15 → 17 rows: fanout one wave, orchestrate program, autopilot PR queue); work-fanout.md "already-open PR" present with the embedded.rs pin intact; validate-skills 19 valid; doc links 0 findings; cargo test 5 suites ok. Deviation: `site/assets/workflow.png` still shows fifteen playbooks (alt text updated); outside scope, left for the owner.
 - 2026-11-09T04:57Z — autopilot — done — gate APPROVED by an independent mono-verifier (fable); entry in `## Validation`. Correction to 04:53: `site/assets/workflow.png` reads twelve playbooks (pre-existing drift, NG5). Non-blocking requests (ADR Decision 2/3 wording, NOTICE version) go to a final-pass commit before `check full`.
+- 2026-11-09T04:58Z — autopilot — done — gate nits applied in `93c72b9`: ADR 0020 Decision 2 says the owner never asserts a took-over SHA itself; Decision 3 names the no-report default; NOTICE gains v0.15.36 `6b03002`. doc links and validate-skills rc=0.
+- 2026-11-09T05:00Z — plan — done — routing dry-run by a fresh agent (sonnet, router file only): "run these 4 independent tasks in parallel" → fanout; "drive this 20-PR migration over the week" → orchestrate; "take these 5 PRs to verified" → autopilot. 3/3 as expected; closest call was prompt 3 vs babysit/ship, decided by "to verified".
+- 2026-11-09T05:07Z — plan — done — final `check full` APPROVED by an independent mono-verifier (fable) over `13b36da..HEAD`; entry in `## Validation`. Non-blocking follow-ups for the owner: autopilot.md:21 scope of the per-head single verifier, :23 replacement counts as a retry by cause, :24 define "merge prep", :14 "the verifier's verdict"; ADR 0020 citations pinned at `5210571` are stale at HEAD by design (ADR:5); all four verdicts ran on one verifier model (fable, the repo's cross-family role); `site/assets/workflow.png` drift (NG5). Plan closed; branch stays local until the owner asks to push.
 
 ## Validation
 - 2026-11-09T04:30Z — phase `adr` — verdict: APPROVED — mode: gate
@@ -129,9 +132,26 @@ lane: high-risk
   - judge: independent
   - judge_model: claude-fable-5-1
 
+- 2026-11-09T05:06Z — plan — verdict: APPROVED — mode: full
+  - `cd cli && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` — fmt clean, clippy 0 warnings; lib 84 passed, projection_parity 3, skill_reference_resolution 2, 0 failed, rc=0
+  - `bash scripts/ci/verify-doc-links.sh` — "doc links OK (0 findings; 4 claim(s) under known-removed v0.15 surfaces)", rc=0
+  - `bash scripts/ci/validate-skills.sh` — "19 skill(s) valid", rc=0
+  - `bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/test-risk-facts.sh && python3 -I scripts/ci/test-panel-merge.py` — skill scripts and risk-facts fixtures pass; panel-merge "Ran 11 tests ... OK", rc=0
+  - `bash scripts/ci/test-weakening.sh 13b36da HEAD` — "no test weakening in 13b36da...HEAD" (embedded.rs pins 1 → 4, each stronger), rc=0
+  - `bash scripts/ci/test-guards.sh` — "guards: 131 passed, 0 failed", rc=0
+  - `test -f docs/decisions/0020-orchestrate-and-autopilot.md && test "$(grep -c "force-with-lease\|ship.md#land\|session-pickup\|event" docs/decisions/0020-orchestrate-and-autopilot.md)" -ge 4 && test "$(grep -c "canary\|session-pickup\|## Log\|/loop\|head SHA" skills/mono/playbooks/orchestrate.md)" -ge 5 && ! grep -q "Orchestrate-lite" skills/mono/playbooks/fanout.md && grep -q "orchestrate.md" skills/mono/playbooks/fanout.md && grep -q "force-with-lease" skills/stages/work/references/work-fanout.md && grep -qi "by cause" skills/stages/work/references/work-fanout.md && test "$(grep -c "stack\|full\|ship.md#land\|patch-id\|decision: hold\|owner-reviewed" skills/mono/playbooks/autopilot.md)" -ge 6 && ! grep -q "gh pr merge" skills/mono/playbooks/autopilot.md skills/mono/playbooks/orchestrate.md && grep -q "seventeen" skills/mono/SKILL.md && grep -q "orchestrate.md" skills/mono/SKILL.md && grep -q "autopilot.md" skills/mono/SKILL.md && test "$(grep -c "^FORBIDDEN  no merge, rebase, force-push" skills/stages/work/references/work-fanout.md)" -eq 1` — R1–R6 acceptance at HEAD: ADR grep 10, orchestrate grep 6, autopilot grep 12, no direct merge command, FORBIDDEN prefix count 1, rc=0
+  - `test -z "$(git diff --name-only 13b36da..HEAD | grep -E "skills/mono/playbooks/ship.md|check-risk.md|^\.github/|^scripts/ci/|install-git-hooks|^site/")"` — NG4 and NG5 paths untouched across the whole plan range, rc=0
+  - scope: on target — ADR 0020 + decisions index, orchestrate.md and autopilot.md (new), fanout.md, work-fanout.md, embedded.rs test pins, router (17 rows), README, CHANGELOG, NOTICE, plan file; ship.md § Land, check-risk.md, CI, hooks, site/ untouched. Only ship.md § Land merges; one lease rule in work-fanout.md:48; retry by cause max 2 then `blocked` in one reference; state in plan `## Log` + live `gh` only; no cloud, event or sub-coordinator text.
+  - proof_classes: output, unit, integration
+  - requirements: R1 met (grep 10; 8 decisions with rejected alternatives, reversal cited, 5 dropped pieces) | R2 met (grep 6) | R3 met (Orchestrate-lite gone, rules mapped, Land per Decision 1) | R4 met (four causes, max 2, `blocked`; lease scoped; pins hold) | R5 met (grep 12; never merges outside Land) | R6 met (seventeen, separate rows; docs updated). success_signal met; routing dry-run 3/3 (Log 05:00).
+  - rollback_point: 13b36da
+  - requests: non-blocking — autopilot.md:21/:23/:24/:14 wording; stale base-pinned ADR citations (declared at ADR:5); plan Log 04:58 entry and Current State reconciled in the closing commit. Listed for the owner in Log 05:07.
+  - judge: independent
+  - judge_model: claude-fable-5-1
+
 ## Current State and Next Action
-- active_phase: autopilot
-- lifecycle_status: in-progress
+- active_phase: none
+- lifecycle_status: completed
 - blockers: none
 - open_items: none
-- exact_next_action: apply gate nits, then final check full + routing dry-run
+- exact_next_action: owner decides push/PR of feat/orchestrate-autopilot (stacked on PR #252; rebase onto master after #252 merges) and the non-blocking autopilot.md wording follow-ups in Log 05:07
