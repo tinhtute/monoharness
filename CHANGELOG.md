@@ -62,6 +62,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   cannot fail: only `true`, `:`, `exit 0`, `echo` or `printf`; a `cargo test` run that
   passes 0 tests; or a range that adds a Rust `#[test]` with an empty body. Rerun
   `bash scripts/install-git-hooks.sh --force`.
+- `orchestrate` and `autopilot` mono playbooks (ADR 0020): a multi-day program of many
+  units or PRs, and a queue of PRs taken to verified, or merged via ship § Land on
+  explicit request. The router now lists seventeen playbooks.
+
+### Changed
+
+- `fanout` keeps one in-session wave; multi-day programs go to `orchestrate`.
+- `work-fanout` retries a failed agent by cause, at most 2 times.
+- PR-owner exception to FORBIDDEN: a PR owner spawned by `orchestrate` or `autopilot`
+  may rebase and force-push only its own PR branch under a pinned
+  `--force-with-lease`; a respawned or takeover owner pins the SHA the plan Log records.
 
 ### Fixed
 

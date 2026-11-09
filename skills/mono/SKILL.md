@@ -1,7 +1,7 @@
 ---
 name: mono
 version: "1.0.0"
-description: "Entry router: match a task to one of fifteen playbooks (feature, bug-fix, refactoring, perf, research, ship, ...) and run its skill steps as a todo list. Use when the route is unclear."
+description: "Entry router: match a task to one of seventeen playbooks (feature, bug-fix, refactoring, perf, research, ship, ...) and run its skill steps as a todo list. Use when the route is unclear."
 argument-hint: "[task]"
 compatibility: Designed for Claude Code
 ---
@@ -26,7 +26,9 @@ Ask the user only through the agent's question tool (Claude Code `AskUserQuestio
 | Resume, "where was I", an active plan exists | [playbooks/session-pickup.md](playbooks/session-pickup.md) |
 | Pause, "stop here", save state to resume later | [playbooks/pause.md](playbooks/pause.md) |
 | Learn from recent sessions, retrospective | [playbooks/retro.md](playbooks/retro.md) |
-| Run several sub-agents in parallel, swarm, orchestrate | [playbooks/fanout.md](playbooks/fanout.md) |
+| One in-session wave of parallel sub-agents, swarm | [playbooks/fanout.md](playbooks/fanout.md) |
+| Multi-day program of many units or PRs, "orchestrate" | [playbooks/orchestrate.md](playbooks/orchestrate.md) |
+| Queue of PRs to verified, "autopilot", merge on request | [playbooks/autopilot.md](playbooks/autopilot.md) |
 
 Read the matched playbook. Open a todo list whose first items are its steps copied verbatim, in order. A step you choose not to do stays in the list as `skip: <reason>`; never drop it silently. No playbook fits → say so and ask which one applies.
 

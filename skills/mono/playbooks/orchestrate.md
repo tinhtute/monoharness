@@ -1,6 +1,6 @@
 # Playbook: orchestrate
 
-A standing program handed to one coordinator: multi-day, many PRs, few owner turns. One in-session wave is [fanout](fanout.md); a queue of PRs taken to verified or merged is `autopilot`; work one agent finishes in the session is not a program. The coordinator (the main agent) runs the program, never the code: it decides which agent does each unit and checks what each one produces. The brief template, retry by cause, and the PR-owner force-push and respawn lease rules live in [work-fanout.md](../../stages/work/references/work-fanout.md); follow them there.
+A standing program handed to one coordinator: multi-day, many PRs, few owner turns. One in-session wave is [fanout](fanout.md); a queue of PRs taken to verified or merged is [autopilot](autopilot.md); work one agent finishes in the session is not a program. The coordinator (the main agent) runs the program, never the code: it decides which agent does each unit and checks what each one produces. The brief template, retry by cause, and the PR-owner force-push and respawn lease rules live in [work-fanout.md](../../stages/work/references/work-fanout.md); follow them there.
 
 Rules for the whole run:
 
