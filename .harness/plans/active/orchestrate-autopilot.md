@@ -48,7 +48,7 @@ lane: high-risk
     - T1 write ADR 0020 covering: context (upstream orchestrate/autopilot, the earlier skip); decisions (merge authority, owner force-push, retry by cause everywhere, 2 levels, in-session runtime, file shape); dropped pieces (cloud VMs, event subscriptions, sub-coordinators, Project store, Cursor-only skills); consequences. Owner: lead, writes the ADR and the README index line only. Output: the ADR. Check: `grep -c "force-with-lease\|ship.md#land\|session-pickup\|event" docs/decisions/0020-orchestrate-and-autopilot.md && bash scripts/ci/verify-doc-links.sh`. stop_if: the link check fails.
   - phase check: `test -f docs/decisions/0020-orchestrate-and-autopilot.md && bash scripts/ci/verify-doc-links.sh`
 - phase_slug: `orchestrate`
-  status: planned
+  status: checked
   - goal: R2, R3, R4 | depends_on: adr
   - surfaces: `skills/mono/playbooks/orchestrate.md` (new), `skills/mono/playbooks/fanout.md`, `skills/stages/work/references/work-fanout.md` | avoided: `ship.md`, `babysit.md`, the router
   - escalate_when: a `cargo test` contract pins `work-fanout.md` wording that R4 must change
@@ -76,6 +76,11 @@ lane: high-risk
 - 2026-11-09T04:27Z — adr/T1 — done — mono-lead (opus), branch `worktree-agent-a4831d2bc8793a65b` commit `14a6a9f`, cherry-picked as `fd1b7e0` onto `feat/orchestrate-autopilot`. Check on the main checkout at HEAD `fd1b7e0`, clean tracked tree: `grep -c "force-with-lease\|ship.md#land\|session-pickup\|event" docs/decisions/0020-orchestrate-and-autopilot.md` → 10; `bash scripts/ci/verify-doc-links.sh` rc=0. Surfaces: the ADR (new) and `docs/decisions/README.md` (index row + Exception sentence). stop_if: not matched.
 - 2026-11-09T04:27Z — adr — decision — worker deviations accepted: the concepts audit itself has no orchestration finding, so the ADR cites `docs/research/2026-10-22-pstack-retro-5.md:44`/`:47` and the completed `pstack-lessons` plan instead; repository line citations pin to base `5210571`. Gap carried to T2: a respawned PR owner has no "last pushed" SHA; T2 pins the lease to the SHA logged in `## Log` for that branch and only after `git ls-remote` shows that SHA as the remote head, else `blocked`. Carried to T4: map upstream `ketchup`/`show-me-your-work`/`no-comments` to this repo's skills or drop them.
 - 2026-11-09T04:31Z — adr — done — gate APPROVED by an independent mono-verifier (fable); entry in `## Validation`. Non-blocking requests carried to phase `orchestrate`: (1) ADR 0020 line 72 cites `README.md:129`, which is :131 on this branch — fix the citation; (2) T2's respawned-owner lease rule (Log 04:27) widens Decision 2, so `docs/decisions/0020-orchestrate-and-autopilot.md` joins T2's surfaces for a matching amendment.
+- 2026-11-09T04:35Z — orchestrate — start — escalate_when matched ahead of time and resolved by the owner (Log 04:20: update the pin). Baseline phase check rc=0 at `34572a1`. T2 surfaces now: `work-fanout.md`, `cli/src/embedded.rs`, `docs/decisions/0020-orchestrate-and-autopilot.md` (Decision 2 respawned-owner clause, Consequences bullet, `README.md:131` citation).
+- 2026-11-09T04:42Z — orchestrate/T2 — done — mono-lead (opus), branch `worktree-agent-a9fda857dd2c6e389` commits `2420e70`, `ab21542`, cherry-picked as `962e7ac`, `f5ae14e`. Checked on the main checkout: force-with-lease + "by cause" greps rc=0; FORBIDDEN prefix count 1; "A second miss" absent; verify-doc-links rc=0; `cargo fmt --check` + `cargo test` rc=0 (84/3/2). Diff in SCOPE: work-fanout.md, embedded.rs work-fanout pins (1 → 4), ADR 0020. stop_if: not matched.
+- 2026-11-09T04:42Z — orchestrate — decision — accepted T2 deviation: ADR 0020 Decision 3 gains a fourth cause ("rejected result → consolidated scope", the existing rule kept) so the reference stays within its authority. The respawned-owner lease rule is a coordinator decision, recorded as such in the ADR; surfaced to the owner for veto before the phase commit.
+- 2026-11-09T04:43Z — orchestrate/T3 — done — mono-lead (opus), branch `worktree-agent-a606d30ee17ab98d0` commits `999f372`, `9177bee`, cherry-picked as `b5533c6`, `cd1135d`. Checked on the main checkout: R2 grep → 6; R3 check rc=0; no `gh pr merge`/cloud; validate-skills (19 valid), verify-doc-links, cargo test (84/3/2) rc=0. Diff in SCOPE: orchestrate.md (new), fanout.md (Orchestrate-lite removed, step 4 → retry by cause). Remaining old-wording hit: babysit.md:9 "one fresh run" is the CI-flake rule, left. `autopilot` named without a link until T4 creates it. stop_if: not matched.
+- 2026-11-09T04:46Z — orchestrate — done — gate APPROVED by an independent mono-verifier (fable); entry in `## Validation`. Non-blocking requests carried to phase `autopilot` as task T6 (mono-worker, wave 2 beside T5, disjoint files): orchestrate.md — state that the program request covers PR owners pushing their own branch and opening its PR, add a short resume clause (session-pickup respawns from Log branch/SHA/model; live `gh pr view` first; lease rule in work-fanout.md), fold rule bullets toward 5–8, link `autopilot.md`; work-fanout.md:48 "The owner's brief" → "The PR owner's brief"; a default retry when the cause is unknown (dropped connection → same brief). Also: Log timestamp 04:50 for T3 corrected to 04:43 (the gate's clock read 04:44).
 
 ## Validation
 - 2026-11-09T04:30Z — phase `adr` — verdict: APPROVED — mode: gate
@@ -89,10 +94,23 @@ lane: high-risk
   - requests: minor, non-blocking — (1) ADR line 72 cites `README.md:129`, now :131 on this branch; (2) T2's respawned-owner lease rule needs a matching ADR 0020 Decision 2 amendment. Both carried to phase `orchestrate` (Log 04:31).
   - judge: independent
   - judge_model: claude-fable-5-1
+- 2026-11-09T04:44Z — phase `orchestrate` — verdict: APPROVED — mode: gate
+  - `grep -q "force-with-lease" skills/stages/work/references/work-fanout.md && grep -qi "by cause" skills/stages/work/references/work-fanout.md && grep -c "canary\|session-pickup\|## Log\|/loop\|head SHA" skills/mono/playbooks/orchestrate.md` — prints 6, rc=0 (R2 threshold ≥ 5; R4 greps hold)
+  - `bash scripts/ci/validate-skills.sh` — "19 skill(s) valid", rc=0
+  - `bash scripts/ci/verify-doc-links.sh` — "doc links OK (0 findings; 4 claim(s) under known-removed v0.15 surfaces)", rc=0
+  - `cd cli && cargo test` — lib 84 passed; projection_parity 3 passed; skill_reference_resolution 2 passed; 0 failed, rc=0 (work-fanout pins 1 → 4)
+  - `cd cli && cargo fmt --check` — clean, rc=0
+  - scope: on target — work-fanout.md, embedded.rs (test pins only), ADR 0020 amendments, orchestrate.md (new), fanout.md; ship.md, babysit.md, router and NG4 paths untouched. R3 check rc=0. FORBIDDEN prefix count 1; exception scoped to PR owners spawned by orchestrate/autopilot; no worker merges.
+  - proof_classes: output, unit, integration
+  - requirements: R2 met (all properties present; step 5 lands only via ship.md § Land; NG1–NG4 honored), R3 met (lite rules mapped; Land-as-verified replaced by Land per Decision 1), R4 met (four causes, max 2, then `blocked`; fanout.md:6 matches; pins stronger; respawned-owner rule labeled coordinator decision, no wider than owner intent)
+  - rollback_point: 34572a1
+  - requests: non-blocking — push/PR clause and resume clause in orchestrate.md; "The PR owner's brief" at work-fanout.md:48; default retry for unknown cause; fold rule bullets. Carried to phase `autopilot` T6 (Log 04:46).
+  - judge: independent
+  - judge_model: claude-fable-5-1
 
 ## Current State and Next Action
-- active_phase: adr
+- active_phase: orchestrate
 - lifecycle_status: checked
 - blockers: none
 - open_items: none
-- exact_next_action: work full phase orchestrate (T2: work-fanout.md + embedded.rs pin + ADR 0020 amendment)
+- exact_next_action: work full phase autopilot (T4 autopilot.md; then T5 router/docs + T6 gate follow-ups)
