@@ -7,8 +7,8 @@
 # Env:   ALLOW_TEST_WEAKENING=true when the PR carries the override label.
 #
 # The facts come from the base revision's risk-facts.sh, so a PR cannot neuter
-# its own gate; a range that edits the script runs the head copy too and both
-# must report no weakening.
+# its own gate. The head copy never runs: the workflow is pull_request_target,
+# and PR code must not execute in the base context.
 set -uo pipefail
 
 [ "$#" -eq 2 ] || { echo "usage: test-weakening.sh <base> <head>" >&2; exit 2; }
@@ -35,14 +35,6 @@ git show "$base:$script" > "$tmp/base.sh" 2>/dev/null || {
   exit 1
 }
 found=$(findings "$tmp/base.sh" base) || exit 1
-if ! git diff --quiet "$base" "$head" -- "$script"; then
-  git show "$head:$script" > "$tmp/head.sh" 2>/dev/null || {
-    echo "❌ TEST-WEAKENING: $head carries no $script." >&2
-    exit 1
-  }
-  headfound=$(findings "$tmp/head.sh" head) || exit 1
-  found=$(printf '%s\n%s\n' "$found" "$headfound" | sed '/^$/d' | sort -u)
-fi
 
 if [ -z "$found" ]; then
   echo "✅ no test weakening in $base...$head"
