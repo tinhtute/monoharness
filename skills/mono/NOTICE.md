@@ -4,4 +4,4 @@
 
 `playbooks/hillclimb.md` and `pause.md` adapt poteto-mode playbooks from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, MIT, Copyright 2026 Lauren Tan).
 
-`playbooks/orchestrate.md` and `autopilot.md` adapt poteto-mode playbooks from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (MIT, Copyright 2026 Lauren Tan).
+`playbooks/orchestrate.md` and `autopilot.md` adapt poteto-mode playbooks from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, `6b03002`, MIT, Copyright 2026 Lauren Tan).
