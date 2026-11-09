@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v0.34.0] — 2026-11-09
+
 ### BREAKING
 
 - `setup/` moved to the separate repo [monoclaudian](https://github.com/tinhtute/monoclaudian)
