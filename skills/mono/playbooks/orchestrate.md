@@ -4,17 +4,14 @@ A standing program handed to one coordinator: multi-day, many PRs, few owner tur
 
 Rules for the whole run:
 
-- **Two levels only:** the coordinator and the agents it spawns; `mono-lead` and `mono-worker` cannot spawn agents of their own.
-- **One PR owner per PR:** a `mono-lead` (judgment) or `mono-worker` (mechanical) agent in its own worktree (`isolation: worktree`) is the only writer of its branch; conflicts, rebases and fixes go to the PR owner, never to the coordinator. No PR owner merges.
+- **Two levels, one PR owner per PR:** the coordinator and the agents it spawns; `mono-lead` and `mono-worker` cannot spawn agents of their own. A `mono-lead` (judgment) or `mono-worker` (mechanical) agent in its own worktree (`isolation: worktree`) is the only writer of its branch; conflicts, rebases and fixes go to the PR owner, never to the coordinator. The owner's program request covers each PR owner pushing its own branch and opening its PR; no PR owner merges, merging stays with [ship.md § Land](ship.md#land).
 - **A verifier per PR:** `mono-verifier`, a different model family from the PR owner, read-only; its verdict is bound to one head SHA, so a new push needs a new verdict.
 - **Standing Orders:** paste the plan's `## Standing Orders` into every spawn and retry brief, PR owners and verifiers alike.
 - **Rolling window:** at most 10 agents in flight; when a unit lands or is blocked, spawn the next ready unit instead of waiting on the batch.
-- **Live state:** read `gh pr view` and `gh pr checks` before any report or decision, never an agent's last report; liveness comes from branches, `git status`, the task list and `gh`.
-- **Never resume an agent to ask status:** judge it by its pushes and PR activity, not its status text.
-- **State:** the plan `## Log` only; every spawn, retry, verdict, `done` and `blocked` is an entry naming model, branch and SHA. Nothing lives outside the plan and git/`gh`.
-- **Every spawned agent is accounted for** as `done`, replaced, absorbed into another's scope, or `blocked`.
+- **Live state:** read `gh pr view` and `gh pr checks` before any report or decision, never an agent's last report; liveness comes from branches, `git status`, the task list and `gh`. Never resume an agent to ask status: judge it by its pushes and PR activity.
+- **State:** the plan `## Log` only; every spawn, retry, verdict, `done` and `blocked` is an entry naming model, branch and SHA, and every spawned agent ends as `done`, replaced, absorbed into another's scope, or `blocked`. Nothing lives outside the plan and git/`gh`.
 - **Ask the owner only for a real decision:** an irreversible action, a product or preference call no experiment settles, a dead end that survived a replan, or a PR Land leaves for review. Rebases, retries, CI flakes, review triage and "keep going?" never reach the owner.
-- **Runtime:** in-session plus a Claude Code `/loop` audit, e.g. `/loop 1h`: read `gh` and the Log, judge each agent by pushes and PR activity, refill the window. Agents end with the session; next session `session-pickup` respawns PR owners from the Log.
+- **Runtime:** in-session plus a Claude Code `/loop` audit, e.g. `/loop 1h`: read `gh` and the Log, judge each agent by pushes and PR activity, refill the window. Agents end with the session; next session `session-pickup` respawns PR owners: read each unit's branch, SHA and model from the `## Log`, read live `gh pr view` first, then respawn its PR owner with the lease rule from work-fanout.md.
 
 1. `brainstorm` — frame the program in the plan: the goal, the units, each unit's done evidence (a command and its expected output, or an artifact), and a `## Standing Orders` section holding the rules every agent gets. A unit whose evidence you cannot name is not scoped yet.
 2. `work full` — canary: take one unit end to end (brief, PR owner, verifier, Land) before fanning out, so a flaw in the brief costs one agent instead of fifty.
