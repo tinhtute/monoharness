@@ -28,7 +28,7 @@ Ask the user only through the agent's question tool (Claude Code `AskUserQuestio
 | Learn from recent sessions, retrospective | [playbooks/retro.md](playbooks/retro.md) |
 | One in-session wave of parallel sub-agents, swarm | [playbooks/fanout.md](playbooks/fanout.md) |
 | Multi-day program of many units or PRs, "orchestrate" | [playbooks/orchestrate.md](playbooks/orchestrate.md) |
-| Queue of PRs to verified, "autopilot", merge on request | [playbooks/autopilot.md](playbooks/autopilot.md) |
+| Carry a queue of PRs to verified (merge only in `full`), "autopilot" | [playbooks/autopilot.md](playbooks/autopilot.md) |
 
 Read the matched playbook. Open a todo list whose first items are its steps copied verbatim, in order. A step you choose not to do stays in the list as `skip: <reason>`; never drop it silently. No playbook fits → say so and ask which one applies.
 
