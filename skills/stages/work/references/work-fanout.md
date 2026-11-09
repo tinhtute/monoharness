@@ -1,6 +1,6 @@
 # Playbook: work (fan-out)
 
-Loaded by [work-full.md](work-full.md) step 4 when a wave runs tasks on sub-agents. The main agent owns every worker's output: it frames, briefs, integrates and verifies; workers never merge, rebase, or edit outside their scope.
+Loaded by [work-full.md](work-full.md) step 4 when a wave runs tasks on sub-agents. The main agent owns every worker's output: it frames, briefs, integrates and verifies. Workers never merge, rebase, force-push, or edit outside their scope; the one exception, a PR owner rebasing its own branch, sits under the brief's FORBIDDEN line.
 
 ## When to fan out
 
@@ -45,6 +45,8 @@ FORBIDDEN  no merge, rebase, force-push, --no-verify, or fixes outside SCOPE
 REPORT     PASS | ISSUES | BLOCKED; branch, commit SHA (or dirty-diff hash), the commands actually run and their output, deviations
 ```
 
+PR-owner exception (ADR 0020 decision 2, `docs/decisions/0020-orchestrate-and-autopilot.md`): a PR-owner agent that `orchestrate` or `autopilot` spawns may rebase and force-push only its own PR branch, with `--force-with-lease=<branch>:<sha>` pinned to the SHA it last pushed. A respawned owner has pushed nothing yet: it pins the SHA the plan `## Log` records for that branch, only after `git ls-remote` shows that SHA as the remote head; otherwise it logs `blocked` and does not push. The owner's brief states this exception under FORBIDDEN; every other brief keeps FORBIDDEN as written. No worker merges, PR owners included.
+
 Size it to the task: a one-command task collapses the template to a paragraph that still names goal, scope, check and report. Shared exploration runs once into a scratch file outside the repo, and briefs point at it.
 
 ## Fan out
@@ -55,7 +57,13 @@ Spawn the whole wave in one message, in the background, each with its own worktr
 
 1. A report is a claim: reject it unless it names the tested source and the acceptance output.
 2. Accept only after checking that source, its diff against SCOPE, and its acceptance check yourself. Inspect a worker tree with `git -C <worktree>` or a subshell `(cd <worktree> && …)` so your shell stays in the main checkout.
-3. A rejected or missing result gets one fresh worker with consolidated scope (the original brief, later directives, the prior report and branch). A second miss → log `blocked` and plan around it; a gap never counts as a pass.
+3. A rejected or missing result gets a retry chosen by cause, at most 2 per unit, each logged with its cause:
+   - context limit → a fresh worker with a smaller scope;
+   - dropped connection → the same brief;
+   - tool error → a different model;
+   - rejected result (wrong output) → a fresh worker with consolidated scope (the original brief, later directives, the prior report and branch).
+
+   After the second failed retry → log `blocked` and plan around it; a gap never counts as a pass.
 4. Race: apply the rule declared up front. For a design bakeoff, score each candidate against a 3–6 point rubric, ask a cross-family judge for its pick, choose one base, and graft the best part of each loser by hand; wild divergence means the brief was under-specified, so reframe and re-run rather than averaging.
 
 ## Integrate
