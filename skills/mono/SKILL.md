@@ -1,7 +1,7 @@
 ---
 name: mono
 version: "1.0.0"
-description: "Entry router: match a task to one of thirteen playbooks (feature, bug-fix, refactoring, perf, research, ship, ...) and run its skill steps as a todo list. Use when the route is unclear."
+description: "Entry router: match a task to one of fifteen playbooks (feature, bug-fix, refactoring, perf, research, ship, ...) and run its skill steps as a todo list. Use when the route is unclear."
 argument-hint: "[task]"
 compatibility: Designed for Claude Code
 ---
@@ -16,6 +16,7 @@ Ask the user only through the agent's question tool (Claude Code `AskUserQuestio
 | Error, crash, failing test, regression | [playbooks/bug-fix.md](playbooks/bug-fix.md) |
 | Restructure code without changing behavior | [playbooks/refactoring.md](playbooks/refactoring.md) |
 | Slow, latency, memory, throughput regression | [playbooks/perf.md](playbooks/perf.md) |
+| Push one metric toward a target over many keep-or-revert attempts | [playbooks/hillclimb.md](playbooks/hillclimb.md) |
 | Decide a design by building throwaway variants | [playbooks/prototype.md](playbooks/prototype.md) |
 | Question, review, diagnosis; nothing to change | [playbooks/investigation.md](playbooks/investigation.md) |
 | Web research, read sources, deep dive into a topic | [playbooks/research.md](playbooks/research.md) |
@@ -23,6 +24,7 @@ Ask the user only through the agent's question tool (Claude Code `AskUserQuestio
 | Get PRs green, address review comments, "check on PR X" | [playbooks/babysit.md](playbooks/babysit.md) |
 | Land PRs, release, tag, publish, deploy, "is this worth a release" | [playbooks/ship.md](playbooks/ship.md) |
 | Resume, "where was I", an active plan exists | [playbooks/session-pickup.md](playbooks/session-pickup.md) |
+| Pause, "stop here", save state to resume later | [playbooks/pause.md](playbooks/pause.md) |
 | Learn from recent sessions, retrospective | [playbooks/retro.md](playbooks/retro.md) |
 | Run several sub-agents in parallel, swarm, orchestrate | [playbooks/fanout.md](playbooks/fanout.md) |
 

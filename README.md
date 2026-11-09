@@ -86,7 +86,7 @@ read-only and bounded work.
 Start a task with `/mono <task>`. The router matches one playbook, copies
 its steps into a todo list, and calls the skill each step names.
 
-![mono routes a task to one of thirteen playbooks, each a chain of skills](site/assets/workflow.png)
+![mono routes a task to one of fifteen playbooks, each a chain of skills](site/assets/workflow.png)
 
 | Playbook | Steps |
 |---|---|
@@ -94,6 +94,7 @@ its steps into a todo list, and calls the skill each step names.
 | bug-fix | hunt → failing test → work (bounded) → check → git (on request) |
 | refactoring | think → pin behavior → work (subtract, then reshape) → check |
 | perf | baseline → hunt → mantras, cheapest first → work → check before/after |
+| hillclimb | metric + stop predicate → frozen harness → loop: one change, measure, keep or revert → check |
 | prototype | throwaway variants → observe in the real app → decide |
 | fanout | separate → spawn sub-agents → aggregate → check |
 | investigation | think or hunt; read-only, changes nothing |
@@ -102,6 +103,7 @@ its steps into a todo list, and calls the skill each step names.
 | babysit | `/loop` over review threads and CI until the PR is ready |
 | ship | watzup → security-review → check → land → changelog → tag → verify → rollback |
 | session-pickup | watzup → reconcile → route to the next playbook |
+| pause | safe boundary → handoff → `chore(wip)` commit; resume with session-pickup |
 | retro | watzup → retro → save approved lessons |
 
 A typo does not need a plan. A migration spanning sessions does: it gets one

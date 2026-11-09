@@ -32,6 +32,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `hillclimb` and `pause` playbooks in `mono`, adapted from upstream
+  [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack).
+  `hillclimb` pushes one metric toward a target with a stop predicate that has a
+  floor on attempts, a frozen harness, a `decision.tsv` log outside the repo, and
+  one keep-or-revert change per attempt on a dedicated branch. `pause` stops at a
+  safe boundary, writes Current State through `handoff` (or the commit body when no
+  plan is active), and makes one `chore(wip)` commit off the default branch.
 - `wayfinder` skill for a Goal whose decisions span sessions. It keeps a `## Map` of
   typed questions (`grill`/`prototype`/`research`/`task`, HITL or AFK, `blocked_by`)
   and `fog:` lines in the active plan, fans out AFK research to sub-agents, settles
