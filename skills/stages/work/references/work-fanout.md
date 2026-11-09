@@ -1,6 +1,6 @@
 # Playbook: work (fan-out)
 
-Loaded by [work-full.md](work-full.md) step 4 when a wave runs tasks on sub-agents. The main agent owns every worker's output: it frames, briefs, integrates and verifies. Workers never merge, rebase, force-push, or edit outside their scope; the one exception, a PR owner rebasing its own branch, sits under the brief's FORBIDDEN line.
+Loaded by [work-full.md](work-full.md) step 4 when a wave runs tasks on sub-agents. The main agent owns every worker's output: it frames, briefs, integrates and verifies. Workers never merge, rebase, force-push, or edit outside their scope; the one exception, a PR owner rebasing and force-pushing only its own branch, is stated after the brief template.
 
 ## When to fan out
 

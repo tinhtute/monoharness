@@ -38,7 +38,8 @@ The owner (therealtinhtute) made these decisions on 2026-11-09.
 3. **Retry by cause, at most 2, everywhere.** `work-fanout.md` Aggregate step 3 replaces one fresh retry followed by "A second miss → log `blocked`" (`skills/stages/work/references/work-fanout.md:58`) with a retry chosen by cause:
    - after a context limit, retry with a smaller scope;
    - after a dropped connection, retry with the same brief;
-   - after a tool error, retry with a different model.
+   - after a tool error, retry with a different model;
+   - after a rejected result (wrong output), retry with a fresh worker and consolidated scope, the current rule kept for that cause.
 
    After 2 retries the unit is `blocked`. The rule lives in the shared reference, so `fanout`, `orchestrate` and `autopilot` read one rule. Upstream: `orchestrate.md:22`. Rejected: the current single retry, which ignores the cause and re-runs a context-limit failure at the same scope.
 4. **Topology: two levels, a root coordinator and workers.** The main agent coordinates. `mono-lead` and `mono-worker` agents own PRs or units. Rejected: upstream's sub-coordinator level, up to three levels (`orchestrate.md:11`). `mono-lead` cannot spawn sub-agents (`agents/mono-lead.md:15`).
