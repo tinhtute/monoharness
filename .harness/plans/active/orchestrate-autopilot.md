@@ -40,7 +40,7 @@ lane: high-risk
 - constraints: the branch stacks on PR #252 (`feat/hillclimb-pause-playbooks`) because the router count goes 15 → 17, so rebase onto master after #252 merges. Follow `docs/guides/prompt-engineering-principles.md` for all playbook text. Make no edits under NG4 paths.
 - recovery: a failed phase check, or a judge verdict of REJECT, reverts the phase commit and records it as `blocked` in `## Log`.
 - phase_slug: `adr`
-  status: in-progress
+  status: checked
   - goal: R1 | depends_on: none
   - surfaces: `docs/decisions/0020-orchestrate-and-autopilot.md` (new), `docs/decisions/README.md` index | avoided: skills
   - escalate_when: an owner decision conflicts with an accepted ADR (0016, 0018, 0019) in a way the ADR text cannot reconcile
@@ -73,12 +73,26 @@ lane: high-risk
 - 2026-11-09T04:20Z — plan — decision — owner (AskUserQuestion, 2026-11-09): run the plan through `fanout`; one local commit per gated phase on `feat/orchestrate-autopilot`, no push or PR until asked. Workers run in worktrees; each phase commits before the next so worktrees see prior output.
 - 2026-11-09T04:20Z — orchestrate — decision — `cli/src/embedded.rs:405` pins "A second miss → log `blocked`" in `work-fanout.md`; this matches the phase's escalate_when ahead of time. Owner answered (2026-11-09): update the pin — `cli/src/embedded.rs` joins T2's surfaces and the pinned string is replaced by the new retry-by-cause wording with equal strength. `fanout.md` step 4 ("one fresh retry") is a second copy of the rule and joins T3's scope.
 - 2026-11-09T04:20Z — adr — start — escalate_when not matched: ADR 0016 decision 1/3 requires a new authority record before a boundary rule (FORBIDDEN, outward permission) changes; ADR 0020 is that record, and 0018/0019 decisions do not conflict. Baseline `bash scripts/ci/verify-doc-links.sh` rc=0. The ADR is written before implementation, so T1 may also amend the README "Exception" sentence to name 0020.
+- 2026-11-09T04:27Z — adr/T1 — done — mono-lead (opus), branch `worktree-agent-a4831d2bc8793a65b` commit `14a6a9f`, cherry-picked as `fd1b7e0` onto `feat/orchestrate-autopilot`. Check on the main checkout at HEAD `fd1b7e0`, clean tracked tree: `grep -c "force-with-lease\|ship.md#land\|session-pickup\|event" docs/decisions/0020-orchestrate-and-autopilot.md` → 10; `bash scripts/ci/verify-doc-links.sh` rc=0. Surfaces: the ADR (new) and `docs/decisions/README.md` (index row + Exception sentence). stop_if: not matched.
+- 2026-11-09T04:27Z — adr — decision — worker deviations accepted: the concepts audit itself has no orchestration finding, so the ADR cites `docs/research/2026-10-22-pstack-retro-5.md:44`/`:47` and the completed `pstack-lessons` plan instead; repository line citations pin to base `5210571`. Gap carried to T2: a respawned PR owner has no "last pushed" SHA; T2 pins the lease to the SHA logged in `## Log` for that branch and only after `git ls-remote` shows that SHA as the remote head, else `blocked`. Carried to T4: map upstream `ketchup`/`show-me-your-work`/`no-comments` to this repo's skills or drop them.
+- 2026-11-09T04:31Z — adr — done — gate APPROVED by an independent mono-verifier (fable); entry in `## Validation`. Non-blocking requests carried to phase `orchestrate`: (1) ADR 0020 line 72 cites `README.md:129`, which is :131 on this branch — fix the citation; (2) T2's respawned-owner lease rule (Log 04:27) widens Decision 2, so `docs/decisions/0020-orchestrate-and-autopilot.md` joins T2's surfaces for a matching amendment.
 
 ## Validation
+- 2026-11-09T04:30Z — phase `adr` — verdict: APPROVED — mode: gate
+  - `test -f docs/decisions/0020-orchestrate-and-autopilot.md && grep -c "force-with-lease\|ship.md#land\|session-pickup\|event" docs/decisions/0020-orchestrate-and-autopilot.md` — prints 10, rc=0 (R1 threshold ≥ 4)
+  - `bash scripts/ci/verify-doc-links.sh` — "doc links OK (0 findings; 4 claim(s) under known-removed v0.15 surfaces)", rc=0
+  - `cd cli && cargo test` — lib 84 passed; projection_parity 3 passed; skill_reference_resolution 2 passed; 0 failed, rc=0 (regression proof; the ADR touches no Rust)
+  - scope: on target — diff adds the ADR and edits the README index row plus the Exception sentence (Log 04:20 allowed the latter); no skills touched
+  - proof_classes: output, unit, integration
+  - requirements: R1 met (file exists; acceptance grep → 10; all 8 owner decisions recorded with a rejected alternative each; reversal of the earlier skip cited; 5 dropped upstream pieces each with a reason; five headings present)
+  - rollback_point: 6d6e8a5
+  - requests: minor, non-blocking — (1) ADR line 72 cites `README.md:129`, now :131 on this branch; (2) T2's respawned-owner lease rule needs a matching ADR 0020 Decision 2 amendment. Both carried to phase `orchestrate` (Log 04:31).
+  - judge: independent
+  - judge_model: claude-fable-5-1
 
 ## Current State and Next Action
 - active_phase: adr
-- lifecycle_status: in-progress
+- lifecycle_status: checked
 - blockers: none
 - open_items: none
-- exact_next_action: integrate T1 (ADR 0020) and gate phase adr with an independent mono-verifier
+- exact_next_action: work full phase orchestrate (T2: work-fanout.md + embedded.rs pin + ADR 0020 amendment)
