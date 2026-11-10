@@ -34,9 +34,15 @@ else
   trap 'chmod -R u+w "$fx" 2>/dev/null; rm -rf "$fx"' EXIT
   g() { git -C "$fx/r" -c user.name=t -c user.email=t@t "$@"; }
   git init -q "$fx/r"; echo a > "$fx/r/f"; g add f; g commit -q -m f
-  ro=$(cd "$fx/r" && bash "$root/scripts/workflow/readonly-worktree.sh" HEAD)
+  ro=$(cd "$fx/r" && TMPDIR="$fx" bash "$root/scripts/workflow/readonly-worktree.sh" HEAD)
   if ( echo x > "$ro/f" ) 2>/dev/null || ( : > "$ro/new" ) 2>/dev/null; then
     echo "read-only worktree is writable"; fail=1
+  fi
+  # A gate still runs inside it: build output and temp files go to the
+  # writable siblings the verifier exports as CARGO_TARGET_DIR and TMPDIR.
+  if ! ( cd "$ro" && export CARGO_TARGET_DIR="$ro/../target" TMPDIR="$ro/../tmp" &&
+    t=$(mktemp) && echo ok > "$t" && : > "$CARGO_TARGET_DIR/build" && git status --porcelain >/dev/null ) 2>/dev/null; then
+    echo "a gate cannot write its scratch next to the read-only worktree"; fail=1
   fi
 fi
 # judges: models allowed to sign a low-risk verdict (scripts/ci/risk-verdict.sh).
