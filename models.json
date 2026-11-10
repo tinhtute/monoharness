@@ -40,9 +40,10 @@
     },
     {
       "agent": "mono-verifier",
-      "tier": "strongest",
+      "tier": "default",
       "role": "verifier, judge, cross-review of another agent's diff",
-      "effort": "medium"
+      "effort": "high",
+      "advisor": "fable"
     }
   ]
 }

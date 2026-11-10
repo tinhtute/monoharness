@@ -23,6 +23,9 @@ for a in $listed; do
   [ -n "$want_e" ] || { echo "$a: models.json row has no effort"; fail=1; }
   [ "$got_e" = "$want_e" ] || { echo "$a: effort '$got_e', policy wants '$want_e'"; fail=1; }
   [ "$name" = "$a" ] || { echo "$a: frontmatter name '$name'"; fail=1; }
+  adv=$(jq -r --arg a "$a" '.agents[]|select(.agent==$a).advisor // empty' "$policy")
+  [ -z "$adv" ] || jq -e --arg m "$adv" '.available|index($m)' "$policy" >/dev/null || { echo "$a: advisor '$adv' not in available"; fail=1; }
+  [ -z "$adv" ] || grep -q "\`$adv\` advisor" "$f" || { echo "$a: policy advisor '$adv' not named in the agent body"; fail=1; }
   grep -q '^maxTurns: [0-9]' "$f" || { echo "$a: missing maxTurns"; fail=1; }
   if jq -e --arg a "$a" '.readOnly|index($a)' "$policy" >/dev/null; then
     tools=$(awk '/^---$/{n++;next} n==1 && /^tools:/{sub(/^tools:[[:space:]]*/,"");print}' "$f")
