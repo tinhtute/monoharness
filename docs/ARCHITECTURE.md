@@ -38,7 +38,7 @@ Fail-closed guarantees live in the pre-commit hook (`scripts/install-git-hooks.s
 3. **Independent judge (full)** — a newly added Validation entry that declares `mode: full` and `judge: same-session` is rejected, on every lane.
 4. **At most one active plan** — more than one non-empty file under `.harness/plans/active/` is rejected; zero is a valid idle state.
 
-`.github/workflows/cli-ci.yml` re-runs these checks on pushed commits, so bypassing local hooks gains nothing. CI runs the guard core from the base revision (`scripts/ci/hook-guard.sh`), so a commit cannot neuter its own guard; a range that edits the installer must pass both the base and the head guard. The hook reads staged bytes itself; there is no pass marker an authoring agent could forge.
+`.github/workflows/cli-ci.yml` re-runs these checks on pushed commits, so bypassing local hooks gains nothing. CI runs the guard core from the base revision (`scripts/ci/hook-guard.sh`), so a commit cannot neuter its own guard; a range that edits the installer must pass both the base and the head guard. The hook reads staged bytes itself; there is no pass marker an authoring agent could forge. The secret scan and commit-message check run over each PR range too (`.github/workflows/pr-guards.yml`, `scripts/ci/pr-guards.sh`), and `docs/guides/consumer-ci-guards.md` is the CI template that gives a zharness consumer the same two checks.
 
 Handoff absorb is playbook protocol, not a hook: final close writes `absorb: none` or names an existing ADR/guard/memory. An unabsorbed class-of-failure stops before `git mv`.
 
