@@ -78,7 +78,8 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       Then an old Validation entry may go only when it is not its phase's
 #       last, or a new entry for that phase replaces it; an entry with no
 #       ``phase `slug` `` on its first line is never dropped. Deleting the
-#       whole plan file is not a range this guard sees.
+#       whole plan file is not a range this guard sees; a rename git detects
+#       (-M, 50% similarity) compares against its source.
 #   BASELINE (#219): in a non-empty plan staged/pushed under
 #       .harness/plans/active/, the first `done` Log entry must sit below a
 #       `baseline: <sha> <cmd> rc=<n>` line (scripts/workflow/baseline.sh
@@ -683,14 +684,26 @@ zharness_guard_plan_paths() {              # <base> <head>
   fi
 }
 
-zharness_guard_old_blob() {                # <base> <path> <out-file>
+zharness_guard_rename_source() {           # <base> <head> <path> -> rename source, if any
+  if [ "$2" = ":" ]; then
+    git -c core.quotePath=false diff --cached --name-status -M "$1" 2>/dev/null
+  else
+    git -c core.quotePath=false diff --name-status -M "$1" "$2" 2>/dev/null
+  fi | awk -F '\t' -v p="$3" '$1 ~ /^R/ && $3 == p && !n++ { print $2 }'
+}
+
+zharness_guard_old_blob() {                # <base> <path> <out-file> [<head>]
   # A plan moved active/ -> completed/ keeps its identity: compare against the
   # predecessor path so a closure re-executes its new entries, not every entry
-  # the plan ever recorded. Plans lived under docs/plans/ before v0.31.0, so the
+  # the plan ever recorded. With <head>, a rename git detects in base..head
+  # names the predecessor, so renaming a plan cannot empty APPEND-ONLY's old
+  # side. Plans lived under docs/plans/ before v0.31.0, so the
   # layout move resolves to that path too. No predecessor found means an empty
   # old side, which re-executes everything — the conservative direction.
-  local base="$1" path="$2" out="$3" alt
+  local base="$1" path="$2" out="$3" alt src=""
   if git show "$base:$path" > "$out" 2>/dev/null; then return 0; fi
+  if [ $# -ge 4 ]; then src=$(zharness_guard_rename_source "$base" "$4" "$path") || src=""; fi
+  if [ -n "$src" ] && git show "$base:$src" > "$out" 2>/dev/null; then return 0; fi
   set -- "docs/plans/${path#.harness/plans/}"
   case "$path" in
     .harness/plans/completed/*)
@@ -821,7 +834,7 @@ zharness_guard_baseline() {                # <path> <old-file> <new-file>
 zhuards_guard_plans() {                    # <path-list-space-separated> <base> <head> <dir-for-temp>
   local plans="$1" base="$2" head="$3" tmp="$4" f rc=0
   for f in $plans; do
-    zharness_guard_old_blob "$base" "$f" "$tmp/old.md"
+    zharness_guard_old_blob "$base" "$f" "$tmp/old.md" "$head"
     if [ "$head" = ":" ]; then
       git show ":$f" > "$tmp/new.md"
     else

@@ -1460,9 +1460,13 @@ $ao_log_done" "$ao_v_rc
 
 $ao_v_ok" > .harness/plans/active/p.md && git add -A && git commit -qm base &&
 			if [ "$1" != .harness/plans/active/p.md ]; then git mv .harness/plans/active/p.md "$1"; fi &&
-			ao_plan "$2" "$3" "$4" "$5" > "$1" && git add -A &&
-			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans "$1" HEAD : "$d/g"
-	) >/dev/null 2>&1
+			ao_plan "$2" "$3" "$4" "$5" > "$1" && git add -A && mkdir g &&
+			if [ -n "${AO_RANGE:-}" ]; then # the pushed range, as CI and pre-push see it
+				git commit -qm next && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans "$1" HEAD~1 HEAD "$d/g"
+			else
+				ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans "$1" HEAD : "$d/g"
+			fi
+	) > "$tmp/ao.out" 2>&1
 	rc=$?
 	rm -rf "$d"
 	return $rc
@@ -1504,6 +1508,21 @@ ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec" "$ao_v_o
 ao_case .harness/plans/active/p.md active completed "$ao_log_dec
 $ao_log_absorb" "$ao_v_ok" && bad "APPEND-ONLY a compaction that stays under active/ must be rejected" ||
 	ok "APPEND-ONLY a compaction that stays under active/ is rejected"
+
+# A rename keeps the plan's history: the rename source is the old side, so
+# renaming cannot launder a dropped entry (staged and range), and a pure rename
+# neither rejects nor re-judges the entries it carries.
+for ao_mode in staged range; do
+	ao_r=""; [ "$ao_mode" = range ] && ao_r=1
+	AO_RANGE=$ao_r ao_case .harness/plans/active/p2.md active in-progress "$ao_full_log" "$ao_v_rc
+
+$ao_v_ok" && ok "APPEND-ONLY a pure rename of an active plan is accepted ($ao_mode)" ||
+		bad "APPEND-ONLY a pure rename must be accepted without re-judging old entries ($ao_mode)"
+	AO_RANGE=$ao_r ao_case .harness/plans/active/p2.md active in-progress "$ao_log_start
+$ao_log_done" "" && bad "APPEND-ONLY dropping entries under a rename must be rejected ($ao_mode)" ||
+		{ grep -q "APPEND-ONLY GUARD REJECTED" "$tmp/ao.out" && ok "APPEND-ONLY dropping entries under a rename is rejected ($ao_mode)" ||
+			bad "APPEND-ONLY rename drop rejected for the wrong reason ($ao_mode): $(head -3 "$tmp/ao.out")"; }
+done
 
 # BASELINE (issue #219): an active plan's first `done` sits below a
 # `baseline: <sha> <cmd> rc=<n>` Log line; baseline.sh writes those lines.
