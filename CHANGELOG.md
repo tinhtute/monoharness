@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - ADR 0010 (local failure ledger) is marked Superseded by `d8ed43e`, which removed `docs/evals/failures.md`; the last ledger is at `d8ed43e^` (#224).
+- Pre-commit guards: an R8 `judged_sha` outside the range still passes when a range commit has the same `git patch-id` (a rebase keeps the verdict); PLAN-SHAPE accepts `- authority:` with nested sub-bullets; APPEND-ONLY compares a renamed plan against its rename source; BASELINE requires the baseline in an entry before the first `done`, not inside it. Rerun `bash scripts/install-git-hooks.sh --force`.
+- `verify-doc-links.sh`: a directory-wide `.claimignore` entry no longer exempts paths cited by an Accepted ADR; only a per-file entry does.
+- `readonly-worktree.sh` creates writable `target/` and `tmp/` siblings, and `mono-verifier` exports them as `CARGO_TARGET_DIR` and `TMPDIR` so gates run inside the read-only worktree.
+- CI runs `evals/risk-judge/test_report.py` (skills-ci `risk-facts`).
 
 ## [v0.34.0] — 2026-11-09
 
