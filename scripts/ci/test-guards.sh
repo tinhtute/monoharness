@@ -1295,6 +1295,45 @@ r8range fable old && bad "R8 a judged_sha older than the range must be rejected"
 r8range fable side && bad "R8 a judged_sha off the branch must be rejected" ||
 	ok "R8 a judged_sha not reachable from HEAD is rejected"
 
+# A rebase rewrites the judged commit. The verdict carries over when a commit
+# in the range has the judged commit's `git patch-id` (autopilot.md); a changed
+# patch, or a judged object this clone does not have, still rejects.
+r8rebase() { # <same|diff|absent> -> PR-range guard rc after master moves on
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			mkdir -p .harness/plans/active && printf 'c0\n' > a.txt && git add -A && git commit -qm c0 &&
+			printf '{\n  "judges": ["fable", "opus"]\n}\n' > models.json &&
+			cp "$tmp/r8-old.md" .harness/plans/active/p.md && git add -A && git commit -qm c1 &&
+			git checkout -qb feat && printf 'w\n' > w.txt && git add -A && git commit -qm work &&
+			s=$(git rev-parse HEAD) &&
+			if [ "$1" = absent ]; then s=0123456789abcdef0123456789abcdef01234567; fi &&
+			r8entry high-risk gate "  - judge_model: fable\n" "  - judged_sha: $s\n" &&
+			cp "$tmp/r8-new.md" .harness/plans/active/p.md && git add -A && git commit -qm entry &&
+			git checkout -q master && printf 'm\n' > m.txt && git add -A && git commit -qm c2 &&
+			git checkout -q feat && git rebase -q master &&
+			if [ "$1" = diff ]; then
+				e=$(git rev-parse HEAD) && git reset -q --hard master &&
+					printf 'w2\n' > w.txt && git add -A && git commit -qm work && git cherry-pick "$e"
+			fi &&
+			mb=$(git merge-base master HEAD) && mkdir g &&
+			ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md "$mb" HEAD "$d/g"
+	) > "$tmp/r8rebase.out" 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+r8rebase same && ok "R8 a judged_sha rebased with an unchanged patch-id is accepted" ||
+	bad "R8 a rebased judged_sha with the same patch-id must be accepted: $(tail -3 "$tmp/r8rebase.out")"
+r8rebase diff && bad "R8 a judged_sha whose patch changed in the rebase must be rejected" ||
+	{ grep -q "is not in the range" "$tmp/r8rebase.out" &&
+		ok "R8 a judged_sha whose patch-id no longer appears in the range is rejected" ||
+		bad "R8 changed patch rejected for the wrong reason: $(tail -3 "$tmp/r8rebase.out")"; }
+r8rebase absent && bad "R8 a judged_sha this clone does not have must be rejected" ||
+	{ grep -q "is not in the range" "$tmp/r8rebase.out" && ok "R8 an absent judged_sha object is rejected" ||
+		bad "R8 absent judged_sha rejected for the wrong reason: $(tail -3 "$tmp/r8rebase.out")"; }
+
 # PLAN-SHAPE (issue #217): an active plan states its outcome, success signal
 # and authority, and every requirement names an acceptance command.
 shape() { # <goal-body> -> problems for a plan with that Goal

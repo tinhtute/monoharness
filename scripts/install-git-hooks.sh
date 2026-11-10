@@ -57,7 +57,9 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       model must belong to a `judges` name in models.json at the range's
 #       lower bound (`opus` or `claude-opus-5-5` for `opus`), and judged_sha
 #       must lie in the range: an ancestor of the upper bound that is the lower
-#       bound or not reachable from it. At pre-commit the bounds are the
+#       bound or not reachable from it, or a present commit whose `git
+#       patch-id` equals a range commit's (a rebase carries the verdict;
+#       autopilot.md). At pre-commit the bounds are the
 #       default branch's merge-base and HEAD. Without a range (fixtures) only
 #       presence and shape are checked. Unresolvable bounds or an empty
 #       allowlist reject (fail closed).
@@ -187,11 +189,20 @@ zharness_judge_model_allowed() {           # <model> <allowlist>
 }
 
 zharness_judged_sha_in_range() {           # <sha> <lower> <upper>
-  local sha
+  local sha pid
   sha=$(git rev-parse --verify --quiet "$1^{commit}" 2>/dev/null) || return 1
-  git merge-base --is-ancestor "$sha" "$3" 2>/dev/null || return 1
-  [ "$sha" = "$2" ] && return 0
-  ! git merge-base --is-ancestor "$sha" "$2" 2>/dev/null
+  if git merge-base --is-ancestor "$sha" "$3" 2>/dev/null; then
+    [ "$sha" = "$2" ] && return 0
+    git merge-base --is-ancestor "$sha" "$2" 2>/dev/null || return 0
+  fi
+  # A rebase rewrites the judged commit; the verdict carries over when a commit
+  # in the range has the same `git patch-id` (autopilot.md). The judged object
+  # must still be present; an empty diff (merge, empty commit) never matches.
+  pid=$(git show --no-color --no-ext-diff "$sha" 2>/dev/null |
+    git patch-id --stable 2>/dev/null | cut -d' ' -f1)
+  [ -n "$pid" ] || return 1
+  git log -p --no-merges --no-color --no-ext-diff "$2..$3" 2>/dev/null |
+    git patch-id --stable 2>/dev/null | cut -d' ' -f1 | grep -Fxq "$pid"
 }
 
 zharness_entry_judge_problems() {          # <entry-body> [<lower> <upper> <allowlist>] -> problems
