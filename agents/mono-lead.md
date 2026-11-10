@@ -2,7 +2,7 @@
 name: mono-lead
 description: Implementation delegate for a mono fanout wave — ordinary features, guards, contract and test changes that need judgment. Spawn with a full brief; it does not spawn sub-agents.
 model: opus
-effort: high
+effort: medium
 maxTurns: 80
 color: blue
 ---

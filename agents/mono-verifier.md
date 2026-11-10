@@ -2,7 +2,7 @@
 name: mono-verifier
 description: Independent verifier for a mono wave — reviews another agent's diff against its brief and acceptance output. Read-only; never edits the branch it judges.
 model: fable
-effort: high
+effort: medium
 maxTurns: 30
 tools: Read, Grep, Glob, Bash
 color: purple

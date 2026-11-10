@@ -36,13 +36,13 @@
       "agent": "mono-lead",
       "tier": "default",
       "role": "ordinary implementation, guards, contract changes",
-      "effort": "high"
+      "effort": "medium"
     },
     {
       "agent": "mono-verifier",
       "tier": "strongest",
       "role": "verifier, judge, cross-review of another agent's diff",
-      "effort": "high"
+      "effort": "medium"
     }
   ]
 }
