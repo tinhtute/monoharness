@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v0.35.0] — 2026-11-10
+
 ### Added
 
 - Pre-commit guards: an allowlisted `judge_model` and in-range `judged_sha` on high-risk and `full` Validation entries (#214), active-plan Goal shape (#217), append-only Validation and Log decisions outside handoff compaction (#218), and a recorded baseline before a plan's first `done` (#219), plus `scripts/workflow/baseline.sh`.
