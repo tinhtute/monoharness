@@ -19,12 +19,26 @@ for a in $listed; do
   name=$(awk '/^---$/{n++;next} n==1 && /^name:/{print $2}' "$f")
   [ "$got" = "$want" ] || { echo "$a: model '$got', policy wants '$want'"; fail=1; }
   [ "$name" = "$a" ] || { echo "$a: frontmatter name '$name'"; fail=1; }
+  grep -q '^maxTurns: [0-9]' "$f" || { echo "$a: missing maxTurns"; fail=1; }
   if jq -e --arg a "$a" '.readOnly|index($a)' "$policy" >/dev/null; then
     tools=$(awk '/^---$/{n++;next} n==1 && /^tools:/{sub(/^tools:[[:space:]]*/,"");print}' "$f")
     [ -n "$tools" ] || { echo "$a: read-only agent has no tools allowlist"; fail=1; }
     case ", $tools," in *", Edit,"*|*", Write,"*|*", NotebookEdit,"*) echo "$a: read-only agent allows an edit tool: $tools"; fail=1 ;; esac
   fi
 done
+# read-only worktree fixture: a write into it must fail (root bypasses chmod).
+if [ "$(id -u)" -eq 0 ]; then
+  echo "skip read-only worktree fixture: running as root"
+else
+  fx=$(mktemp -d)
+  trap 'chmod -R u+w "$fx" 2>/dev/null; rm -rf "$fx"' EXIT
+  g() { git -C "$fx/r" -c user.name=t -c user.email=t@t "$@"; }
+  git init -q "$fx/r"; echo a > "$fx/r/f"; g add f; g commit -q -m f
+  ro=$(cd "$fx/r" && bash "$root/scripts/workflow/readonly-worktree.sh" HEAD)
+  if ( echo x > "$ro/f" ) 2>/dev/null || ( : > "$ro/new" ) 2>/dev/null; then
+    echo "read-only worktree is writable"; fail=1
+  fi
+fi
 # judges: models allowed to sign a low-risk verdict (scripts/ci/risk-verdict.sh).
 jq -e '.judges | length > 0' "$policy" >/dev/null || { echo "models.json: judges is empty"; fail=1; }
 for m in $(jq -r '.judges[]?' "$policy"); do
