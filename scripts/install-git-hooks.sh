@@ -82,8 +82,9 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       (-M, 50% similarity) compares against its source.
 #   BASELINE (#219): in a non-empty plan staged/pushed under
 #       .harness/plans/active/, the first `done` Log entry must sit below a
-#       `baseline: <sha> <cmd> rc=<n>` line (scripts/workflow/baseline.sh
-#       writes it), unless that `done` entry was already on the old side.
+#       separate entry reading `baseline: <sha> <cmd> rc=<n>`
+#       (scripts/workflow/baseline.sh writes it); a `done` entry cannot carry
+#       its own baseline. Exempt when that `done` was already on the old side.
 #   FLOOR: entries already committed at ZHARNESS_GUARD_HISTORICAL_FLOOR are
 #       never re-executed. A push whose before-SHA predates the v0.24 cutover
 #       makes the pre-cutover entries look new, and their proofs cannot run at
@@ -820,8 +821,8 @@ zharness_guard_baseline() {                # <path> <old-file> <new-file>
   first=$(awk '
     $0 == "## Log" { on = 1; next }
     /^## / { on = 0 }
-    on && /baseline:[[:blank:]]*[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]+[[:blank:]].*rc=[0-9]+/ { exit }
-    on && /^- / && /(^- [^[:space:]]+ | — )done([[:space:]:(]|$)/ { print; exit }' "$3")
+    on && /^- / && /(^- [^[:space:]]+ | — )done([[:space:]:(]|$)/ { print; exit }
+    on && /^- / && /baseline:[[:blank:]]*[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]+[[:blank:]].*rc=[0-9]+/ { exit }' "$3")
   [ -n "$first" ] || return 0
   L="$first" awk '$0 == ENVIRON["L"] { f = 1 } END { exit !f }' "$2" && return 0
   echo "❌ BASELINE GUARD REJECTED: $1" >&2

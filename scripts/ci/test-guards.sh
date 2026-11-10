@@ -1557,6 +1557,15 @@ bl_case "$bl_start
 $bl_done
 $bl_base" && bad "BASELINE a baseline written after the first done must be rejected" ||
 	ok "BASELINE a baseline written after the first done is rejected"
+bl_case "$bl_start
+- 2026-11-10T00:09Z — main — done — R1 landed, baseline: 0123abcd bash scripts/ci/test-guards.sh rc=0" &&
+	bad "BASELINE a done entry carrying its own baseline must be rejected" ||
+	ok "BASELINE a done entry cannot certify its own baseline"
+bl_case "$bl_start
+$bl_done
+  - baseline: 0123abcd bash scripts/ci/test-guards.sh rc=0" &&
+	bad "BASELINE a baseline sub-bullet under the done entry must be rejected" ||
+	ok "BASELINE a baseline sub-bullet under the done entry is rejected"
 bl_case "$bl_start" && ok "BASELINE a plan with no done entry needs no baseline yet" ||
 	bad "BASELINE must not demand a baseline before any done"
 
