@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Pre-commit guards: an allowlisted `judge_model` and in-range `judged_sha` on high-risk and `full` Validation entries (#214), active-plan Goal shape (#217), append-only Validation and Log decisions outside handoff compaction (#218), and a recorded baseline before a plan's first `done` (#219), plus `scripts/workflow/baseline.sh`.
+- `scripts/ci/pr-guards.sh` and the `pr-guards` workflow run the secret scan and commit-message check over a PR range; `docs/guides/consumer-ci-guards.md` gives consumers a CI template (#216).
+- `mono-verifier` has `maxTurns: 30` and judges inside a read-only worktree from `scripts/workflow/readonly-worktree.sh` (#215).
+- `evals/risk-judge/` scaffold (label format, split, TPR/TNR report) and a nightly `cargo mutants` workflow for `cli/src/installer`; labels are pending (#221).
+
 ### Changed
 
 - ADR 0010 (local failure ledger) is marked Superseded by `d8ed43e`, which removed `docs/evals/failures.md`; the last ledger is at `d8ed43e^` (#224).
