@@ -125,6 +125,9 @@ lane: high-risk
 
 - `2026-08-28T00:00:00Z` — new gate verdict `APPROVED` with a sabotaged proof
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `echo sabotaged-proof && false`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-fail.md" 2>/dev/null; then
@@ -145,6 +148,9 @@ lane: high-risk
 
 - `2026-08-28T00:00:00Z` — new gate verdict `APPROVED` with a clean proof
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `test -d .`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-pass.md" 2>/dev/null; then
@@ -249,6 +255,9 @@ lane: high-risk
 
 - undated entry, verdict `APPROVED`, invisible to the v2 guard
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `echo undated-sabotage && false`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-undated-fail.md" 2>/dev/null; then
@@ -276,7 +285,7 @@ for lane in tiny normal high-risk; do
 		classes="$req"; j=independent
 		[ "$kind" = miss ] && classes=$(printf '%s' "$req" | sed -E 's/(, )?[a-z]+$//')
 		[ "$kind" = ss ] && j=same-session
-		printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-08-27T00:00:00Z` — older entry, already on record\n  - `test -d .`\n\n- `2026-09-03T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: %s\n  - judge: %s\n' \
+		printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-08-27T00:00:00Z` — older entry, already on record\n  - `test -d .`\n\n- `2026-09-03T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: %s\n  - judge: %s\n  - judge_model: fable\n  - judged_sha: 0123abcd\n' \
 			"$lane" "$classes" "$j" > "$tmp/lane-$kind.md"
 	done
 	zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/lane-pos.md" >/dev/null 2>&1 &&
@@ -351,6 +360,9 @@ lane: high-risk
 
 - `2026-08-28T00:00:00Z` — honest work, verdict `APPROVED`
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `test -d .`
 EOF
 	cat > "$tmp/legacy-fail.md" <<'EOF'
@@ -365,6 +377,9 @@ lane: high-risk
 
 - `2026-08-28T00:00:00Z` — verdict `APPROVED` with a sabotaged proof
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `echo legacy-sabotage && false`
 EOF
 	legacy_run() {                            # <new-file>; echoes the guard exit code
@@ -1198,6 +1213,68 @@ fn audit_real() {
 r7range '#[test]
 fn audit_real_inline() { assert_eq!(crate::f(), 1); }' && ok "R7 a one-line test with a body is accepted" ||
 	bad "R7 a one-line test with a body must be accepted"
+
+# R8 JUDGE-ID (issue #214): a high-risk or full verdict names its judge model
+# from the base revision's models.json `judges` and the commit it judged, which
+# must lie in the range. Without a range only presence and shape are checked.
+r8entry() { # <lane> <mode> <judge_model-line> <judged_sha-line> -> $tmp/r8-new.md
+	printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-11-09T00:00:00Z` — phase `main` — verdict: APPROVED — mode: %s\n  - `test -d .`\n  - proof_classes: output, unit, integration\n  - judge: independent\n%b%b' \
+		"$1" "$2" "$3" "$4" > "$tmp/r8-new.md"
+}
+printf -- '---\nlane: high-risk\n---\n\n## Validation\n' > "$tmp/r8-old.md"
+r8entry high-risk gate '' '  - judged_sha: 0123abcd\n'
+r8out=$(zharness_guard_entries_of_file p.md "$tmp/r8-old.md" "$tmp/r8-new.md" 2>&1) &&
+	bad "R8 a high-risk verdict without judge_model must be rejected" ||
+	{ printf '%s' "$r8out" | grep -q "R8 JUDGE-ID" && printf '%s' "$r8out" | grep -q "no \`judge_model:\`" &&
+		ok "R8 a high-risk verdict without judge_model is rejected" ||
+		bad "R8 missing judge_model rejected for the wrong reason: $r8out"; }
+r8entry normal full '  - judge_model: fable\n' ''
+r8out=$(zharness_guard_entries_of_file p.md "$tmp/r8-old.md" "$tmp/r8-new.md" 2>&1) &&
+	bad "R8 a mode-full verdict without judged_sha must be rejected" ||
+	{ printf '%s' "$r8out" | grep -q "no \`judged_sha:\`" && ok "R8 a mode-full verdict without judged_sha is rejected" ||
+		bad "R8 missing judged_sha rejected for the wrong reason: $r8out"; }
+r8entry normal gate '' ''
+zharness_guard_entries_of_file p.md "$tmp/r8-old.md" "$tmp/r8-new.md" >/dev/null 2>&1 &&
+	ok "R8 a normal-lane gate verdict needs no judge fields" ||
+	bad "R8 must not demand judge fields on a normal-lane gate verdict"
+
+# End to end on a staged range: master c0 -> c1 (models.json judges fable,
+# opus), a side branch, and a feature commit W. The range is merge-base..HEAD.
+r8range() { # <judge_model> <judged_sha: base|work|old|side|head-of-master> -> guard rc
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			mkdir -p .harness/plans/active && printf 'c0\n' > a.txt && git add -A && git commit -qm c0 &&
+			old=$(git rev-parse HEAD) &&
+			printf '{\n  "judges": ["fable", "opus"]\n}\n' > models.json &&
+			cp "$tmp/r8-old.md" .harness/plans/active/p.md && git add -A && git commit -qm c1 &&
+			base=$(git rev-parse HEAD) &&
+			git checkout -qb side && printf 's\n' > s.txt && git add -A && git commit -qm side &&
+			side=$(git rev-parse HEAD) && git checkout -q master && git checkout -qb feat &&
+			printf 'w\n' > w.txt && git add -A && git commit -qm work && work=$(git rev-parse HEAD) &&
+			case "$2" in base) s=$base ;; work) s=$work ;; old) s=$old ;; side) s=$side ;; esac &&
+			r8entry high-risk gate "  - judge_model: $1\n" "  - judged_sha: $s\n" &&
+			cp "$tmp/r8-new.md" .harness/plans/active/p.md && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g" &&
+			git commit -qm entry && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md "$base" HEAD "$d/g"
+	) >/dev/null 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+r8range claude-fable-5-1 work && ok "R8 an allowlisted model judging a commit in range is accepted (staged and committed)" ||
+	bad "R8 claude-fable-5-1 judging the work commit must be accepted"
+r8range opus base && ok "R8 the range's lower bound is a valid judged_sha" ||
+	bad "R8 judged_sha at the merge-base must be accepted"
+r8range claude-haiku-4-5 work && bad "R8 a model outside models.json judges must be rejected" ||
+	ok "R8 a non-allowlisted judge_model is rejected"
+r8range claude-fable-x work && bad "R8 a lookalike model name must be rejected" ||
+	ok "R8 a lookalike judge_model is rejected"
+r8range fable old && bad "R8 a judged_sha older than the range must be rejected" ||
+	ok "R8 a judged_sha before the range is rejected"
+r8range fable side && bad "R8 a judged_sha off the branch must be rejected" ||
+	ok "R8 a judged_sha not reachable from HEAD is rejected"
 
 # TRIP: each validator has a committed bad fixture that must make it fail.
 tl=$(mktemp -d)

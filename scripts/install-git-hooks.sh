@@ -51,6 +51,16 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       `echo` or `printf` (not executed); a `cargo test` proof exits 0 having
 #       passed 0 tests; or the revision under test adds a Rust `#[test]` whose
 #       body is empty. A proof is not required to run a test changed in range.
+#   R8: JUDGE-ID (#214) — a new verdict-bearing entry judged at high-risk (the
+#       effective lane) or in mode full must carry `judge: independent`,
+#       `judge_model:` and `judged_sha:` sub-bullets. With a revision range the
+#       model must belong to a `judges` name in models.json at the range's
+#       lower bound (`opus` or `claude-opus-5-5` for `opus`), and judged_sha
+#       must lie in the range: an ancestor of the upper bound that is the lower
+#       bound or not reachable from it. At pre-commit the bounds are the
+#       default branch's merge-base and HEAD. Without a range (fixtures) only
+#       presence and shape are checked. Unresolvable bounds or an empty
+#       allowlist reject (fail closed).
 #   FLOOR: entries already committed at ZHARNESS_GUARD_HISTORICAL_FLOOR are
 #       never re-executed. A push whose before-SHA predates the v0.24 cutover
 #       makes the pre-cutover entries look new, and their proofs cannot run at
@@ -118,6 +128,75 @@ zharness_entry_has_full_mode() {           # first line only, backticks stripped
   # Same first-line rule as verdicts: a quoted `mode: full` in a sub-bullet
   # of a gate entry must not look like the entry's own mode.
   printf '%s\n' "$1" | head -1 | sed 's/[`]//g' | grep -qE 'mode:[[:blank:]]*full|[[:space:]]mode[[:blank:]]+full'
+}
+
+zharness_entry_field() {                   # <entry-body> <field> -> first sub-bullet value
+  # Only a `  - <field>:` sub-bullet counts; prose or a quoted review naming the
+  # field elsewhere in the entry cannot supply it.
+  printf '%s\n' "$1" | sed 's/[`]//g' \
+    | sed -n -E "s/^[[:space:]]{2,}- $2:[[:blank:]]*([^[:space:]]+).*/\\1/p" | head -1
+}
+
+zharness_judge_bounds() {                  # <base> <head> -> "<lower>\t<upper>"; 1 = unresolved
+  local lower upper
+  if [ "$2" = ":" ]; then
+    upper=$(git rev-parse --verify --quiet "HEAD^{commit}" 2>/dev/null) || return 1
+    lower=$(git merge-base "${ZHARNESS_DEFAULT_BRANCH:-origin/master}" HEAD 2>/dev/null) || return 1
+  else
+    lower=$(git rev-parse --verify --quiet "$1^{commit}" 2>/dev/null) || return 1
+    upper=$(git rev-parse --verify --quiet "$2^{commit}" 2>/dev/null) || return 1
+  fi
+  printf '%s\t%s\n' "$lower" "$upper"
+}
+
+zharness_judge_allowlist() {               # <rev> -> `judges` names from <rev>:models.json
+  # No jq: the guard must run on a stock machine. The array may span lines.
+  git show "$1:models.json" 2>/dev/null | tr -d '\n' \
+    | sed -n 's/.*"judges"[[:space:]]*:[[:space:]]*\[\([^]]*\)\].*/\1/p' \
+    | tr ',' '\n' | tr -d ' \t"' | grep -E '^[A-Za-z0-9._-]+$' || true
+}
+
+zharness_judge_model_allowed() {           # <model> <allowlist>
+  # `opus` matches `opus`, `claude-opus`, `claude-opus-5-5`, `claude-opus-4.1`;
+  # never `claude-opus-x` or `opusx`.
+  local a
+  while IFS= read -r a; do
+    [ -n "$a" ] || continue
+    printf '%s\n' "$1" | grep -qE "^(claude-)?$(printf '%s' "$a" | sed 's/\./\\./g')(-[0-9]+([.-][0-9]+)*)?$" && return 0
+  done <<< "$2"
+  return 1
+}
+
+zharness_judged_sha_in_range() {           # <sha> <lower> <upper>
+  local sha
+  sha=$(git rev-parse --verify --quiet "$1^{commit}" 2>/dev/null) || return 1
+  git merge-base --is-ancestor "$sha" "$3" 2>/dev/null || return 1
+  [ "$sha" = "$2" ] && return 0
+  ! git merge-base --is-ancestor "$sha" "$2" 2>/dev/null
+}
+
+zharness_entry_judge_problems() {          # <entry-body> [<lower> <upper> <allowlist>] -> problems
+  local body="$1" model sha
+  printf '%s\n' "$body" | sed 's/[`]//g' | grep -qE '^[[:space:]]{2,}- judge:[[:blank:]]*independent([[:space:]]|$)' ||
+    echo "no \`judge: independent\` sub-bullet"
+  model=$(zharness_entry_field "$body" judge_model)
+  sha=$(zharness_entry_field "$body" judged_sha)
+  if [ -z "$model" ]; then
+    echo "no \`judge_model:\` sub-bullet"
+  elif [ $# -ge 4 ]; then
+    if [ -z "$4" ]; then
+      echo "models.json at $2 lists no judges (failed closed)"
+    elif ! zharness_judge_model_allowed "$model" "$4"; then
+      echo "judge_model '$model' is not a judge in models.json at $2: $(printf '%s' "$4" | tr '\n' ' ')"
+    fi
+  fi
+  if [ -z "$sha" ]; then
+    echo "no \`judged_sha:\` sub-bullet"
+  elif ! printf '%s\n' "$sha" | grep -qE '^[0-9a-f]{7,40}$'; then
+    echo "judged_sha '$sha' is not a commit SHA"
+  elif [ $# -ge 4 ] && ! zharness_judged_sha_in_range "$sha" "$2" "$3"; then
+    echo "judged_sha '$sha' is not in the range $2..$3"
+  fi
 }
 
 zharness_lane_required_proof() {          # <lane> -> classes; unknown lane -> 1
@@ -334,6 +413,13 @@ zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base
   fi
   # R7: hollow tests are a property of the range, read once per plan file.
   if [ $# -ge 5 ]; then hollow=$(zharness_hollow_tests "$4" "$5"); fi
+  # R8: judge bounds and the allowlist are properties of the range too.
+  local jbounds="" jlower="" jupper="" jallow="" jprob
+  if [ $# -ge 5 ] && jbounds=$(zharness_judge_bounds "$4" "$5"); then
+    jlower=$(printf '%s' "$jbounds" | cut -f1)
+    jupper=$(printf '%s' "$jbounds" | cut -f2)
+    jallow=$(zharness_judge_allowlist "$jlower")
+  fi
   for efile in "$scratch"/n/e*.txt; do
     [ -f "$efile" ] || continue
     h=$(sha256sum "$efile" | cut -d' ' -f1)
@@ -363,6 +449,24 @@ zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base
     fi
 
     verdict=$(zharness_anchored_verdict "$body")
+    if [ -n "$verdict" ] && { [ "$lane" = "high-risk" ] || zharness_entry_has_full_mode "$body"; }; then
+      if [ $# -lt 5 ]; then
+        jprob=$(zharness_entry_judge_problems "$body")
+      elif [ -z "$jbounds" ]; then
+        jprob="no judge range resolves for $4..$5 (failed closed)"
+      else
+        jprob=$(zharness_entry_judge_problems "$body" "$jlower" "$jupper" "$jallow")
+      fi
+      if [ -n "$jprob" ]; then
+        failed=$((failed + 1))
+        echo "" >&2
+        echo "❌ R8 JUDGE-ID GUARD REJECTED: $path" >&2
+        echo "   a high-risk or mode-full entry must name an allowlisted judge and the commit it judged:" >&2
+        printf '%s\n' "$jprob" | sed 's/^/     /' >&2
+        echo "   offending entry starts: $header" >&2
+        continue
+      fi
+    fi
     case "$verdict" in
       APPROVED|APPROVE_WITH_REQUESTS) ;;
       *) continue ;;
