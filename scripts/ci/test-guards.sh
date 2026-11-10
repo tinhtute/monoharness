@@ -1680,6 +1680,18 @@ if [ -z "${ZHARNESS_GUARDS_NESTED:-}" ]; then
 	rm -rf "$nest"
 fi
 
+# WT: the installer must work from a linked worktree, where .git is a file.
+wt=$(mktemp -d); INSTALLER="$PWD/scripts/install-git-hooks.sh"
+if git init -q "$wt/main" && git -C "$wt/main" -c user.name=t -c user.email=t@t commit -q --allow-empty -m "chore: init" &&
+	git -C "$wt/main" worktree add -q "$wt/linked" 2>/dev/null &&
+	(cd "$wt/linked" && bash "$INSTALLER" --force >/dev/null 2>&1) &&
+	[ -x "$wt/main/.git/hooks/pre-commit" ]; then
+	ok "WT installer runs from a linked worktree and writes the common hooks dir"
+else
+	bad "WT installer failed from a linked worktree"
+fi
+rm -rf "$wt"
+
 rm -rf "$tmp" "$GUARD"
 echo
 echo "guards: $pass passed, $fail failed"
