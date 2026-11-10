@@ -35,6 +35,9 @@ bash scripts/ci/test-install-zharness.sh
 # [CI] Guard fixture tests for the pre-commit hook's ZGUARD-CORE block — .github/workflows/cli-ci.yml, job `hook-guard`
 bash scripts/ci/test-guards.sh
 
+# [CI] PR-range secret scan + commit-msg check, and the consumer CI template (docs/guides/consumer-ci-guards.md) — gate: .github/workflows/pr-guards.yml (PRs only, runs from the base branch); fixtures: .github/workflows/cli-ci.yml, job `hook-guard`
+bash scripts/ci/test-pr-guards.sh && bash scripts/ci/pr-guards.sh origin/master HEAD
+
 # [CI] Doc link integrity (broken repo-relative cross-references) — .github/workflows/docs-ci.yml, job `doc-links`, on any tracked *.md change.
 # Exceptions live in .claimignore, each one requires a `# reason`.
 bash scripts/ci/verify-doc-links.sh

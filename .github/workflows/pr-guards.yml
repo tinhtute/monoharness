@@ -1,0 +1,38 @@
+name: pr-guards
+
+# Issue #216: CI parity for the local secret guard and commit-msg hook. Runs
+# both over the PR range, so a local-hook bypass cannot land a secret or a
+# malformed commit message. Consumers run the same checks from
+# docs/guides/consumer-ci-guards.md.
+# pull_request_target runs this file and the scripts from the base branch, so a
+# PR cannot rewrite its own gate; the head is fetched as data and never run.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-guards-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+
+      - name: Fetch the PR head as data
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags origin "+refs/pull/$PR/head:refs/remotes/pr/head"
+
+      - name: Secret scan and commit-msg check over the PR range
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash scripts/ci/pr-guards.sh "$BASE_SHA" "$HEAD_SHA"
