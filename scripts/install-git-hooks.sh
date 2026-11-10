@@ -76,6 +76,10 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       last, or a new entry for that phase replaces it; an entry with no
 #       ``phase `slug` `` on its first line is never dropped. Deleting the
 #       whole plan file is not a range this guard sees.
+#   BASELINE (#219): in a non-empty plan staged/pushed under
+#       .harness/plans/active/, the first `done` Log entry must sit below a
+#       `baseline: <sha> <cmd> rc=<n>` line (scripts/workflow/baseline.sh
+#       writes it), unless that `done` entry was already on the old side.
 #   FLOOR: entries already committed at ZHARNESS_GUARD_HISTORICAL_FLOOR are
 #       never re-executed. A push whose before-SHA predates the v0.24 cutover
 #       makes the pre-cutover entries look new, and their proofs cannot run at
@@ -783,6 +787,22 @@ zharness_guard_append_only() {             # <path> <old-file> <new-file> <base>
   return 1
 }
 
+zharness_guard_baseline() {                # <path> <old-file> <new-file>
+  local first
+  first=$(awk '
+    $0 == "## Log" { on = 1; next }
+    /^## / { on = 0 }
+    on && /baseline:[[:blank:]]*[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]+[[:blank:]].*rc=[0-9]+/ { exit }
+    on && /^- / && /(^- [^[:space:]]+ | — )done([[:space:]:(]|$)/ { print; exit }' "$3")
+  [ -n "$first" ] || return 0
+  L="$first" awk '$0 == ENVIRON["L"] { f = 1 } END { exit !f }' "$2" && return 0
+  echo "❌ BASELINE GUARD REJECTED: $1" >&2
+  echo "   the first \`done\` entry in ## Log has no baseline line above it:" >&2
+  printf '   %s\n' "$first" | cut -c1-200 >&2
+  echo "   Record the pre-work state first: bash scripts/workflow/baseline.sh (work-full.md step 3)." >&2
+  return 1
+}
+
 zhuards_guard_plans() {                    # <path-list-space-separated> <base> <head> <dir-for-temp>
   local plans="$1" base="$2" head="$3" tmp="$4" f rc=0
   for f in $plans; do
@@ -794,7 +814,8 @@ zhuards_guard_plans() {                    # <path-list-space-separated> <base> 
     fi
     case "$f" in
       .harness/plans/active/*.md)
-        if [ -s "$tmp/new.md" ] && ! zharness_guard_plan_shape "$f" "$tmp/new.md"; then rc=1; fi ;;
+        if [ -s "$tmp/new.md" ] && ! zharness_guard_plan_shape "$f" "$tmp/new.md"; then rc=1; fi
+        if [ -s "$tmp/new.md" ] && ! zharness_guard_baseline "$f" "$tmp/old.md" "$tmp/new.md"; then rc=1; fi ;;
     esac
     if [ -s "$tmp/old.md" ] && ! zharness_guard_append_only "$f" "$tmp/old.md" "$tmp/new.md" "$base"; then rc=1; fi
     if ! zharness_guard_entries_of_file "$f" "$tmp/old.md" "$tmp/new.md" "$base" "$head"; then rc=1; fi

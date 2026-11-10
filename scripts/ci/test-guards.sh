@@ -1439,6 +1439,77 @@ ao_case .harness/plans/active/p.md active completed "$ao_log_dec
 $ao_log_absorb" "$ao_v_ok" && bad "APPEND-ONLY a compaction that stays under active/ must be rejected" ||
 	ok "APPEND-ONLY a compaction that stays under active/ is rejected"
 
+# BASELINE (issue #219): an active plan's first `done` sits below a
+# `baseline: <sha> <cmd> rc=<n>` Log line; baseline.sh writes those lines.
+bl_plan() { # <log-block> -> active plan on stdout
+	printf -- '---\nstatus: active\nlane: normal\n---\n# T\n\n%s\n## Log\n%s\n\n## Validation\n\n## Current State and Next Action\n- active_phase: main\n- lifecycle_status: in-progress\n' \
+		"$GOAL" "$1"
+}
+bl_case() { # <log-block> -> guard rc for that Log staged over an empty-Log base
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			mkdir -p .harness/plans/active && bl_plan '' > .harness/plans/active/p.md && git add -A && git commit -qm base &&
+			bl_plan "$1" > .harness/plans/active/p.md && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g"
+	) >/dev/null 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+bl_base='- 2026-11-10T00:00:00Z — main — decision — baseline: 0123abcd bash scripts/ci/test-guards.sh rc=0'
+bl_start='- 2026-11-10T00:01Z — main — start — begin'
+bl_done='- 2026-11-10T00:09Z — main — done — R1 landed'
+bl_case "$bl_start
+$bl_done" && bad "BASELINE a done entry with no baseline must be rejected" ||
+	ok "BASELINE a done entry with no baseline is rejected"
+bl_case "$bl_base
+$bl_start
+$bl_done" && ok "BASELINE a done entry below a baseline line is accepted" ||
+	bad "BASELINE a done entry below a baseline line must be accepted"
+bl_case "$bl_start
+$bl_done
+$bl_base" && bad "BASELINE a baseline written after the first done must be rejected" ||
+	ok "BASELINE a baseline written after the first done is rejected"
+bl_case "$bl_start" && ok "BASELINE a plan with no done entry needs no baseline yet" ||
+	bad "BASELINE must not demand a baseline before any done"
+
+# baseline.sh end to end: a passed subset is recorded with HEAD and each rc,
+# the guard then accepts a done entry, and AGENTS.md supplies the default list.
+bd=$(mktemp -d)
+(
+	cd "$bd" && git init -q -b master && git config user.email t@t && git config user.name t &&
+		mkdir -p .harness/plans/active && bl_plan "$bl_start" > .harness/plans/active/p.md &&
+		printf '# A\n\n## Gate Commands\n\n```bash\n# a comment\ntest -d .\n\nfalse\n```\n\n## Other\n\n```bash\nnot-a-gate\n```\n' > AGENTS.md &&
+		git add -A && git commit -qm base
+) >/dev/null 2>&1
+bl_bin="$PWD/scripts/workflow/baseline.sh"
+bl_list=$( cd "$bd" && bash "$bl_bin" --list 2>/dev/null )
+[ "$bl_list" = "test -d .
+false" ] && ok "BASELINE baseline.sh reads the AGENTS.md gate commands only" ||
+	bad "BASELINE baseline.sh --list got: $bl_list"
+bl_sha=$(git -C "$bd" rev-parse HEAD)
+( cd "$bd" && bash "$bl_bin" -- 'test -d .' 'exit 3' ) >/dev/null 2>&1
+bl_rc=$?
+bl_log=$(awk '$0=="## Log"{on=1;next} /^## /{on=0} on && /baseline:/' "$bd/.harness/plans/active/p.md")
+[ "$bl_rc" = 0 ] && printf '%s\n' "$bl_log" | grep -q " — main — decision — baseline: $bl_sha test -d \. rc=0\$" &&
+	printf '%s\n' "$bl_log" | grep -q "baseline: $bl_sha exit 3 rc=3\$" &&
+	[ "$(printf '%s\n' "$bl_log" | grep -c .)" = 2 ] &&
+	ok "BASELINE baseline.sh appends one entry per command with HEAD and rc" ||
+	bad "BASELINE baseline.sh rc=$bl_rc log: $bl_log"
+(
+	cd "$bd" &&
+		awk -v d="$bl_done" '{print} /baseline: .* exit 3 rc=3$/{print d}' .harness/plans/active/p.md > p.tmp &&
+		mv p.tmp .harness/plans/active/p.md && git add .harness/plans/active/p.md && mkdir g &&
+		ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$bd/g"
+) >/dev/null 2>&1 && ok "BASELINE the guard accepts a done entry after baseline.sh ran" ||
+	bad "BASELINE the guard must accept a done entry after baseline.sh ran"
+( cd "$bd" && git rm -qf .harness/plans/active/p.md && bash "$bl_bin" -- true ) >/dev/null 2>&1
+[ $? = 2 ] && ok "BASELINE baseline.sh exits 2 with no active plan" ||
+	bad "BASELINE baseline.sh must exit 2 with no active plan"
+rm -rf "$bd"
+
 # TRIP: each validator has a committed bad fixture that must make it fail.
 tl=$(mktemp -d)
 mkdir -p "$tl/scripts/ci" "$tl/docs" "$tl/cli" "$tl/skills" "$tl/setup"
