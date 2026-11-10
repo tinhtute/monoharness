@@ -29,6 +29,21 @@ pass=0
 fail=0
 ok() { pass=$((pass + 1)); echo "  ok  - $1"; }
 bad() { fail=$((fail + 1)); echo "  FAIL - $1"; }
+# PLAN-SHAPE: every fixture plan staged under .harness/plans/active/ carries
+# a well-formed Goal, so the guard under test is the only reason it fails.
+GOAL='## Goal
+- outcome: the fixture plan is guarded
+- success_signal: the guard verdict matches the fixture
+- authority: scripts/ci/test-guards.sh
+- requirements:
+  - R1: the guard runs | acceptance: `test -d .` | source: fixture
+'
+addgoal() { # <plan-file> — insert $GOAL after the frontmatter
+	local t
+	t=$(mktemp)
+	awk -v g="$GOAL" '{print} /^---$/ && ++n == 2 {print ""; printf "%s", g}' "$1" > "$t" && cat "$t" > "$1"
+	rm -f "$t"
+}
 
 # S1 / R1: a verdict token quoted in a sub-bullet cannot shadow the
 # entry's own first-line verdict (the guard-v3 first-line rule).
@@ -125,6 +140,9 @@ lane: high-risk
 
 - `2026-08-28T00:00:00Z` — new gate verdict `APPROVED` with a sabotaged proof
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `echo sabotaged-proof && false`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-fail.md" 2>/dev/null; then
@@ -145,6 +163,9 @@ lane: high-risk
 
 - `2026-08-28T00:00:00Z` — new gate verdict `APPROVED` with a clean proof
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `test -d .`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-pass.md" 2>/dev/null; then
@@ -249,6 +270,9 @@ lane: high-risk
 
 - undated entry, verdict `APPROVED`, invisible to the v2 guard
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `echo undated-sabotage && false`
 EOF
 if zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/new-undated-fail.md" 2>/dev/null; then
@@ -276,7 +300,7 @@ for lane in tiny normal high-risk; do
 		classes="$req"; j=independent
 		[ "$kind" = miss ] && classes=$(printf '%s' "$req" | sed -E 's/(, )?[a-z]+$//')
 		[ "$kind" = ss ] && j=same-session
-		printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-08-27T00:00:00Z` — older entry, already on record\n  - `test -d .`\n\n- `2026-09-03T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: %s\n  - judge: %s\n' \
+		printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-08-27T00:00:00Z` — older entry, already on record\n  - `test -d .`\n\n- `2026-09-03T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: %s\n  - judge: %s\n  - judge_model: fable\n  - judged_sha: 0123abcd\n' \
 			"$lane" "$classes" "$j" > "$tmp/lane-$kind.md"
 	done
 	zharness_guard_entries_of_file p.md "$tmp/old.md" "$tmp/lane-pos.md" >/dev/null 2>&1 &&
@@ -351,6 +375,9 @@ lane: high-risk
 
 - `2026-08-28T00:00:00Z` — honest work, verdict `APPROVED`
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `test -d .`
 EOF
 	cat > "$tmp/legacy-fail.md" <<'EOF'
@@ -365,6 +392,9 @@ lane: high-risk
 
 - `2026-08-28T00:00:00Z` — verdict `APPROVED` with a sabotaged proof
   - proof_classes: output, unit, integration
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd
   - `echo legacy-sabotage && false`
 EOF
 	legacy_run() {                            # <new-file>; echoes the guard exit code
@@ -477,6 +507,7 @@ gplan() { # <file> <marker-for-old-entry>
 lane: normal
 ---
 
+$GOAL
 ## Validation
 
 - \`2026-09-01T00:00:00Z\` — first gate, verdict \`APPROVED\`
@@ -838,6 +869,7 @@ lane: normal
   - proof_classes: output, unit, integration
   - `test -f flag.txt`
 EOF
+addgoal "$pp/w/.harness/plans/active/p.md"
 pp_git add -A && pp_git commit -qm "feat: land plan"
 pp_git rm -q flag.txt && pp_git commit -qm "fix: drop flag"
 [ "$(git -C "$pp/w" rev-list --count master..feat)" = 2 ] &&
@@ -1092,8 +1124,8 @@ r6case() {                                  # <extra-path> -> guard rc
 	rm -rf "$d"
 	return $rc
 }
-printf -- '---\nlane: normal\n---\n\n## Validation\n' > "$tmp/r6-old.md"
-printf -- '---\nlane: normal\n---\n\n## Validation\n\n- `2026-10-29T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: output, unit\n  - judge: same-session\n' > "$tmp/r6-new.md"
+printf -- '---\nlane: normal\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n' > "$tmp/r6-old.md"
+printf -- '---\nlane: normal\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n\n- `2026-10-29T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: output, unit\n  - judge: same-session\n' > "$tmp/r6-new.md"
 r6case .github/workflows/ci.yml && bad "R6 guard must reject a same-session entry once a CI path raises the lane" ||
 	ok "R6 guard rejects a raised-lane same-session entry end to end"
 r6case docs/a.md && ok "R6 guard accepts the same entry on a docs-only diff" ||
@@ -1139,9 +1171,9 @@ test result: ok. 0 passed; 0 failed; 0 ignored')
 [ "$n" = 2 ] && ok "R7 sums libtest passes across summaries" || bad "R7 expected 2 passed, got '$n'"
 
 r7entry() { # <proof> -> plan file with one new APPROVED entry
-	printf -- '---\nlane: normal\n---\n\n## Validation\n\n- `2026-11-07T00:00:00Z` — gate verdict `APPROVED`\n  - proof_classes: output, unit, integration\n  - `%s`\n' "$1" > "$tmp/r7-new.md"
+	printf -- '---\nlane: normal\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n\n- `2026-11-07T00:00:00Z` — gate verdict `APPROVED`\n  - proof_classes: output, unit, integration\n  - `%s`\n' "$1" > "$tmp/r7-new.md"
 }
-printf -- '---\nlane: normal\n---\n\n## Validation\n' > "$tmp/r7-old.md"
+printf -- '---\nlane: normal\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n' > "$tmp/r7-old.md"
 r7entry true
 r7out=$(zharness_guard_entries_of_file p.md "$tmp/r7-old.md" "$tmp/r7-new.md" 2>&1) &&
 	bad "R7 an entry citing \`true\` must be rejected" ||
@@ -1198,6 +1230,285 @@ fn audit_real() {
 r7range '#[test]
 fn audit_real_inline() { assert_eq!(crate::f(), 1); }' && ok "R7 a one-line test with a body is accepted" ||
 	bad "R7 a one-line test with a body must be accepted"
+
+# R8 JUDGE-ID (issue #214): a high-risk or full verdict names its judge model
+# from the base revision's models.json `judges` and the commit it judged, which
+# must lie in the range. Without a range only presence and shape are checked.
+r8entry() { # <lane> <mode> <judge_model-line> <judged_sha-line> -> $tmp/r8-new.md
+	printf -- '---\nlane: %s\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n\n- `2026-11-09T00:00:00Z` — phase `main` — verdict: APPROVED — mode: %s\n  - `test -d .`\n  - proof_classes: output, unit, integration\n  - judge: independent\n%b%b' \
+		"$1" "$2" "$3" "$4" > "$tmp/r8-new.md"
+}
+printf -- '---\nlane: high-risk\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n' > "$tmp/r8-old.md"
+r8entry high-risk gate '' '  - judged_sha: 0123abcd\n'
+r8out=$(zharness_guard_entries_of_file p.md "$tmp/r8-old.md" "$tmp/r8-new.md" 2>&1) &&
+	bad "R8 a high-risk verdict without judge_model must be rejected" ||
+	{ printf '%s' "$r8out" | grep -q "R8 JUDGE-ID" && printf '%s' "$r8out" | grep -q "no \`judge_model:\`" &&
+		ok "R8 a high-risk verdict without judge_model is rejected" ||
+		bad "R8 missing judge_model rejected for the wrong reason: $r8out"; }
+r8entry normal full '  - judge_model: fable\n' ''
+r8out=$(zharness_guard_entries_of_file p.md "$tmp/r8-old.md" "$tmp/r8-new.md" 2>&1) &&
+	bad "R8 a mode-full verdict without judged_sha must be rejected" ||
+	{ printf '%s' "$r8out" | grep -q "no \`judged_sha:\`" && ok "R8 a mode-full verdict without judged_sha is rejected" ||
+		bad "R8 missing judged_sha rejected for the wrong reason: $r8out"; }
+r8entry normal gate '' ''
+zharness_guard_entries_of_file p.md "$tmp/r8-old.md" "$tmp/r8-new.md" >/dev/null 2>&1 &&
+	ok "R8 a normal-lane gate verdict needs no judge fields" ||
+	bad "R8 must not demand judge fields on a normal-lane gate verdict"
+
+# End to end on a staged range: master c0 -> c1 (models.json judges fable,
+# opus), a side branch, and a feature commit W. The range is merge-base..HEAD.
+r8range() { # <judge_model> <judged_sha: base|work|old|side|head-of-master> -> guard rc
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			mkdir -p .harness/plans/active && printf 'c0\n' > a.txt && git add -A && git commit -qm c0 &&
+			old=$(git rev-parse HEAD) &&
+			printf '{\n  "judges": ["fable", "opus"]\n}\n' > models.json &&
+			cp "$tmp/r8-old.md" .harness/plans/active/p.md && git add -A && git commit -qm c1 &&
+			base=$(git rev-parse HEAD) &&
+			git checkout -qb side && printf 's\n' > s.txt && git add -A && git commit -qm side &&
+			side=$(git rev-parse HEAD) && git checkout -q master && git checkout -qb feat &&
+			printf 'w\n' > w.txt && git add -A && git commit -qm work && work=$(git rev-parse HEAD) &&
+			case "$2" in base) s=$base ;; work) s=$work ;; old) s=$old ;; side) s=$side ;; esac &&
+			r8entry high-risk gate "  - judge_model: $1\n" "  - judged_sha: $s\n" &&
+			cp "$tmp/r8-new.md" .harness/plans/active/p.md && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g" &&
+			git commit -qm entry && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md "$base" HEAD "$d/g"
+	) >/dev/null 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+r8range claude-fable-5-1 work && ok "R8 an allowlisted model judging a commit in range is accepted (staged and committed)" ||
+	bad "R8 claude-fable-5-1 judging the work commit must be accepted"
+r8range opus base && ok "R8 the range's lower bound is a valid judged_sha" ||
+	bad "R8 judged_sha at the merge-base must be accepted"
+r8range claude-haiku-4-5 work && bad "R8 a model outside models.json judges must be rejected" ||
+	ok "R8 a non-allowlisted judge_model is rejected"
+r8range claude-fable-x work && bad "R8 a lookalike model name must be rejected" ||
+	ok "R8 a lookalike judge_model is rejected"
+r8range fable old && bad "R8 a judged_sha older than the range must be rejected" ||
+	ok "R8 a judged_sha before the range is rejected"
+r8range fable side && bad "R8 a judged_sha off the branch must be rejected" ||
+	ok "R8 a judged_sha not reachable from HEAD is rejected"
+
+# PLAN-SHAPE (issue #217): an active plan states its outcome, success signal
+# and authority, and every requirement names an acceptance command.
+shape() { # <goal-body> -> problems for a plan with that Goal
+	printf -- '---\nstatus: active\nlane: normal\n---\n# T\n\n%s\n## Validation\n' "$1" > "$tmp/shape.md"
+	zharness_plan_shape_problems "$tmp/shape.md"
+}
+sg_head='## Goal
+- outcome: o
+- success_signal: s
+- actors: a
+- authority: owner'
+[ -z "$(shape "$sg_head
+- requirements:
+  - R1: r | acceptance: \`test -d .\` | source: owner
+  - R2: r | acceptance: \`echo a | grep -q a\` and a reviewer reads it | source: owner")" ] &&
+	ok "PLAN-SHAPE a well-formed Goal passes (pipes inside a backticked command too)" ||
+	bad "PLAN-SHAPE a well-formed Goal must pass"
+[ -z "$(shape "$sg_head
+- requirements: none until the map is decided")" ] &&
+	ok "PLAN-SHAPE a wayfinder Goal with no requirements yet passes" ||
+	bad "PLAN-SHAPE a Goal without requirements must pass"
+sp=$(shape "$sg_head
+- requirements:
+  - R1: r | acceptance: \`test -d .\` | source: owner
+  - R2: r | source: owner")
+[ "$sp" = "R2: no \`acceptance:\`" ] && ok "PLAN-SHAPE a requirement without acceptance is rejected by id" ||
+	bad "PLAN-SHAPE R2 without acceptance: got '$sp'"
+sp=$(shape "$sg_head
+- requirements:
+  - R3: r | acceptance: a reviewer reads it | source: \`docs/x.md\`")
+[ "$sp" = "R3: \`acceptance:\` names no backticked command" ] &&
+	ok "PLAN-SHAPE a prose acceptance is rejected (a backticked source does not count)" ||
+	bad "PLAN-SHAPE prose acceptance: got '$sp'"
+sp=$(shape '## Goal
+- outcome: o
+- success_signal:
+- authority: owner')
+[ "$sp" = "\`## Goal\` has no \`- success_signal:\`" ] && ok "PLAN-SHAPE an empty success_signal is rejected" ||
+	bad "PLAN-SHAPE empty success_signal: got '$sp'"
+sp=$(shape '## Goal
+- outcome: o
+- success_signal: s')
+[ "$sp" = "\`## Goal\` has no \`- authority:\`" ] && ok "PLAN-SHAPE a missing authority is rejected" ||
+	bad "PLAN-SHAPE missing authority: got '$sp'"
+sp=$(shape '## Goals
+- outcome: o')
+[ "$sp" = "no \`## Goal\` section" ] && ok "PLAN-SHAPE a plan without ## Goal is rejected" ||
+	bad "PLAN-SHAPE no Goal: got '$sp'"
+
+# End to end: the staged active plan is linted; a completed plan is not.
+shape_range() { # <plan-path> -> guard rc for a Goal whose R1 lacks acceptance
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			printf '# x\n' > README.md && git add -A && git commit -qm base &&
+			mkdir -p "$(dirname "$1")" &&
+			printf -- '---\nstatus: active\nlane: normal\n---\n# T\n\n## Goal\n- outcome: o\n- success_signal: s\n- authority: owner\n- requirements:\n  - R1: r | source: owner\n\n## Validation\n' > "$1" &&
+			git add -A && mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans "$1" HEAD : "$d/g"
+	) >/dev/null 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+shape_range .harness/plans/active/p.md && bad "PLAN-SHAPE a staged active plan missing acceptance must be rejected" ||
+	ok "PLAN-SHAPE a staged active plan missing acceptance is rejected"
+shape_range .harness/plans/completed/p.md && ok "PLAN-SHAPE a completed plan is not linted" ||
+	bad "PLAN-SHAPE must leave completed plans alone"
+
+# APPEND-ONLY (issue #218): committed Validation entries and Log
+# blocked/decision entries never disappear or change, except in the handoff
+# step 6 compaction (completed/ move, status and lifecycle completed, absorb).
+ao_log_start='- 2026-11-01T00:00Z — main — start — begin'
+ao_log_dec='- 2026-11-01T00:05Z — main — decision — keep the parser'
+ao_log_done='- 2026-11-01T00:09Z — main — done — parser landed'
+ao_log_absorb='- 2026-11-02T00:00Z — closure — decision — absorb: none'
+ao_v_rc='- `2026-11-01T00:10Z` — phase `main` — verdict: REQUEST_CHANGES — mode: gate
+  - `test -d .`
+  - requests: 1. fix the parser'
+ao_v_ok='- `2026-11-01T00:20Z` — phase `main` — verdict: APPROVED — mode: full
+  - `test -d .`
+  - proof_classes: output, unit
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd'
+ao_plan() { # <status> <lifecycle> <log-block> <validation-block>
+	printf -- '---\nstatus: %s\nlane: normal\n---\n# T\n\n%s\n## Log\n%s\n\n## Validation\n%s\n\n## Current State and Next Action\n- active_phase: none\n- lifecycle_status: %s\n' \
+		"$1" "$GOAL" "$3" "$4" "$2"
+}
+ao_case() { # <new-path> <status> <lifecycle> <log-block> <validation-block> -> guard rc
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			mkdir -p .harness/plans/active .harness/plans/completed &&
+			ao_plan active in-progress "$ao_log_start
+$ao_log_dec
+$ao_log_done" "$ao_v_rc
+
+$ao_v_ok" > .harness/plans/active/p.md && git add -A && git commit -qm base &&
+			if [ "$1" != .harness/plans/active/p.md ]; then git mv .harness/plans/active/p.md "$1"; fi &&
+			ao_plan "$2" "$3" "$4" "$5" > "$1" && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans "$1" HEAD : "$d/g"
+	) >/dev/null 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+ao_full_log="$ao_log_start
+$ao_log_dec
+$ao_log_done"
+ao_case .harness/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_rc
+
+$ao_v_ok" && ok "APPEND-ONLY an unchanged history is accepted" ||
+	bad "APPEND-ONLY an unchanged history must be accepted"
+ao_case .harness/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_ok" &&
+	bad "APPEND-ONLY deleting a REQUEST_CHANGES entry must be rejected" ||
+	ok "APPEND-ONLY deleting a REQUEST_CHANGES entry is rejected"
+ao_case .harness/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_rc
+
+$(printf '%s\n' "$ao_v_ok" | sed 's/judge_model: fable/judge_model: opus/')" &&
+	bad "APPEND-ONLY rewriting a committed Validation entry must be rejected" ||
+	ok "APPEND-ONLY rewriting a committed Validation entry is rejected"
+ao_case .harness/plans/active/p.md active in-progress "$ao_log_start
+- 2026-11-01T00:05Z — main — decision — keep the parser (edited)
+$ao_log_done" "$ao_v_rc
+
+$ao_v_ok" && bad "APPEND-ONLY rewriting a Log decision must be rejected" ||
+	ok "APPEND-ONLY rewriting a Log decision is rejected"
+# The sanctioned compaction: start/done dropped, the last entry per phase kept.
+ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec
+$ao_log_absorb" "$ao_v_ok" && ok "APPEND-ONLY the handoff compaction is accepted" ||
+	bad "APPEND-ONLY the handoff compaction must be accepted"
+ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec
+$ao_log_absorb" "$ao_v_rc" && bad "APPEND-ONLY a compaction dropping the phase's last entry must be rejected" ||
+	ok "APPEND-ONLY a compaction dropping the phase's last entry is rejected"
+ao_case .harness/plans/completed/p.md completed completed "$ao_log_absorb" "$ao_v_ok" &&
+	bad "APPEND-ONLY a compaction dropping a decision must be rejected" ||
+	ok "APPEND-ONLY a compaction dropping a decision is rejected"
+ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec" "$ao_v_ok" &&
+	bad "APPEND-ONLY a compaction with no absorb decision must be rejected" ||
+	ok "APPEND-ONLY a compaction with no absorb decision is rejected"
+ao_case .harness/plans/active/p.md active completed "$ao_log_dec
+$ao_log_absorb" "$ao_v_ok" && bad "APPEND-ONLY a compaction that stays under active/ must be rejected" ||
+	ok "APPEND-ONLY a compaction that stays under active/ is rejected"
+
+# BASELINE (issue #219): an active plan's first `done` sits below a
+# `baseline: <sha> <cmd> rc=<n>` Log line; baseline.sh writes those lines.
+bl_plan() { # <log-block> -> active plan on stdout
+	printf -- '---\nstatus: active\nlane: normal\n---\n# T\n\n%s\n## Log\n%s\n\n## Validation\n\n## Current State and Next Action\n- active_phase: main\n- lifecycle_status: in-progress\n' \
+		"$GOAL" "$1"
+}
+bl_case() { # <log-block> -> guard rc for that Log staged over an empty-Log base
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			mkdir -p .harness/plans/active && bl_plan '' > .harness/plans/active/p.md && git add -A && git commit -qm base &&
+			bl_plan "$1" > .harness/plans/active/p.md && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g"
+	) >/dev/null 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+bl_base='- 2026-11-10T00:00:00Z — main — decision — baseline: 0123abcd bash scripts/ci/test-guards.sh rc=0'
+bl_start='- 2026-11-10T00:01Z — main — start — begin'
+bl_done='- 2026-11-10T00:09Z — main — done — R1 landed'
+bl_case "$bl_start
+$bl_done" && bad "BASELINE a done entry with no baseline must be rejected" ||
+	ok "BASELINE a done entry with no baseline is rejected"
+bl_case "$bl_base
+$bl_start
+$bl_done" && ok "BASELINE a done entry below a baseline line is accepted" ||
+	bad "BASELINE a done entry below a baseline line must be accepted"
+bl_case "$bl_start
+$bl_done
+$bl_base" && bad "BASELINE a baseline written after the first done must be rejected" ||
+	ok "BASELINE a baseline written after the first done is rejected"
+bl_case "$bl_start" && ok "BASELINE a plan with no done entry needs no baseline yet" ||
+	bad "BASELINE must not demand a baseline before any done"
+
+# baseline.sh end to end: a passed subset is recorded with HEAD and each rc,
+# the guard then accepts a done entry, and AGENTS.md supplies the default list.
+bd=$(mktemp -d)
+(
+	cd "$bd" && git init -q -b master && git config user.email t@t && git config user.name t &&
+		mkdir -p .harness/plans/active && bl_plan "$bl_start" > .harness/plans/active/p.md &&
+		printf '# A\n\n## Gate Commands\n\n```bash\n# a comment\ntest -d .\n\nfalse\n```\n\n## Other\n\n```bash\nnot-a-gate\n```\n' > AGENTS.md &&
+		git add -A && git commit -qm base
+) >/dev/null 2>&1
+bl_bin="$PWD/scripts/workflow/baseline.sh"
+bl_list=$( cd "$bd" && bash "$bl_bin" --list 2>/dev/null )
+[ "$bl_list" = "test -d .
+false" ] && ok "BASELINE baseline.sh reads the AGENTS.md gate commands only" ||
+	bad "BASELINE baseline.sh --list got: $bl_list"
+bl_sha=$(git -C "$bd" rev-parse HEAD)
+( cd "$bd" && bash "$bl_bin" -- 'test -d .' 'exit 3' ) >/dev/null 2>&1
+bl_rc=$?
+bl_log=$(awk '$0=="## Log"{on=1;next} /^## /{on=0} on && /baseline:/' "$bd/.harness/plans/active/p.md")
+[ "$bl_rc" = 0 ] && printf '%s\n' "$bl_log" | grep -q " — main — decision — baseline: $bl_sha test -d \. rc=0\$" &&
+	printf '%s\n' "$bl_log" | grep -q "baseline: $bl_sha exit 3 rc=3\$" &&
+	[ "$(printf '%s\n' "$bl_log" | grep -c .)" = 2 ] &&
+	ok "BASELINE baseline.sh appends one entry per command with HEAD and rc" ||
+	bad "BASELINE baseline.sh rc=$bl_rc log: $bl_log"
+(
+	cd "$bd" &&
+		awk -v d="$bl_done" '{print} /baseline: .* exit 3 rc=3$/{print d}' .harness/plans/active/p.md > p.tmp &&
+		mv p.tmp .harness/plans/active/p.md && git add .harness/plans/active/p.md && mkdir g &&
+		ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$bd/g"
+) >/dev/null 2>&1 && ok "BASELINE the guard accepts a done entry after baseline.sh ran" ||
+	bad "BASELINE the guard must accept a done entry after baseline.sh ran"
+( cd "$bd" && git rm -qf .harness/plans/active/p.md && bash "$bl_bin" -- true ) >/dev/null 2>&1
+[ $? = 2 ] && ok "BASELINE baseline.sh exits 2 with no active plan" ||
+	bad "BASELINE baseline.sh must exit 2 with no active plan"
+rm -rf "$bd"
 
 # TRIP: each validator has a committed bad fixture that must make it fail.
 tl=$(mktemp -d)

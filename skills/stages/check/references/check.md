@@ -34,7 +34,7 @@ Whether a green PR needs a person is a separate, commit-bound verdict: [check-ri
 4. **Plan alignment** (gate/full) — `check-durable.md` step 4.
 5. **Manual review** — `gate` does not perform manual review; the gate, plan alignment, and proof classes are its whole check. `full`, or `bounded` on a diff: read [check-review.md](check-review.md) now.
 6. **Proof classes** — the lane's required proof from the Lane Matrix; record the classes you proved in the entry's `proof_classes:` line. A missing class blocks an approvable verdict: name it in `proof_gaps:`. A runtime change's `output` proof is its exercise: read [check-exercise.md](check-exercise.md).
-7. **Verdict** — critical issue or plan contradiction → `REQUEST_CHANGES`; major findings → at least `APPROVE_WITH_REQUESTS`; else `APPROVED`. Declare the judge (`same-session` IF you authored the diff, else `independent`) and the model. A `same-session` approval names one aspect not independently verified. `full` and `high-risk` require `judge: independent` (Lane Matrix).
+7. **Verdict** — critical issue or plan contradiction → `REQUEST_CHANGES`; major findings → at least `APPROVE_WITH_REQUESTS`; else `APPROVED`. Declare the judge (`same-session` IF you authored the diff, else `independent`) and the model. A `same-session` approval names one aspect not independently verified. `full` and `high-risk` require `judge: independent` (Lane Matrix), a `judge_model:` from `models.json` `judges`, and the `judged_sha:` the judge reviewed ([check-validation.md](check-validation.md)).
 8. **Evidence and plan state** (gate/full) — `check-durable.md` steps 8–11.
 
 ## Output Format
