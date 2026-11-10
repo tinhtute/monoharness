@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- ADR 0010 (local failure ledger) is marked Superseded by `d8ed43e`, which removed `docs/evals/failures.md`; the last ledger is at `d8ed43e^` (#224).
+
 ## [v0.34.0] — 2026-11-09
 
 ### BREAKING
