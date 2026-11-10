@@ -6,7 +6,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"
-HOOKS_DIR="$REPO_ROOT/.git/hooks"
+# --git-path resolves to the common hooks dir from a linked worktree (where .git
+# is a file) and honors core.hooksPath.
+HOOKS_DIR="$(cd "$REPO_ROOT" && git rev-parse --path-format=absolute --git-path hooks 2>/dev/null || echo "$REPO_ROOT/.git/hooks")"
 
 # ZGUARD-CORE-BEGIN
 # Core guard logic shared by the local pre-commit hook and the CI re-check.
