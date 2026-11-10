@@ -29,6 +29,21 @@ pass=0
 fail=0
 ok() { pass=$((pass + 1)); echo "  ok  - $1"; }
 bad() { fail=$((fail + 1)); echo "  FAIL - $1"; }
+# PLAN-SHAPE: every fixture plan staged under .harness/plans/active/ carries
+# a well-formed Goal, so the guard under test is the only reason it fails.
+GOAL='## Goal
+- outcome: the fixture plan is guarded
+- success_signal: the guard verdict matches the fixture
+- authority: scripts/ci/test-guards.sh
+- requirements:
+  - R1: the guard runs | acceptance: `test -d .` | source: fixture
+'
+addgoal() { # <plan-file> — insert $GOAL after the frontmatter
+	local t
+	t=$(mktemp)
+	awk -v g="$GOAL" '{print} /^---$/ && ++n == 2 {print ""; printf "%s", g}' "$1" > "$t" && cat "$t" > "$1"
+	rm -f "$t"
+}
 
 # S1 / R1: a verdict token quoted in a sub-bullet cannot shadow the
 # entry's own first-line verdict (the guard-v3 first-line rule).
@@ -492,6 +507,7 @@ gplan() { # <file> <marker-for-old-entry>
 lane: normal
 ---
 
+$GOAL
 ## Validation
 
 - \`2026-09-01T00:00:00Z\` — first gate, verdict \`APPROVED\`
@@ -853,6 +869,7 @@ lane: normal
   - proof_classes: output, unit, integration
   - `test -f flag.txt`
 EOF
+addgoal "$pp/w/.harness/plans/active/p.md"
 pp_git add -A && pp_git commit -qm "feat: land plan"
 pp_git rm -q flag.txt && pp_git commit -qm "fix: drop flag"
 [ "$(git -C "$pp/w" rev-list --count master..feat)" = 2 ] &&
@@ -1107,8 +1124,8 @@ r6case() {                                  # <extra-path> -> guard rc
 	rm -rf "$d"
 	return $rc
 }
-printf -- '---\nlane: normal\n---\n\n## Validation\n' > "$tmp/r6-old.md"
-printf -- '---\nlane: normal\n---\n\n## Validation\n\n- `2026-10-29T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: output, unit\n  - judge: same-session\n' > "$tmp/r6-new.md"
+printf -- '---\nlane: normal\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n' > "$tmp/r6-old.md"
+printf -- '---\nlane: normal\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n\n- `2026-10-29T00:00:00Z` — phase `main` — verdict: APPROVED — mode: gate\n  - `test -d .`\n  - proof_classes: output, unit\n  - judge: same-session\n' > "$tmp/r6-new.md"
 r6case .github/workflows/ci.yml && bad "R6 guard must reject a same-session entry once a CI path raises the lane" ||
 	ok "R6 guard rejects a raised-lane same-session entry end to end"
 r6case docs/a.md && ok "R6 guard accepts the same entry on a docs-only diff" ||
@@ -1154,9 +1171,9 @@ test result: ok. 0 passed; 0 failed; 0 ignored')
 [ "$n" = 2 ] && ok "R7 sums libtest passes across summaries" || bad "R7 expected 2 passed, got '$n'"
 
 r7entry() { # <proof> -> plan file with one new APPROVED entry
-	printf -- '---\nlane: normal\n---\n\n## Validation\n\n- `2026-11-07T00:00:00Z` — gate verdict `APPROVED`\n  - proof_classes: output, unit, integration\n  - `%s`\n' "$1" > "$tmp/r7-new.md"
+	printf -- '---\nlane: normal\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n\n- `2026-11-07T00:00:00Z` — gate verdict `APPROVED`\n  - proof_classes: output, unit, integration\n  - `%s`\n' "$1" > "$tmp/r7-new.md"
 }
-printf -- '---\nlane: normal\n---\n\n## Validation\n' > "$tmp/r7-old.md"
+printf -- '---\nlane: normal\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n' > "$tmp/r7-old.md"
 r7entry true
 r7out=$(zharness_guard_entries_of_file p.md "$tmp/r7-old.md" "$tmp/r7-new.md" 2>&1) &&
 	bad "R7 an entry citing \`true\` must be rejected" ||
@@ -1218,10 +1235,10 @@ fn audit_real_inline() { assert_eq!(crate::f(), 1); }' && ok "R7 a one-line test
 # from the base revision's models.json `judges` and the commit it judged, which
 # must lie in the range. Without a range only presence and shape are checked.
 r8entry() { # <lane> <mode> <judge_model-line> <judged_sha-line> -> $tmp/r8-new.md
-	printf -- '---\nlane: %s\n---\n\n## Validation\n\n- `2026-11-09T00:00:00Z` — phase `main` — verdict: APPROVED — mode: %s\n  - `test -d .`\n  - proof_classes: output, unit, integration\n  - judge: independent\n%b%b' \
+	printf -- '---\nlane: %s\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n\n- `2026-11-09T00:00:00Z` — phase `main` — verdict: APPROVED — mode: %s\n  - `test -d .`\n  - proof_classes: output, unit, integration\n  - judge: independent\n%b%b' \
 		"$1" "$2" "$3" "$4" > "$tmp/r8-new.md"
 }
-printf -- '---\nlane: high-risk\n---\n\n## Validation\n' > "$tmp/r8-old.md"
+printf -- '---\nlane: high-risk\n---\n\n## Goal\n- outcome: fixture\n- success_signal: fixture\n- authority: fixture\n\n## Validation\n' > "$tmp/r8-old.md"
 r8entry high-risk gate '' '  - judged_sha: 0123abcd\n'
 r8out=$(zharness_guard_entries_of_file p.md "$tmp/r8-old.md" "$tmp/r8-new.md" 2>&1) &&
 	bad "R8 a high-risk verdict without judge_model must be rejected" ||
@@ -1275,6 +1292,75 @@ r8range fable old && bad "R8 a judged_sha older than the range must be rejected"
 	ok "R8 a judged_sha before the range is rejected"
 r8range fable side && bad "R8 a judged_sha off the branch must be rejected" ||
 	ok "R8 a judged_sha not reachable from HEAD is rejected"
+
+# PLAN-SHAPE (issue #217): an active plan states its outcome, success signal
+# and authority, and every requirement names an acceptance command.
+shape() { # <goal-body> -> problems for a plan with that Goal
+	printf -- '---\nstatus: active\nlane: normal\n---\n# T\n\n%s\n## Validation\n' "$1" > "$tmp/shape.md"
+	zharness_plan_shape_problems "$tmp/shape.md"
+}
+sg_head='## Goal
+- outcome: o
+- success_signal: s
+- actors: a
+- authority: owner'
+[ -z "$(shape "$sg_head
+- requirements:
+  - R1: r | acceptance: \`test -d .\` | source: owner
+  - R2: r | acceptance: \`echo a | grep -q a\` and a reviewer reads it | source: owner")" ] &&
+	ok "PLAN-SHAPE a well-formed Goal passes (pipes inside a backticked command too)" ||
+	bad "PLAN-SHAPE a well-formed Goal must pass"
+[ -z "$(shape "$sg_head
+- requirements: none until the map is decided")" ] &&
+	ok "PLAN-SHAPE a wayfinder Goal with no requirements yet passes" ||
+	bad "PLAN-SHAPE a Goal without requirements must pass"
+sp=$(shape "$sg_head
+- requirements:
+  - R1: r | acceptance: \`test -d .\` | source: owner
+  - R2: r | source: owner")
+[ "$sp" = "R2: no \`acceptance:\`" ] && ok "PLAN-SHAPE a requirement without acceptance is rejected by id" ||
+	bad "PLAN-SHAPE R2 without acceptance: got '$sp'"
+sp=$(shape "$sg_head
+- requirements:
+  - R3: r | acceptance: a reviewer reads it | source: \`docs/x.md\`")
+[ "$sp" = "R3: \`acceptance:\` names no backticked command" ] &&
+	ok "PLAN-SHAPE a prose acceptance is rejected (a backticked source does not count)" ||
+	bad "PLAN-SHAPE prose acceptance: got '$sp'"
+sp=$(shape '## Goal
+- outcome: o
+- success_signal:
+- authority: owner')
+[ "$sp" = "\`## Goal\` has no \`- success_signal:\`" ] && ok "PLAN-SHAPE an empty success_signal is rejected" ||
+	bad "PLAN-SHAPE empty success_signal: got '$sp'"
+sp=$(shape '## Goal
+- outcome: o
+- success_signal: s')
+[ "$sp" = "\`## Goal\` has no \`- authority:\`" ] && ok "PLAN-SHAPE a missing authority is rejected" ||
+	bad "PLAN-SHAPE missing authority: got '$sp'"
+sp=$(shape '## Goals
+- outcome: o')
+[ "$sp" = "no \`## Goal\` section" ] && ok "PLAN-SHAPE a plan without ## Goal is rejected" ||
+	bad "PLAN-SHAPE no Goal: got '$sp'"
+
+# End to end: the staged active plan is linted; a completed plan is not.
+shape_range() { # <plan-path> -> guard rc for a Goal whose R1 lacks acceptance
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			printf '# x\n' > README.md && git add -A && git commit -qm base &&
+			mkdir -p "$(dirname "$1")" &&
+			printf -- '---\nstatus: active\nlane: normal\n---\n# T\n\n## Goal\n- outcome: o\n- success_signal: s\n- authority: owner\n- requirements:\n  - R1: r | source: owner\n\n## Validation\n' > "$1" &&
+			git add -A && mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans "$1" HEAD : "$d/g"
+	) >/dev/null 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+shape_range .harness/plans/active/p.md && bad "PLAN-SHAPE a staged active plan missing acceptance must be rejected" ||
+	ok "PLAN-SHAPE a staged active plan missing acceptance is rejected"
+shape_range .harness/plans/completed/p.md && ok "PLAN-SHAPE a completed plan is not linted" ||
+	bad "PLAN-SHAPE must leave completed plans alone"
 
 # TRIP: each validator has a committed bad fixture that must make it fail.
 tl=$(mktemp -d)

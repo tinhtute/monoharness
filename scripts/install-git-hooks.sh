@@ -61,6 +61,11 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       default branch's merge-base and HEAD. Without a range (fixtures) only
 #       presence and shape are checked. Unresolvable bounds or an empty
 #       allowlist reject (fail closed).
+#   PLAN-SHAPE (#217): a non-empty plan staged/pushed under
+#       .harness/plans/active/ must have a `## Goal` with non-empty `outcome:`,
+#       `success_signal:` and `authority:` bullets, and every `R<n>:` line in
+#       it must carry `acceptance:` naming a backticked command (before any
+#       `| source:`). A Goal with no requirements yet (wayfinder) passes.
 #   FLOOR: entries already committed at ZHARNESS_GUARD_HISTORICAL_FLOOR are
 #       never re-executed. A push whose before-SHA predates the v0.24 cutover
 #       makes the pre-cutover entries look new, and their proofs cannot run at
@@ -672,6 +677,38 @@ zharness_guard_old_blob() {                # <base> <path> <out-file>
   : > "$out"
 }
 
+zharness_plan_shape_problems() {           # <plan-file> -> one problem per line
+  awk '
+    /^## / { in_goal = ($0 ~ /^## Goal[[:space:]]*$/); if (in_goal) goal = 1; next }
+    !in_goal { next }
+    /^[[:space:]]*- outcome:[[:space:]]*[^[:space:]]/ { o = 1 }
+    /^[[:space:]]*- success_signal:[[:space:]]*[^[:space:]]/ { s = 1 }
+    /^[[:space:]]*- authority:[[:space:]]*[^[:space:]]/ { a = 1 }
+    /^[[:space:]]*- R[0-9]+:/ {
+      id = $0; sub(/^[[:space:]]*- /, "", id); sub(/:.*/, "", id)
+      i = index($0, "acceptance:")
+      if (!i) { print id ": no `acceptance:`"; next }
+      seg = substr($0, i + 11); k = index(seg, "| source:"); if (k) seg = substr(seg, 1, k - 1)
+      if (seg !~ /`[^`]+`/) print id ": `acceptance:` names no backticked command"
+    }
+    END {
+      if (!goal) { print "no `## Goal` section"; exit }
+      if (!o) print "`## Goal` has no `- outcome:`"
+      if (!s) print "`## Goal` has no `- success_signal:`"
+      if (!a) print "`## Goal` has no `- authority:`"
+    }' "$1"
+}
+
+zharness_guard_plan_shape() {              # <path> <content-file>
+  local probs
+  probs=$(zharness_plan_shape_problems "$2")
+  [ -z "$probs" ] && return 0
+  echo "❌ PLAN-SHAPE GUARD REJECTED: $1" >&2
+  printf '%s\n' "$probs" | sed 's/^/   /' >&2
+  echo "   An active plan needs ## Goal outcome/success_signal/authority and an acceptance command per requirement (brainstorm-lock.md)." >&2
+  return 1
+}
+
 zhuards_guard_plans() {                    # <path-list-space-separated> <base> <head> <dir-for-temp>
   local plans="$1" base="$2" head="$3" tmp="$4" f rc=0
   for f in $plans; do
@@ -681,6 +718,10 @@ zhuards_guard_plans() {                    # <path-list-space-separated> <base> 
     else
       git show "$head:$f" > "$tmp/new.md" 2>/dev/null || : > "$tmp/new.md"
     fi
+    case "$f" in
+      .harness/plans/active/*.md)
+        if [ -s "$tmp/new.md" ] && ! zharness_guard_plan_shape "$f" "$tmp/new.md"; then rc=1; fi ;;
+    esac
     if ! zharness_guard_entries_of_file "$f" "$tmp/old.md" "$tmp/new.md" "$base" "$head"; then rc=1; fi
   done
   return $rc
