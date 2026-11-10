@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted 2026-11-09; implementation pending (plan `orchestrate-autopilot`, phases `orchestrate` and `autopilot`). The owner asked for this record before implementation, following the [0015](0015-skill-owned-procedures-and-safe-retirement.md) and [0016](0016-lean-workflow-method-latitude.md) precedent. Repository line citations resolve at `5210571`, the base this record was written on; upstream lines resolve at `6b03002`; plan lines resolve in the plan's main-checkout copy at writing. Phases `orchestrate` and `autopilot` rewrite several of the cited lines.
+Accepted 2026-11-09; implemented 2026-11-09 (plan `orchestrate-autopilot`, phases `orchestrate` and `autopilot`, completed in `fb9baaa`). The owner asked for this record before implementation, following the [0015](0015-skill-owned-procedures-and-safe-retirement.md) and [0016](0016-lean-workflow-method-latitude.md) precedent. Repository line citations resolve at `5210571`, the base this record was written on; upstream lines resolve at `6b03002`; plan lines resolve in the plan's main-checkout copy at writing. Phases `orchestrate` and `autopilot` rewrite several of the cited lines.
 
 ## Context
 
