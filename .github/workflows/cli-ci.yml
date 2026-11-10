@@ -16,6 +16,8 @@ on:
       - "models.json"
       - "scripts/ci/test-agent-models.sh"
       - "scripts/install-agents.sh"
+      - "scripts/workflow/**"
+      - "docs/guides/consumer-ci-guards.md"
       - ".github/workflows/cli-ci.yml"
   pull_request:
 

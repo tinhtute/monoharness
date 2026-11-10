@@ -48,6 +48,9 @@ bash scripts/ci/validate-skills.sh
 # [CI] Skill script and check-panel tests — .github/workflows/skills-ci.yml, jobs `skill-scripts`, `risk-facts`, `panel-merge`
 bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/test-risk-facts.sh && python3 -I scripts/ci/test-panel-merge.py
 
+# [CI] Risk-judge eval report tests — .github/workflows/skills-ci.yml, job `risk-facts`
+python3 -I -B evals/risk-judge/test_report.py
+
 # [CI] Test-weakening gate (PRs only; the `allow-test-weakening` label overrides) — .github/workflows/test-weakening.yml, job `test-weakening`
 bash scripts/ci/test-weakening.sh origin/master HEAD
 
