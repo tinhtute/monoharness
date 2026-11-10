@@ -95,7 +95,7 @@ jobs:
           mkdir -p "$d/agents"
           echo legacy > "$d/agents/lead.md"
           CLAUDE_DIR="$d" bash scripts/install-agents.sh
-          test "$(ls "$d"/agents/mono-*.md | wc -l)" -eq 3
+          test "$(ls "$d"/agents/mono-*.md | wc -l)" -eq "$(ls agents/mono-*.md | wc -l)"
           test ! -e "$d/agents/lead.md"
           test "$(ls "$d"/agents/lead.md.retired.* | wc -l)" -eq 1
 
