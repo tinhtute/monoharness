@@ -1362,6 +1362,83 @@ shape_range .harness/plans/active/p.md && bad "PLAN-SHAPE a staged active plan m
 shape_range .harness/plans/completed/p.md && ok "PLAN-SHAPE a completed plan is not linted" ||
 	bad "PLAN-SHAPE must leave completed plans alone"
 
+# APPEND-ONLY (issue #218): committed Validation entries and Log
+# blocked/decision entries never disappear or change, except in the handoff
+# step 6 compaction (completed/ move, status and lifecycle completed, absorb).
+ao_log_start='- 2026-11-01T00:00Z — main — start — begin'
+ao_log_dec='- 2026-11-01T00:05Z — main — decision — keep the parser'
+ao_log_done='- 2026-11-01T00:09Z — main — done — parser landed'
+ao_log_absorb='- 2026-11-02T00:00Z — closure — decision — absorb: none'
+ao_v_rc='- `2026-11-01T00:10Z` — phase `main` — verdict: REQUEST_CHANGES — mode: gate
+  - `test -d .`
+  - requests: 1. fix the parser'
+ao_v_ok='- `2026-11-01T00:20Z` — phase `main` — verdict: APPROVED — mode: full
+  - `test -d .`
+  - proof_classes: output, unit
+  - judge: independent
+  - judge_model: fable
+  - judged_sha: 0123abcd'
+ao_plan() { # <status> <lifecycle> <log-block> <validation-block>
+	printf -- '---\nstatus: %s\nlane: normal\n---\n# T\n\n%s\n## Log\n%s\n\n## Validation\n%s\n\n## Current State and Next Action\n- active_phase: none\n- lifecycle_status: %s\n' \
+		"$1" "$GOAL" "$3" "$4" "$2"
+}
+ao_case() { # <new-path> <status> <lifecycle> <log-block> <validation-block> -> guard rc
+	local d rc
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			mkdir -p .harness/plans/active .harness/plans/completed &&
+			ao_plan active in-progress "$ao_log_start
+$ao_log_dec
+$ao_log_done" "$ao_v_rc
+
+$ao_v_ok" > .harness/plans/active/p.md && git add -A && git commit -qm base &&
+			if [ "$1" != .harness/plans/active/p.md ]; then git mv .harness/plans/active/p.md "$1"; fi &&
+			ao_plan "$2" "$3" "$4" "$5" > "$1" && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans "$1" HEAD : "$d/g"
+	) >/dev/null 2>&1
+	rc=$?
+	rm -rf "$d"
+	return $rc
+}
+ao_full_log="$ao_log_start
+$ao_log_dec
+$ao_log_done"
+ao_case .harness/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_rc
+
+$ao_v_ok" && ok "APPEND-ONLY an unchanged history is accepted" ||
+	bad "APPEND-ONLY an unchanged history must be accepted"
+ao_case .harness/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_ok" &&
+	bad "APPEND-ONLY deleting a REQUEST_CHANGES entry must be rejected" ||
+	ok "APPEND-ONLY deleting a REQUEST_CHANGES entry is rejected"
+ao_case .harness/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_rc
+
+$(printf '%s\n' "$ao_v_ok" | sed 's/judge_model: fable/judge_model: opus/')" &&
+	bad "APPEND-ONLY rewriting a committed Validation entry must be rejected" ||
+	ok "APPEND-ONLY rewriting a committed Validation entry is rejected"
+ao_case .harness/plans/active/p.md active in-progress "$ao_log_start
+- 2026-11-01T00:05Z — main — decision — keep the parser (edited)
+$ao_log_done" "$ao_v_rc
+
+$ao_v_ok" && bad "APPEND-ONLY rewriting a Log decision must be rejected" ||
+	ok "APPEND-ONLY rewriting a Log decision is rejected"
+# The sanctioned compaction: start/done dropped, the last entry per phase kept.
+ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec
+$ao_log_absorb" "$ao_v_ok" && ok "APPEND-ONLY the handoff compaction is accepted" ||
+	bad "APPEND-ONLY the handoff compaction must be accepted"
+ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec
+$ao_log_absorb" "$ao_v_rc" && bad "APPEND-ONLY a compaction dropping the phase's last entry must be rejected" ||
+	ok "APPEND-ONLY a compaction dropping the phase's last entry is rejected"
+ao_case .harness/plans/completed/p.md completed completed "$ao_log_absorb" "$ao_v_ok" &&
+	bad "APPEND-ONLY a compaction dropping a decision must be rejected" ||
+	ok "APPEND-ONLY a compaction dropping a decision is rejected"
+ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec" "$ao_v_ok" &&
+	bad "APPEND-ONLY a compaction with no absorb decision must be rejected" ||
+	ok "APPEND-ONLY a compaction with no absorb decision is rejected"
+ao_case .harness/plans/active/p.md active completed "$ao_log_dec
+$ao_log_absorb" "$ao_v_ok" && bad "APPEND-ONLY a compaction that stays under active/ must be rejected" ||
+	ok "APPEND-ONLY a compaction that stays under active/ is rejected"
+
 # TRIP: each validator has a committed bad fixture that must make it fail.
 tl=$(mktemp -d)
 mkdir -p "$tl/scripts/ci" "$tl/docs" "$tl/cli" "$tl/skills" "$tl/setup"

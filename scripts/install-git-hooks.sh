@@ -66,6 +66,16 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       `success_signal:` and `authority:` bullets, and every `R<n>:` line in
 #       it must carry `acceptance:` naming a backticked command (before any
 #       `| source:`). A Goal with no requirements yet (wayfinder) passes.
+#   APPEND-ONLY (#218): every old-side `## Validation` entry and every
+#       old-side `## Log` `blocked`/`decision` entry must survive byte-identical
+#       (trailing whitespace trimmed) on the new side. The one exception is the
+#       handoff step 6 compaction: the plan lands under completed/ in this
+#       range, its frontmatter reads `status: completed`, Current State reads
+#       `lifecycle_status: completed`, and a new Log entry records `absorb:`.
+#       Then an old Validation entry may go only when it is not its phase's
+#       last, or a new entry for that phase replaces it; an entry with no
+#       ``phase `slug` `` on its first line is never dropped. Deleting the
+#       whole plan file is not a range this guard sees.
 #   FLOOR: entries already committed at ZHARNESS_GUARD_HISTORICAL_FLOOR are
 #       never re-executed. A push whose before-SHA predates the v0.24 cutover
 #       makes the pre-cutover entries look new, and their proofs cannot run at
@@ -709,6 +719,70 @@ zharness_guard_plan_shape() {              # <path> <content-file>
   return 1
 }
 
+zharness_append_only_problems() {          # <old-file> <new-file> <compaction-candidate 0|1>
+  COMP="$3" awk '
+    function flush() {
+      if (sec != "" && cur != "") { sub(/[[:space:]]+$/, "", cur); E[f, sec, ++N[f, sec]] = cur }
+      cur = ""
+    }
+    function first(e) { sub(/\n.*/, "", e); return e }
+    function phase(e,   l) {
+      l = first(e); gsub(/`/, "", l)
+      if (!match(l, /phase [^[:space:]]+/)) return ""
+      return substr(l, RSTART + 6, RLENGTH - 6)
+    }
+    function kept(e) {
+      return first(e) ~ /(^- [^[:space:]]+ | — )(blocked|decision)([[:space:]:(]|$)/
+    }
+    FNR == 1 { flush(); f++; sec = "" }
+    /^## / { flush(); sec = ($0 == "## Validation") ? "V" : ($0 == "## Log") ? "L" : ""; next }
+    sec != "" {
+      if ($0 ~ /^- /) { flush(); cur = $0 }
+      else if (cur != "") cur = cur "\n" $0
+    }
+    END {
+      flush()
+      for (i = 1; i <= N[1, "L"]; i++) oldL[E[1, "L", i]] = 1
+      for (i = 1; i <= N[2, "L"]; i++) {
+        e = E[2, "L", i]; newL[e] = 1
+        if (!(e in oldL) && first(e) ~ /absorb:/) absorb = 1
+      }
+      comp = (ENVIRON["COMP"] == 1 && absorb)
+      for (i = 1; i <= N[1, "V"]; i++) { e = E[1, "V", i]; oldV[e] = 1; p = phase(e); if (p != "") last[p] = i }
+      for (i = 1; i <= N[2, "V"]; i++) {
+        e = E[2, "V", i]; newV[e] = 1
+        if (!(e in oldV) && (p = phase(e)) != "") fresh[p] = 1
+      }
+      for (i = 1; i <= N[1, "V"]; i++) {
+        e = E[1, "V", i]
+        if (e in newV) continue
+        p = phase(e)
+        if (comp && p != "" && (last[p] != i || (p in fresh))) continue
+        print "Validation entry removed or rewritten: " first(e)
+      }
+      for (i = 1; i <= N[1, "L"]; i++) {
+        e = E[1, "L", i]
+        if (kept(e) && !(e in newL)) print "Log entry removed or rewritten: " first(e)
+      }
+    }' "$1" "$2"
+}
+
+zharness_guard_append_only() {             # <path> <old-file> <new-file> <base>
+  local comp=0 probs
+  case "$1" in
+    .harness/plans/completed/*)
+      if ! git cat-file -e "$4:$1" 2>/dev/null &&
+        awk '/^---$/{n++; next} n==1 && /^status:[[:blank:]]*completed[[:blank:]]*$/{f=1} END{exit !f}' "$3" &&
+        grep -qE '^[[:space:]]*- lifecycle_status:[[:blank:]]*completed[[:blank:]]*$' "$3"; then comp=1; fi ;;
+  esac
+  probs=$(zharness_append_only_problems "$2" "$3" "$comp")
+  [ -z "$probs" ] && return 0
+  echo "❌ APPEND-ONLY GUARD REJECTED: $1" >&2
+  printf '%s\n' "$probs" | cut -c1-200 | sed 's/^/   /' >&2
+  echo "   Committed Validation and Log blocked/decision entries are append-only; only the handoff step 6 compaction drops entries (handoff.md)." >&2
+  return 1
+}
+
 zhuards_guard_plans() {                    # <path-list-space-separated> <base> <head> <dir-for-temp>
   local plans="$1" base="$2" head="$3" tmp="$4" f rc=0
   for f in $plans; do
@@ -722,6 +796,7 @@ zhuards_guard_plans() {                    # <path-list-space-separated> <base> 
       .harness/plans/active/*.md)
         if [ -s "$tmp/new.md" ] && ! zharness_guard_plan_shape "$f" "$tmp/new.md"; then rc=1; fi ;;
     esac
+    if [ -s "$tmp/old.md" ] && ! zharness_guard_append_only "$f" "$tmp/old.md" "$tmp/new.md" "$base"; then rc=1; fi
     if ! zharness_guard_entries_of_file "$f" "$tmp/old.md" "$tmp/new.md" "$base" "$head"; then rc=1; fi
   done
   return $rc
