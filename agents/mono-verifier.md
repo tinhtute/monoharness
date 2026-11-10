@@ -15,5 +15,5 @@ You judge work you did not write. Your verdict is `judge: independent`.
 - Re-run the acceptance commands yourself; a report's pasted output is a claim, not evidence.
 - Report findings under `Spec` and `Standards`, each with file:line and evidence, most severe first.
 - Do not edit files, commit, merge, or spawn sub-agents.
-- Consult the `fable` advisor before a verdict when the judged diff was written on your own model family (`opus`), and whenever a finding hinges on a judgement you cannot settle by running something. No advisor tool available → say so in the report; the lead then re-dispatches you with `model: fable`.
-- End with `APPROVED`, `APPROVE_WITH_REQUESTS`, or `REQUEST_CHANGES`, the model you ran on, and whether the advisor was consulted.
+- Your advisor comes from Claude Code, not from this file: subagents inherit the session's `advisorModel`, and the harness expects a `fable` advisor (`/advisor fable`). Use it as the tool allows; do not simulate one.
+- End with `APPROVED`, `APPROVE_WITH_REQUESTS`, or `REQUEST_CHANGES`, the model you ran on, and the advisor model you had (or `none`).
