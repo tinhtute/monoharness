@@ -42,3 +42,6 @@ docs/workflow-harness/migration.md     # ADR 0004 Decision table, historical pat
 docs/WORKFLOW.md        # historical path; now .harness/WORKFLOW.md (v0.31.0), cited by frozen ADRs/research
 docs/PROJECT.md         # historical path; now .harness/PROJECT.md (v0.31.0), cited by frozen ADRs
 docs/plans/completed/   # historical path; now .harness/plans/completed/ (v0.31.0), cited by frozen ADRs/research
+# Accepted ADRs are not covered by the directory entry above (verify-doc-links.sh); each citation needs its own line.
+docs/plans/completed/outcome-spec.md        # ADR 0014 Status authority; historical path, now .harness/plans/completed/outcome-spec.md (v0.31.0)
+docs/plans/completed/lean-sdlc-workflow.md  # ADR 0016 Status authority; historical path, now .harness/plans/completed/lean-sdlc-workflow.md (v0.31.0)

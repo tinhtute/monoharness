@@ -2,7 +2,10 @@
 
 ## Status
 
-Accepted. 2026-09-16. Authority for creating `docs/evals/failures.md`, executed in phase
+Superseded by commit `d8ed43e` (2026-10-23) — historical record, not a current runbook. That commit
+removed the lean-eval tree, `docs/evals/failures.md` included; the last ledger is
+`git show d8ed43e^:docs/evals/failures.md`. No live surface reads or writes the
+ledger. Accepted 2026-09-16 as the authority for creating that file, executed in phase
 `p3-failure-ledger` of `harness-eval-loop.md` (then under `docs/plans/active/`) (R8).
 
 ## Context

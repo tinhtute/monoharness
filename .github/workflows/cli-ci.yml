@@ -10,10 +10,14 @@ on:
       - ".harness/WORKFLOW.md"
       - "scripts/install-git-hooks.sh"
       - "scripts/ci/hook-guard.sh"
+      - "scripts/ci/pr-guards.sh"
+      - "scripts/ci/test-pr-guards.sh"
       - "agents/**"
       - "models.json"
       - "scripts/ci/test-agent-models.sh"
       - "scripts/install-agents.sh"
+      - "scripts/workflow/**"
+      - "docs/guides/consumer-ci-guards.md"
       - ".github/workflows/cli-ci.yml"
   pull_request:
 
@@ -117,6 +121,10 @@ jobs:
 
       - name: Guard fixture tests (guard-v3)
         run: bash scripts/ci/test-guards.sh
+      # Issue #216: the PR-range secret and commit-msg guard, plus the
+      # consumer CI template it documents. The gate itself is pr-guards.yml.
+      - name: PR guard fixture tests
+        run: bash scripts/ci/test-pr-guards.sh
       # A pull_request checkout has only origin/<default>; proofs may name the
       # default branch bare (`git show master:…`), so provide the local ref.
       - name: Provide the default branch ref for proofs

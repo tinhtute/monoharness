@@ -1,0 +1,61 @@
+name: mutants-nightly
+
+# Issue #221: nightly mutation score for the installer. Schedule and manual
+# runs only, so it never blocks a PR. cargo-mutants exits 2 when mutants
+# survive and 3 on timeouts; both are findings to read in the report, not CI
+# failures. Any other non-zero exit (bad usage, failing baseline) fails the run.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: cli
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-mutants
+
+      - name: Run cargo mutants on cli/src/installer
+        run: |
+          rc=0
+          cargo mutants --file 'src/installer/**/*.rs' --timeout-multiplier 3 || rc=$?
+          echo "cargo mutants exit code: $rc"
+          case "$rc" in 0 | 2 | 3) exit 0 ;; *) exit "$rc" ;; esac
+
+      - name: Summarize the mutation score
+        if: always()
+        run: |
+          d=mutants.out
+          [ -d "$d" ] || { echo "no mutants.out produced" >> "$GITHUB_STEP_SUMMARY"; exit 0; }
+          count() { [ -f "$d/$1.txt" ] && wc -l < "$d/$1.txt" || echo 0; }
+          {
+            echo "### cargo mutants: cli/src/installer"
+            echo
+            echo "| caught | missed | timeout | unviable |"
+            echo "|---|---|---|---|"
+            echo "| $(count caught) | $(count missed) | $(count timeout) | $(count unviable) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutants-report
+          path: cli/mutants.out
+          if-no-files-found: warn

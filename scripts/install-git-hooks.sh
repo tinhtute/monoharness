@@ -51,6 +51,40 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       `echo` or `printf` (not executed); a `cargo test` proof exits 0 having
 #       passed 0 tests; or the revision under test adds a Rust `#[test]` whose
 #       body is empty. A proof is not required to run a test changed in range.
+#   R8: JUDGE-ID (#214) — a new verdict-bearing entry judged at high-risk (the
+#       effective lane) or in mode full must carry `judge: independent`,
+#       `judge_model:` and `judged_sha:` sub-bullets. With a revision range the
+#       model must belong to a `judges` name in models.json at the range's
+#       lower bound (`opus` or `claude-opus-5-5` for `opus`), and judged_sha
+#       must lie in the range: an ancestor of the upper bound that is the lower
+#       bound or not reachable from it, or a present commit whose `git
+#       patch-id` equals a range commit's (a rebase carries the verdict;
+#       autopilot.md). At pre-commit the bounds are the
+#       default branch's merge-base and HEAD. Without a range (fixtures) only
+#       presence and shape are checked. Unresolvable bounds or an empty
+#       allowlist reject (fail closed).
+#   PLAN-SHAPE (#217): a non-empty plan staged/pushed under
+#       .harness/plans/active/ must have a `## Goal` with non-empty `outcome:`,
+#       `success_signal:` and `authority:` bullets (an empty `authority:` with
+#       sub-bullets directly below counts), and every `R<n>:` line in
+#       it must carry `acceptance:` naming a backticked command (before any
+#       `| source:`). A Goal with no requirements yet (wayfinder) passes.
+#   APPEND-ONLY (#218): every old-side `## Validation` entry and every
+#       old-side `## Log` `blocked`/`decision` entry must survive byte-identical
+#       (trailing whitespace trimmed) on the new side. The one exception is the
+#       handoff step 6 compaction: the plan lands under completed/ in this
+#       range, its frontmatter reads `status: completed`, Current State reads
+#       `lifecycle_status: completed`, and a new Log entry records `absorb:`.
+#       Then an old Validation entry may go only when it is not its phase's
+#       last, or a new entry for that phase replaces it; an entry with no
+#       ``phase `slug` `` on its first line is never dropped. Deleting the
+#       whole plan file is not a range this guard sees; a rename git detects
+#       (-M, 50% similarity) compares against its source.
+#   BASELINE (#219): in a non-empty plan staged/pushed under
+#       .harness/plans/active/, the first `done` Log entry must sit below a
+#       separate entry reading `baseline: <sha> <cmd> rc=<n>`
+#       (scripts/workflow/baseline.sh writes it); a `done` entry cannot carry
+#       its own baseline. Exempt when that `done` was already on the old side.
 #   FLOOR: entries already committed at ZHARNESS_GUARD_HISTORICAL_FLOOR are
 #       never re-executed. A push whose before-SHA predates the v0.24 cutover
 #       makes the pre-cutover entries look new, and their proofs cannot run at
@@ -118,6 +152,84 @@ zharness_entry_has_full_mode() {           # first line only, backticks stripped
   # Same first-line rule as verdicts: a quoted `mode: full` in a sub-bullet
   # of a gate entry must not look like the entry's own mode.
   printf '%s\n' "$1" | head -1 | sed 's/[`]//g' | grep -qE 'mode:[[:blank:]]*full|[[:space:]]mode[[:blank:]]+full'
+}
+
+zharness_entry_field() {                   # <entry-body> <field> -> first sub-bullet value
+  # Only a `  - <field>:` sub-bullet counts; prose or a quoted review naming the
+  # field elsewhere in the entry cannot supply it.
+  printf '%s\n' "$1" | sed 's/[`]//g' \
+    | sed -n -E "s/^[[:space:]]{2,}- $2:[[:blank:]]*([^[:space:]]+).*/\\1/p" | head -1
+}
+
+zharness_judge_bounds() {                  # <base> <head> -> "<lower>\t<upper>"; 1 = unresolved
+  local lower upper
+  if [ "$2" = ":" ]; then
+    upper=$(git rev-parse --verify --quiet "HEAD^{commit}" 2>/dev/null) || return 1
+    lower=$(git merge-base "${ZHARNESS_DEFAULT_BRANCH:-origin/master}" HEAD 2>/dev/null) || return 1
+  else
+    lower=$(git rev-parse --verify --quiet "$1^{commit}" 2>/dev/null) || return 1
+    upper=$(git rev-parse --verify --quiet "$2^{commit}" 2>/dev/null) || return 1
+  fi
+  printf '%s\t%s\n' "$lower" "$upper"
+}
+
+zharness_judge_allowlist() {               # <rev> -> `judges` names from <rev>:models.json
+  # No jq: the guard must run on a stock machine. The array may span lines.
+  git show "$1:models.json" 2>/dev/null | tr -d '\n' \
+    | sed -n 's/.*"judges"[[:space:]]*:[[:space:]]*\[\([^]]*\)\].*/\1/p' \
+    | tr ',' '\n' | tr -d ' \t"' | grep -E '^[A-Za-z0-9._-]+$' || true
+}
+
+zharness_judge_model_allowed() {           # <model> <allowlist>
+  # `opus` matches `opus`, `claude-opus`, `claude-opus-5-5`, `claude-opus-4.1`;
+  # never `claude-opus-x` or `opusx`.
+  local a
+  while IFS= read -r a; do
+    [ -n "$a" ] || continue
+    printf '%s\n' "$1" | grep -qE "^(claude-)?$(printf '%s' "$a" | sed 's/\./\\./g')(-[0-9]+([.-][0-9]+)*)?$" && return 0
+  done <<< "$2"
+  return 1
+}
+
+zharness_judged_sha_in_range() {           # <sha> <lower> <upper>
+  local sha pid
+  sha=$(git rev-parse --verify --quiet "$1^{commit}" 2>/dev/null) || return 1
+  if git merge-base --is-ancestor "$sha" "$3" 2>/dev/null; then
+    [ "$sha" = "$2" ] && return 0
+    git merge-base --is-ancestor "$sha" "$2" 2>/dev/null || return 0
+  fi
+  # A rebase rewrites the judged commit; the verdict carries over when a commit
+  # in the range has the same `git patch-id` (autopilot.md). The judged object
+  # must still be present; an empty diff (merge, empty commit) never matches.
+  pid=$(git show --no-color --no-ext-diff "$sha" 2>/dev/null |
+    git patch-id --stable 2>/dev/null | cut -d' ' -f1)
+  [ -n "$pid" ] || return 1
+  git log -p --no-merges --no-color --no-ext-diff "$2..$3" 2>/dev/null |
+    git patch-id --stable 2>/dev/null | cut -d' ' -f1 | grep -Fxq "$pid"
+}
+
+zharness_entry_judge_problems() {          # <entry-body> [<lower> <upper> <allowlist>] -> problems
+  local body="$1" model sha
+  printf '%s\n' "$body" | sed 's/[`]//g' | grep -qE '^[[:space:]]{2,}- judge:[[:blank:]]*independent([[:space:]]|$)' ||
+    echo "no \`judge: independent\` sub-bullet"
+  model=$(zharness_entry_field "$body" judge_model)
+  sha=$(zharness_entry_field "$body" judged_sha)
+  if [ -z "$model" ]; then
+    echo "no \`judge_model:\` sub-bullet"
+  elif [ $# -ge 4 ]; then
+    if [ -z "$4" ]; then
+      echo "models.json at $2 lists no judges (failed closed)"
+    elif ! zharness_judge_model_allowed "$model" "$4"; then
+      echo "judge_model '$model' is not a judge in models.json at $2: $(printf '%s' "$4" | tr '\n' ' ')"
+    fi
+  fi
+  if [ -z "$sha" ]; then
+    echo "no \`judged_sha:\` sub-bullet"
+  elif ! printf '%s\n' "$sha" | grep -qE '^[0-9a-f]{7,40}$'; then
+    echo "judged_sha '$sha' is not a commit SHA"
+  elif [ $# -ge 4 ] && ! zharness_judged_sha_in_range "$sha" "$2" "$3"; then
+    echo "judged_sha '$sha' is not in the range $2..$3"
+  fi
 }
 
 zharness_lane_required_proof() {          # <lane> -> classes; unknown lane -> 1
@@ -334,6 +446,13 @@ zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base
   fi
   # R7: hollow tests are a property of the range, read once per plan file.
   if [ $# -ge 5 ]; then hollow=$(zharness_hollow_tests "$4" "$5"); fi
+  # R8: judge bounds and the allowlist are properties of the range too.
+  local jbounds="" jlower="" jupper="" jallow="" jprob
+  if [ $# -ge 5 ] && jbounds=$(zharness_judge_bounds "$4" "$5"); then
+    jlower=$(printf '%s' "$jbounds" | cut -f1)
+    jupper=$(printf '%s' "$jbounds" | cut -f2)
+    jallow=$(zharness_judge_allowlist "$jlower")
+  fi
   for efile in "$scratch"/n/e*.txt; do
     [ -f "$efile" ] || continue
     h=$(sha256sum "$efile" | cut -d' ' -f1)
@@ -363,6 +482,24 @@ zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base
     fi
 
     verdict=$(zharness_anchored_verdict "$body")
+    if [ -n "$verdict" ] && { [ "$lane" = "high-risk" ] || zharness_entry_has_full_mode "$body"; }; then
+      if [ $# -lt 5 ]; then
+        jprob=$(zharness_entry_judge_problems "$body")
+      elif [ -z "$jbounds" ]; then
+        jprob="no judge range resolves for $4..$5 (failed closed)"
+      else
+        jprob=$(zharness_entry_judge_problems "$body" "$jlower" "$jupper" "$jallow")
+      fi
+      if [ -n "$jprob" ]; then
+        failed=$((failed + 1))
+        echo "" >&2
+        echo "❌ R8 JUDGE-ID GUARD REJECTED: $path" >&2
+        echo "   a high-risk or mode-full entry must name an allowlisted judge and the commit it judged:" >&2
+        printf '%s\n' "$jprob" | sed 's/^/     /' >&2
+        echo "   offending entry starts: $header" >&2
+        continue
+      fi
+    fi
     case "$verdict" in
       APPROVED|APPROVE_WITH_REQUESTS) ;;
       *) continue ;;
@@ -548,14 +685,26 @@ zharness_guard_plan_paths() {              # <base> <head>
   fi
 }
 
-zharness_guard_old_blob() {                # <base> <path> <out-file>
+zharness_guard_rename_source() {           # <base> <head> <path> -> rename source, if any
+  if [ "$2" = ":" ]; then
+    git -c core.quotePath=false diff --cached --name-status -M "$1" 2>/dev/null
+  else
+    git -c core.quotePath=false diff --name-status -M "$1" "$2" 2>/dev/null
+  fi | awk -F '\t' -v p="$3" '$1 ~ /^R/ && $3 == p && !n++ { print $2 }'
+}
+
+zharness_guard_old_blob() {                # <base> <path> <out-file> [<head>]
   # A plan moved active/ -> completed/ keeps its identity: compare against the
   # predecessor path so a closure re-executes its new entries, not every entry
-  # the plan ever recorded. Plans lived under docs/plans/ before v0.31.0, so the
+  # the plan ever recorded. With <head>, a rename git detects in base..head
+  # names the predecessor, so renaming a plan cannot empty APPEND-ONLY's old
+  # side. Plans lived under docs/plans/ before v0.31.0, so the
   # layout move resolves to that path too. No predecessor found means an empty
   # old side, which re-executes everything — the conservative direction.
-  local base="$1" path="$2" out="$3" alt
+  local base="$1" path="$2" out="$3" alt src=""
   if git show "$base:$path" > "$out" 2>/dev/null; then return 0; fi
+  if [ $# -ge 4 ]; then src=$(zharness_guard_rename_source "$base" "$4" "$path") || src=""; fi
+  if [ -n "$src" ] && git show "$base:$src" > "$out" 2>/dev/null; then return 0; fi
   set -- "docs/plans/${path#.harness/plans/}"
   case "$path" in
     .harness/plans/completed/*)
@@ -568,15 +717,136 @@ zharness_guard_old_blob() {                # <base> <path> <out-file>
   : > "$out"
 }
 
+zharness_plan_shape_problems() {           # <plan-file> -> one problem per line
+  awk '
+    /^## / { in_goal = ($0 ~ /^## Goal[[:space:]]*$/); if (in_goal) goal = 1; ap = 0; next }
+    !in_goal { next }
+    # An empty `- authority:` is satisfied by a deeper sub-bullet on the next line.
+    ap { if ($0 ~ /^[[:space:]]*- [^[:space:]]/ && match($0, /[^[:space:]]/) > ap) a = 1; ap = 0 }
+    /^[[:space:]]*- outcome:[[:space:]]*[^[:space:]]/ { o = 1 }
+    /^[[:space:]]*- success_signal:[[:space:]]*[^[:space:]]/ { s = 1 }
+    /^[[:space:]]*- authority:[[:space:]]*[^[:space:]]/ { a = 1 }
+    /^[[:space:]]*- authority:[[:space:]]*$/ { ap = match($0, /[^[:space:]]/); next }
+    /^[[:space:]]*- R[0-9]+:/ {
+      id = $0; sub(/^[[:space:]]*- /, "", id); sub(/:.*/, "", id)
+      i = index($0, "acceptance:")
+      if (!i) { print id ": no `acceptance:`"; next }
+      seg = substr($0, i + 11); k = index(seg, "| source:"); if (k) seg = substr(seg, 1, k - 1)
+      if (seg !~ /`[^`]+`/) print id ": `acceptance:` names no backticked command"
+    }
+    END {
+      if (!goal) { print "no `## Goal` section"; exit }
+      if (!o) print "`## Goal` has no `- outcome:`"
+      if (!s) print "`## Goal` has no `- success_signal:`"
+      if (!a) print "`## Goal` has no `- authority:`"
+    }' "$1"
+}
+
+zharness_guard_plan_shape() {              # <path> <content-file>
+  local probs
+  probs=$(zharness_plan_shape_problems "$2")
+  [ -z "$probs" ] && return 0
+  echo "❌ PLAN-SHAPE GUARD REJECTED: $1" >&2
+  printf '%s\n' "$probs" | sed 's/^/   /' >&2
+  echo "   An active plan needs ## Goal outcome/success_signal/authority and an acceptance command per requirement (brainstorm-lock.md)." >&2
+  return 1
+}
+
+zharness_append_only_problems() {          # <old-file> <new-file> <compaction-candidate 0|1>
+  COMP="$3" awk '
+    function flush() {
+      if (sec != "" && cur != "") { sub(/[[:space:]]+$/, "", cur); E[f, sec, ++N[f, sec]] = cur }
+      cur = ""
+    }
+    function first(e) { sub(/\n.*/, "", e); return e }
+    function phase(e,   l) {
+      l = first(e); gsub(/`/, "", l)
+      if (!match(l, /phase [^[:space:]]+/)) return ""
+      return substr(l, RSTART + 6, RLENGTH - 6)
+    }
+    function kept(e) {
+      return first(e) ~ /(^- [^[:space:]]+ | — )(blocked|decision)([[:space:]:(]|$)/
+    }
+    FNR == 1 { flush(); f++; sec = "" }
+    /^## / { flush(); sec = ($0 == "## Validation") ? "V" : ($0 == "## Log") ? "L" : ""; next }
+    sec != "" {
+      if ($0 ~ /^- /) { flush(); cur = $0 }
+      else if (cur != "") cur = cur "\n" $0
+    }
+    END {
+      flush()
+      for (i = 1; i <= N[1, "L"]; i++) oldL[E[1, "L", i]] = 1
+      for (i = 1; i <= N[2, "L"]; i++) {
+        e = E[2, "L", i]; newL[e] = 1
+        if (!(e in oldL) && first(e) ~ /absorb:/) absorb = 1
+      }
+      comp = (ENVIRON["COMP"] == 1 && absorb)
+      for (i = 1; i <= N[1, "V"]; i++) { e = E[1, "V", i]; oldV[e] = 1; p = phase(e); if (p != "") last[p] = i }
+      for (i = 1; i <= N[2, "V"]; i++) {
+        e = E[2, "V", i]; newV[e] = 1
+        if (!(e in oldV) && (p = phase(e)) != "") fresh[p] = 1
+      }
+      for (i = 1; i <= N[1, "V"]; i++) {
+        e = E[1, "V", i]
+        if (e in newV) continue
+        p = phase(e)
+        if (comp && p != "" && (last[p] != i || (p in fresh))) continue
+        print "Validation entry removed or rewritten: " first(e)
+      }
+      for (i = 1; i <= N[1, "L"]; i++) {
+        e = E[1, "L", i]
+        if (kept(e) && !(e in newL)) print "Log entry removed or rewritten: " first(e)
+      }
+    }' "$1" "$2"
+}
+
+zharness_guard_append_only() {             # <path> <old-file> <new-file> <base>
+  local comp=0 probs
+  case "$1" in
+    .harness/plans/completed/*)
+      if ! git cat-file -e "$4:$1" 2>/dev/null &&
+        awk '/^---$/{n++; next} n==1 && /^status:[[:blank:]]*completed[[:blank:]]*$/{f=1} END{exit !f}' "$3" &&
+        grep -qE '^[[:space:]]*- lifecycle_status:[[:blank:]]*completed[[:blank:]]*$' "$3"; then comp=1; fi ;;
+  esac
+  probs=$(zharness_append_only_problems "$2" "$3" "$comp")
+  [ -z "$probs" ] && return 0
+  echo "❌ APPEND-ONLY GUARD REJECTED: $1" >&2
+  printf '%s\n' "$probs" | cut -c1-200 | sed 's/^/   /' >&2
+  echo "   Committed Validation and Log blocked/decision entries are append-only; only the handoff step 6 compaction drops entries (handoff.md)." >&2
+  return 1
+}
+
+zharness_guard_baseline() {                # <path> <old-file> <new-file>
+  local first
+  first=$(awk '
+    $0 == "## Log" { on = 1; next }
+    /^## / { on = 0 }
+    on && /^- / && /(^- [^[:space:]]+ | — )done([[:space:]:(]|$)/ { print; exit }
+    on && /^- / && /baseline:[[:blank:]]*[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]+[[:blank:]].*rc=[0-9]+/ { exit }' "$3")
+  [ -n "$first" ] || return 0
+  L="$first" awk '$0 == ENVIRON["L"] { f = 1 } END { exit !f }' "$2" && return 0
+  echo "❌ BASELINE GUARD REJECTED: $1" >&2
+  echo "   the first \`done\` entry in ## Log has no baseline line above it:" >&2
+  printf '   %s\n' "$first" | cut -c1-200 >&2
+  echo "   Record the pre-work state first: bash scripts/workflow/baseline.sh (work-full.md step 3)." >&2
+  return 1
+}
+
 zhuards_guard_plans() {                    # <path-list-space-separated> <base> <head> <dir-for-temp>
   local plans="$1" base="$2" head="$3" tmp="$4" f rc=0
   for f in $plans; do
-    zharness_guard_old_blob "$base" "$f" "$tmp/old.md"
+    zharness_guard_old_blob "$base" "$f" "$tmp/old.md" "$head"
     if [ "$head" = ":" ]; then
       git show ":$f" > "$tmp/new.md"
     else
       git show "$head:$f" > "$tmp/new.md" 2>/dev/null || : > "$tmp/new.md"
     fi
+    case "$f" in
+      .harness/plans/active/*.md)
+        if [ -s "$tmp/new.md" ] && ! zharness_guard_plan_shape "$f" "$tmp/new.md"; then rc=1; fi
+        if [ -s "$tmp/new.md" ] && ! zharness_guard_baseline "$f" "$tmp/old.md" "$tmp/new.md"; then rc=1; fi ;;
+    esac
+    if [ -s "$tmp/old.md" ] && ! zharness_guard_append_only "$f" "$tmp/old.md" "$tmp/new.md" "$base"; then rc=1; fi
     if ! zharness_guard_entries_of_file "$f" "$tmp/old.md" "$tmp/new.md" "$base" "$head"; then rc=1; fi
   done
   return $rc

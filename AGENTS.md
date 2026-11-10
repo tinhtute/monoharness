@@ -35,6 +35,9 @@ bash scripts/ci/test-install-zharness.sh
 # [CI] Guard fixture tests for the pre-commit hook's ZGUARD-CORE block — .github/workflows/cli-ci.yml, job `hook-guard`
 bash scripts/ci/test-guards.sh
 
+# [CI] PR-range secret scan + commit-msg check, and the consumer CI template (docs/guides/consumer-ci-guards.md) — gate: .github/workflows/pr-guards.yml (PRs only, runs from the base branch); fixtures: .github/workflows/cli-ci.yml, job `hook-guard`
+bash scripts/ci/test-pr-guards.sh && bash scripts/ci/pr-guards.sh origin/master HEAD
+
 # [CI] Doc link integrity (broken repo-relative cross-references) — .github/workflows/docs-ci.yml, job `doc-links`, on any tracked *.md change.
 # Exceptions live in .claimignore, each one requires a `# reason`.
 bash scripts/ci/verify-doc-links.sh
@@ -44,6 +47,9 @@ bash scripts/ci/validate-skills.sh
 
 # [CI] Skill script and check-panel tests — .github/workflows/skills-ci.yml, jobs `skill-scripts`, `risk-facts`, `panel-merge`
 bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/test-risk-facts.sh && python3 -I scripts/ci/test-panel-merge.py
+
+# [CI] Risk-judge eval report tests — .github/workflows/skills-ci.yml, job `risk-facts`
+python3 -I -B evals/risk-judge/test_report.py
 
 # [CI] Test-weakening gate (PRs only; the `allow-test-weakening` label overrides) — .github/workflows/test-weakening.yml, job `test-weakening`
 bash scripts/ci/test-weakening.sh origin/master HEAD

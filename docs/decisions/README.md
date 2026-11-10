@@ -19,7 +19,7 @@ Exception: the owner explicitly requested ADRs 0015, 0016 and 0020 before implem
 | [0007](0007-fresh-overwrite-for-playbooks-and-workflow.md) | Playbooks and WORKFLOW.md fresh-overwrite; three-way merge narrows to PROJECT.md and the AGENTS.md block | Accepted |
 | [0008](0008-recorded-ownership-and-transactional-recovery.md) | Ownership is recorded, not inferred; stash restore is a transaction | Accepted |
 | [0009](0009-guard-revision-selection-is-centralized.md) | One revision selector for every guard; completed plans are validated like active ones | Accepted |
-| [0010](0010-local-failure-ledger.md) | A local failure ledger is maintainer-owned and optional for consumers | Accepted |
+| [0010](0010-local-failure-ledger.md) | A local failure ledger is maintainer-owned and optional for consumers | Superseded by `d8ed43e` |
 | [0011](0011-update-without-three-way-merge.md) | `update` drops three-way merge: hash-guarded AGENTS block, write-once PROJECT.md | Accepted |
 | [0012](0012-five-section-plan-and-update-migration.md) | Plans have five sections; `update` migrates one nine-section active plan, Validation bytes unchanged | Accepted; decision 2 amended by [0014](0014-outcome-spec-normal-plans.md) |
 | [0013](0013-installer-follows-directory-symlinks.md) | The installer follows symlinks at directory components; deferred to its own initiative | Accepted |

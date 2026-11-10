@@ -23,6 +23,7 @@ on:
       - "scripts/ci/test-risk-verdict.sh"
       - "models.json"
       - "scripts/ci/fixtures/skill-scripts/**"
+      - "evals/risk-judge/**"
       - "skills/**/scripts/**"
       - ".github/workflows/skills-ci.yml"
   pull_request:
@@ -75,3 +76,6 @@ jobs:
 
       - name: Risk verdict gate fixtures
         run: bash scripts/ci/test-risk-verdict.sh
+
+      - name: Risk-judge eval report tests
+        run: python3 -I -B evals/risk-judge/test_report.py
