@@ -1619,6 +1619,33 @@ tl_rc=$?
 	ok "TRIP verify-doc-links fails on a broken link" ||
 	bad "TRIP verify-doc-links must fail on its bad fixture (rc $tl_rc)"
 rm -rf "$tl"
+# An Accepted ADR's missing path is not hidden by a directory-wide .claimignore
+# entry (#224); a Superseded ADR, or a per-file entry with a reason, is.
+ta=$(mktemp -d)
+mkdir -p "$ta/scripts/ci" "$ta/docs/decisions" "$ta/cli" "$ta/skills"
+gfix "$ta"
+cp scripts/ci/verify-doc-links.sh "$ta/scripts/ci/"
+printf 'docs/evals/  # fixture: removed tree\n' > "$ta/.claimignore"
+ta_adr() { # <status-line>
+	printf '# 0001 — fixture\n\n## Status\n\n%s\n\n## Context\n\nThe ledger lives in `docs/evals/gone.md`.\n' "$1" \
+		> "$ta/docs/decisions/0001-fixture.md"
+}
+ta_adr 'Accepted. 2026-11-10.'
+ta_out=$( cd "$ta" && bash scripts/ci/verify-doc-links.sh 2>&1 )
+ta_rc=$?
+[ "$ta_rc" -eq 1 ] && printf '%s' "$ta_out" | grep -q '0001-fixture.md -> docs/evals/gone.md' &&
+	ok "TRIP verify-doc-links: a directory .claimignore entry does not cover an Accepted ADR" ||
+	bad "TRIP an Accepted ADR citing a missing path under an ignored directory must fail (rc $ta_rc: $ta_out)"
+ta_adr 'Superseded by commit `d8ed43e` — historical record.'
+( cd "$ta" && bash scripts/ci/verify-doc-links.sh ) >/dev/null 2>&1 &&
+	ok "TRIP verify-doc-links: a Superseded ADR keeps the directory exemption" ||
+	bad "TRIP a Superseded ADR under a directory exemption must pass"
+ta_adr 'Accepted. 2026-11-10.'
+printf 'docs/evals/gone.md  # fixture: per-file historical path\n' >> "$ta/.claimignore"
+( cd "$ta" && bash scripts/ci/verify-doc-links.sh ) >/dev/null 2>&1 &&
+	ok "TRIP verify-doc-links: a per-file .claimignore entry still covers an Accepted ADR" ||
+	bad "TRIP a per-file exemption must cover an Accepted ADR"
+rm -rf "$ta"
 vs_out=$(bash scripts/ci/validate-skill.sh scripts/ci/fixtures/bad-skill/SKILL.md 2>&1)
 vs_rc=$?
 [ "$vs_rc" -ne 0 ] && printf '%s' "$vs_out" | grep -q "they must match" &&

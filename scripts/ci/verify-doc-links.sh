@@ -68,6 +68,16 @@ REMOVED_HITS=0
 CLAIM_PATTERN='[A-Za-z0-9._/-]+/[A-Za-z0-9._/-]+\.(md|sh|go|json|yml|toml|py)'
 while IFS= read -r file; do
   dir="$(dirname "$file")"
+  # An Accepted ADR is live authority: a directory-wide .claimignore entry (one
+  # ending in `/`) does not cover its missing paths; only a per-file entry with
+  # its own reason does. Superseded ADRs are historical records.
+  accepted_adr=0
+  case "$file" in
+    docs/decisions/[0-9]*.md)
+      if awk '/^## Status/{on=1;next} on && NF{a=($0 ~ /^Accepted/); exit} END{exit !a}' "$file"; then
+        accepted_adr=1
+      fi ;;
+  esac
   claims="$(
     {
       grep -ohE '`'"$CLAIM_PATTERN"'`' "$file" 2>/dev/null |
@@ -156,6 +166,9 @@ while IFS= read -r file; do
 
     skip=0
     for pattern in ${ignore_patterns[@]+"${ignore_patterns[@]}"}; do
+      if [ "$accepted_adr" -eq 1 ]; then
+        case "$pattern" in */) continue ;; esac
+      fi
       case "$claim" in
         *"$pattern"*)
           skip=1
