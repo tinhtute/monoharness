@@ -19,14 +19,14 @@ Instructions are not concurrency control; a fence in the brief's prose is not a 
 
 ## Models per role
 
-Pass `model` explicitly on every dispatch and name it in the brief; never rely on the parent default. On Claude Code with the harness agents installed (`bash scripts/install-agents.sh`), dispatch the role's agent instead of `general-purpose` so the role and model show in the agent list: `mono-worker` (`sonnet`), `mono-lead` (`opus`), `mono-verifier` (`fable`, read-only); the Claude Code setup adds `test-runner` (`haiku`, read-only: runs a suite and returns only failures). `models.json` is the policy for these; `scripts/ci/test-agent-models.sh` fails when an agent's `model:` disagrees with it.
+Pass `model` explicitly on every dispatch and name it in the brief; never rely on the parent default. On Claude Code with the harness agents installed (`bash scripts/install-agents.sh`), dispatch the role's agent instead of `general-purpose` so the role and model show in the agent list: `mono-scout` (`haiku`, read-only: file search, log reading, summaries; never code edits or judgment calls), `mono-worker` (`sonnet`), `mono-lead` (`opus`), `mono-verifier` (`opus` at `high`, read-only, with the session's `fable` advisor, set by `/advisor fable` and inherited by subagents); the Claude Code setup adds `test-runner` (`haiku`, read-only: runs a suite and returns only failures). `models.json` is the policy for these; `scripts/ci/test-agent-models.sh` fails when an agent's `model:` or `effort:` disagrees with it.
 
 | Role | Model |
 |---|---|
 | Mechanical edits (moves, renames, link fixes) | fast tier (e.g. `sonnet`, `haiku`) |
 | Ordinary implementation | the session's default tier |
 | Cross-cutting design, concurrency, subtle algorithms | strongest-judgment tier |
-| Verifier, judge, cross-review | a different model family from the worker |
+| Verifier, judge, cross-review | a different model family from the worker, or the same family when the session's `advisorModel` is `fable` |
 
 The owner's named model wins over this table. Evidence of the model that ran is the dispatch parameter and the sub-agent transcript's assistant `model` field; harness entries such as an advisor attachment are not the worker's model.
 
@@ -75,5 +75,5 @@ An accepted result is not yet `done`: log a worker task's `done` only after its 
 1. Merge accepted branches one at a time; resolve conflicts against the plan, never by taking one side blindly. A worker that left its change uncommitted → bring over exactly its SCOPE paths, new files included, by absolute path.
 2. Edit the held shared files once, after the merges.
 3. Review the shared interfaces, then run the full phase check on the combined tree.
-4. `high-risk` phases: a verifier on a different model family from the workers reviews the combined diff before the gate.
+4. `high-risk` phases: a verifier on a different model family from the workers (or the same family when the session's `advisorModel` is `fable`) reviews the combined diff before the gate.
 5. Each `done` names the worker's model, branch and commit SHA, and the combined tree it passed on. Removing worker worktrees and branches is a delete: do it only with the owner's approval.
