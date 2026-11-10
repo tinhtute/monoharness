@@ -65,7 +65,8 @@ HOOKS_DIR="$REPO_ROOT/.git/hooks"
 #       allowlist reject (fail closed).
 #   PLAN-SHAPE (#217): a non-empty plan staged/pushed under
 #       .harness/plans/active/ must have a `## Goal` with non-empty `outcome:`,
-#       `success_signal:` and `authority:` bullets, and every `R<n>:` line in
+#       `success_signal:` and `authority:` bullets (an empty `authority:` with
+#       sub-bullets directly below counts), and every `R<n>:` line in
 #       it must carry `acceptance:` naming a backticked command (before any
 #       `| source:`). A Goal with no requirements yet (wayfinder) passes.
 #   APPEND-ONLY (#218): every old-side `## Validation` entry and every
@@ -704,11 +705,14 @@ zharness_guard_old_blob() {                # <base> <path> <out-file>
 
 zharness_plan_shape_problems() {           # <plan-file> -> one problem per line
   awk '
-    /^## / { in_goal = ($0 ~ /^## Goal[[:space:]]*$/); if (in_goal) goal = 1; next }
+    /^## / { in_goal = ($0 ~ /^## Goal[[:space:]]*$/); if (in_goal) goal = 1; ap = 0; next }
     !in_goal { next }
+    # An empty `- authority:` is satisfied by a deeper sub-bullet on the next line.
+    ap { if ($0 ~ /^[[:space:]]*- [^[:space:]]/ && match($0, /[^[:space:]]/) > ap) a = 1; ap = 0 }
     /^[[:space:]]*- outcome:[[:space:]]*[^[:space:]]/ { o = 1 }
     /^[[:space:]]*- success_signal:[[:space:]]*[^[:space:]]/ { s = 1 }
     /^[[:space:]]*- authority:[[:space:]]*[^[:space:]]/ { a = 1 }
+    /^[[:space:]]*- authority:[[:space:]]*$/ { ap = match($0, /[^[:space:]]/); next }
     /^[[:space:]]*- R[0-9]+:/ {
       id = $0; sub(/^[[:space:]]*- /, "", id); sub(/:.*/, "", id)
       i = index($0, "acceptance:")

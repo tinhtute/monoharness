@@ -1378,6 +1378,31 @@ sp=$(shape '## Goal
 - success_signal: s')
 [ "$sp" = "\`## Goal\` has no \`- authority:\`" ] && ok "PLAN-SHAPE a missing authority is rejected" ||
 	bad "PLAN-SHAPE missing authority: got '$sp'"
+[ -z "$(shape '## Goal
+- outcome: o
+- success_signal: s
+- authority:
+  - owner decision 2026-11-09 (grill)
+  - docs/decisions/0020-orchestrate-and-autopilot.md
+- requirements:
+  - R1: r | acceptance: `test -d .` | source: owner')" ] &&
+	ok "PLAN-SHAPE an authority given as nested sub-bullets passes" ||
+	bad "PLAN-SHAPE a nested authority list must pass"
+sp=$(shape '## Goal
+- outcome: o
+- success_signal: s
+- authority:
+- requirements: none yet')
+[ "$sp" = "\`## Goal\` has no \`- authority:\`" ] && ok "PLAN-SHAPE an empty authority followed by a sibling bullet is rejected" ||
+	bad "PLAN-SHAPE empty authority before a sibling: got '$sp'"
+sp=$(shape '## Goal
+- outcome: o
+- success_signal: s
+- authority:
+
+  - owner')
+[ "$sp" = "\`## Goal\` has no \`- authority:\`" ] && ok "PLAN-SHAPE an empty authority followed by a blank line is rejected" ||
+	bad "PLAN-SHAPE empty authority before a blank line: got '$sp'"
 sp=$(shape '## Goals
 - outcome: o')
 [ "$sp" = "no \`## Goal\` section" ] && ok "PLAN-SHAPE a plan without ## Goal is rejected" ||
