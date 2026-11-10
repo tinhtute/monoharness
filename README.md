@@ -205,7 +205,7 @@ npx skills add git@github.com:tinhtute/monoharness.git -a claude-code -g -y
 
 No skill runs during installation.
 
-The harness agents (`mono-lead`, `mono-worker`, `mono-verifier`) install from a
+The harness agents (`mono-scout`, `mono-worker`, `mono-lead`, `mono-verifier`) install from a
 clone of this repository; the installer retires old `lead`/`worker`/`verifier`
 agent files as `<name>.md.retired.<timestamp>`:
 

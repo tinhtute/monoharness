@@ -18,6 +18,10 @@ for a in $listed; do
   got=$(awk '/^---$/{n++;next} n==1 && /^model:/{print $2}' "$f")
   name=$(awk '/^---$/{n++;next} n==1 && /^name:/{print $2}' "$f")
   [ "$got" = "$want" ] || { echo "$a: model '$got', policy wants '$want'"; fail=1; }
+  want_e=$(jq -r --arg a "$a" '.agents[]|select(.agent==$a).effort // empty' "$policy")
+  got_e=$(awk '/^---$/{n++;next} n==1 && /^effort:/{print $2}' "$f")
+  [ -n "$want_e" ] || { echo "$a: models.json row has no effort"; fail=1; }
+  [ "$got_e" = "$want_e" ] || { echo "$a: effort '$got_e', policy wants '$want_e'"; fail=1; }
   [ "$name" = "$a" ] || { echo "$a: frontmatter name '$name'"; fail=1; }
   grep -q '^maxTurns: [0-9]' "$f" || { echo "$a: missing maxTurns"; fail=1; }
   if jq -e --arg a "$a" '.readOnly|index($a)' "$policy" >/dev/null; then

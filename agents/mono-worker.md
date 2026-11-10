@@ -2,7 +2,7 @@
 name: mono-worker
 description: Light delegate for a mono fanout wave — mechanical edits, link fixes, docs, and other bounded tasks with a stated acceptance command. Spawn with a full brief; it does not spawn sub-agents.
 model: sonnet
-effort: low
+effort: medium
 maxTurns: 40
 color: green
 ---
