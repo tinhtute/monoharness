@@ -75,5 +75,5 @@ An accepted result is not yet `done`: log a worker task's `done` only after its 
 1. Merge accepted branches one at a time; resolve conflicts against the plan, never by taking one side blindly. A worker that left its change uncommitted → bring over exactly its SCOPE paths, new files included, by absolute path.
 2. Edit the held shared files once, after the merges.
 3. Review the shared interfaces, then run the full phase check on the combined tree.
-4. `high-risk` phases: a verifier on a different model family from the workers reviews the combined diff before the gate.
+4. `high-risk` phases: a verifier on a different model family from the workers (or the same family when the session's `advisorModel` is `fable`) reviews the combined diff before the gate.
 5. Each `done` names the worker's model, branch and commit SHA, and the combined tree it passed on. Removing worker worktrees and branches is a delete: do it only with the owner's approval.
