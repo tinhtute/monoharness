@@ -1,7 +1,7 @@
 ---
 name: retro
 model: opus
-description: "Session retrospective: evidence-cited, severity-ranked findings about the agent's environment, then one user-approved fix — a guard or a rerun-gated experiment. Invoke only from a mono playbook step or when the user asks for it by name."
+description: "Session retrospective: evidence-cited, severity-ranked findings about the agent's environment, then one user-approved fix — a guard or a rerun-gated experiment. Invoke only from a poteto playbook step or when the user asks for it by name."
 ---
 
 Lead with the top finding and its evidence.

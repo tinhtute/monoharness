@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** the entry router skill `mono` is renamed `poteto` (`skills/poteto/`, `/poteto <task>`). Reinstall skills and remove the old `mono` skill.
+- **BREAKING:** the harness agents drop the `mono-` prefix: `scout`, `worker`, `lead`, `verifier`. `install-agents.sh` retires the old `mono-*` agents.
+
 ## [v0.35.0] — 2026-11-10
 
 ### Added
@@ -133,7 +138,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **BREAKING:** the entry router skill is `mono` (`skills/mono/`, `/mono <task>`),
+- **BREAKING:** the entry router skill is `mono` (`skills/poteto/`, `/mono <task>`),
   not `mono-mode`. Reinstall skills and remove any installed `mono-mode` copy.
 - The managed `WORKFLOW.md` names `check.md` § Lane Matrix as the only source
   of lane → required proof, final check mode, and judge independence. Run

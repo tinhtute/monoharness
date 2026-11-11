@@ -19,7 +19,7 @@ Instructions are not concurrency control; a fence in the brief's prose is not a 
 
 ## Models per role
 
-Pass `model` explicitly on every dispatch and name it in the brief; never rely on the parent default. On Claude Code with the harness agents installed (`bash scripts/install-agents.sh`), dispatch the role's agent instead of `general-purpose` so the role and model show in the agent list: `mono-scout` (`haiku`, read-only: file search, log reading, summaries; never code edits or judgment calls), `mono-worker` (`sonnet`), `mono-lead` (`opus`), `mono-verifier` (`opus` at `high`, read-only, with the session's `fable` advisor, set by `/advisor fable` and inherited by subagents); use `mono-scout` instead of the built-in `Explore`, whose model is not pinned; the Claude Code setup adds `test-runner` (`haiku`, read-only: runs a suite and returns only failures). `models.json` is the policy for these; `scripts/ci/test-agent-models.sh` fails when an agent's `model:` or `effort:` disagrees with it.
+Pass `model` explicitly on every dispatch and name it in the brief; never rely on the parent default. On Claude Code with the harness agents installed (`bash scripts/install-agents.sh`), dispatch the role's agent instead of `general-purpose` so the role and model show in the agent list: `scout` (`haiku`, read-only: file search, log reading, summaries; never code edits or judgment calls), `worker` (`sonnet`), `lead` (`opus`), `verifier` (`opus` at `high`, read-only, with the session's `fable` advisor, set by `/advisor fable` and inherited by subagents); use `scout` instead of the built-in `Explore`, whose model is not pinned; the Claude Code setup adds `test-runner` (`haiku`, read-only: runs a suite and returns only failures). `models.json` is the policy for these; `scripts/ci/test-agent-models.sh` fails when an agent's `model:` or `effort:` disagrees with it.
 
 | Role | Model |
 |---|---|
@@ -61,7 +61,7 @@ Spawn the whole wave in one message, in the background, each with its own worktr
    - context limit → a fresh worker with a smaller scope;
    - dropped connection, or no report and no visible cause → the same brief, once;
    - tool error → a different model;
-   - rejected result (wrong output) → a fresh worker with consolidated scope (the original brief, later directives, the prior report and branch), one rung up the ladder: the same agent at `effort: high` first, then the next model (`mono-worker` → `mono-lead`). Start each unit on its role's default effort; raise effort only after a failed check, not up front.
+   - rejected result (wrong output) → a fresh worker with consolidated scope (the original brief, later directives, the prior report and branch), one rung up the ladder: the same agent at `effort: high` first, then the next model (`worker` → `lead`). Start each unit on its role's default effort; raise effort only after a failed check, not up front.
 
    After the second failed retry → log `blocked` and plan around it; a gap never counts as a pass.
 4. Race: apply the rule declared up front. For a design bakeoff, score each candidate against a 3–6 point rubric, ask a cross-family judge for its pick, choose one base, and graft the best part of each loser by hand; wild divergence means the brief was under-specified, so reframe and re-run rather than averaging.

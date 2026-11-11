@@ -26,7 +26,7 @@ claude-code add-dir /path/to/your/local/skill
 - `scripts/` — repository scripts: `install-git-hooks.sh` (pre-commit and pre-push
   guards; run `bash scripts/install-git-hooks.sh --force`), `install-agents.sh` (copies
   `agents/*.md` to `~/.claude/agents/`), and the CI gates under `scripts/ci/`.
-- `agents/` — the harness agents `mono-scout`, `mono-worker`, `mono-lead`, `mono-verifier`; `models.json`
+- `agents/` — the harness agents `scout`, `worker`, `lead`, `verifier`; `models.json`
   holds their model policy, checked by `scripts/ci/test-agent-models.sh`.
 - `cli/` — the Rust CLI (`zharness`) that backs the workflow harness.
 - `docs/` — repo-wide reference docs, including
