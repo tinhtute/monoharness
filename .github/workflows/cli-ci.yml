@@ -93,11 +93,11 @@ jobs:
         run: |
           d=$(mktemp -d)
           mkdir -p "$d/agents"
-          echo legacy > "$d/agents/lead.md"
+          echo legacy > "$d/agents/mono-lead.md"
           CLAUDE_DIR="$d" bash scripts/install-agents.sh
-          test "$(ls "$d"/agents/mono-*.md | wc -l)" -eq "$(ls agents/mono-*.md | wc -l)"
-          test ! -e "$d/agents/lead.md"
-          test "$(ls "$d"/agents/lead.md.retired.* | wc -l)" -eq 1
+          for f in agents/*.md; do cmp -s "$f" "$d/agents/$(basename "$f")"; done
+          test ! -e "$d/agents/mono-lead.md"
+          test "$(ls "$d"/agents/mono-lead.md.retired.* | wc -l)" -eq 1
 
   install-script:
     # Issue #209: scripts/install-zharness.sh against a stubbed gh.

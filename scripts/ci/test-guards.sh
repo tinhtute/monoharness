@@ -650,7 +650,7 @@ hg=$(mktemp -d)
 gfix "$hg"
 mkdir -p "$hg/scripts"
 cp scripts/install-git-hooks.sh "$hg/scripts/install-git-hooks.sh"
-# From a read-only worktree (mono-verifier) the copy keeps mode 0444.
+# From a read-only worktree (verifier) the copy keeps mode 0444.
 chmod u+w "$hg/scripts/install-git-hooks.sh"
 printf 'seed\n' > "$hg/seed.txt"
 git -C "$hg" add -A >/dev/null && git -C "$hg" commit -qm base

@@ -35,6 +35,6 @@ Depth keeps the goal and scope; drop any suggestion that makes the job bigger ra
 
 ## Output
 
-The field, one line per expert move, then the rewrite in a single fenced block and the lint result. Offer in one line to run it now or lock it as a plan for a new session; on yes, route through `mono`'s ambition playbook.
+The field, one line per expert move, then the rewrite in a single fenced block and the lint result. Offer in one line to run it now or lock it as a plan for a new session; on yes, route through `poteto`'s ambition playbook.
 
 Defer to: `think` (whether the task is worth doing), `brainstorm` (scope and plan).

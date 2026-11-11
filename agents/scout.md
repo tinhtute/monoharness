@@ -1,5 +1,5 @@
 ---
-name: mono-scout
+name: scout
 description: Cheap read-only scout for a mono wave — finds files, reads logs and test output, and summarizes what it saw. Use for side tasks where a wrong answer is cheap to spot; never for code edits or judgment calls.
 model: haiku
 effort: low

@@ -33,7 +33,7 @@ Coding agents often fail for ordinary engineering reasons:
   open.
 
 zharness provides a compact entrypoint, a navigable repository map, durable
-plans only when work needs them, and mono playbooks that stay reduced for
+plans only when work needs them, and poteto playbooks that stay reduced for
 read-only and bounded work.
 
 ## Goals
@@ -183,9 +183,9 @@ skills and can read their installed references. A missing dependency is unsuppor
 for workflow execution; retained legacy files are not a fallback. Other skills
 are optional extensions.
 
-`mono` sits at `skills/mono`; the other skills live in three groups: `stages`
+`poteto` sits at `skills/poteto`; the other skills live in three groups: `stages`
 (the six workflow skills plus grill, wayfinder and retro), `reason` (think, hunt, arena, learn, ambition) and `tools` (git,
-librarian, mono-write, read). `retro` is gated: it runs only from a mono playbook
+librarian, mono-write, read). `retro` is gated: it runs only from a poteto playbook
 step or when the user names it. `mono-write` covers only what the playbooks need:
 polishing a research draft and writing CHANGELOG entries and release notes.
 
@@ -205,7 +205,7 @@ npx skills add git@github.com:tinhtute/monoharness.git -a claude-code -g -y
 
 No skill runs during installation.
 
-The harness agents (`mono-scout`, `mono-worker`, `mono-lead`, `mono-verifier`) install from a
+The harness agents (`scout`, `worker`, `lead`, `verifier`) install from a
 clone of this repository; the installer retires old `lead`/`worker`/`verifier`
 agent files as `<name>.md.retired.<timestamp>`:
 

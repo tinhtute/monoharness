@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# install-agents.sh — Install the harness agents (agents/mono-*.md) for Claude Code.
+# install-agents.sh — Install the harness agents (agents/*.md) for Claude Code.
 # Safe to run multiple times: an identical file is left alone, a differing one
 # is backed up as <name>.md.backup.<timestamp> before it is overwritten.
-# The pre-rename agents (lead, worker, verifier) are retired, never deleted:
+# The pre-rename agents (mono-scout, mono-worker, mono-lead, mono-verifier) are retired, never deleted:
 # each is renamed to <name>.md.retired.<timestamp>.
 #
 # Usage:
@@ -15,7 +15,7 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 DEST_DIR="$CLAUDE_DIR/agents"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
-LEGACY_AGENTS="lead worker verifier"
+LEGACY_AGENTS="mono-scout mono-worker mono-lead mono-verifier"
 
 mkdir -p "$DEST_DIR"
 count=0

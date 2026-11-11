@@ -1,6 +1,6 @@
 # Risk Verdict
 
-Decides whether a green PR needs a person. Used by the land step of the `mono` ship playbook (`skills/mono/playbooks/ship.md` § Land). The change sets the tier, not the author: the verdict reads the diff at one commit, never the plan's declared lane.
+Decides whether a green PR needs a person. Used by the land step of the `poteto` ship playbook (`skills/poteto/playbooks/ship.md` § Land). The change sets the tier, not the author: the verdict reads the diff at one commit, never the plan's declared lane.
 
 ## Checks
 
