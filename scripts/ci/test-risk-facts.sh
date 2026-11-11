@@ -132,6 +132,24 @@ printf 'x\n' >"$REPO/db/x.sql"
 commit
 check "every Always-review line counts" '.always_review_hits == ["db/x.sql"]'
 
+new_repo exempt "$(printf -- '- Always-review paths: .github/**, cli/Cargo.toml\n- Review-exempt paths: .github/dependabot.yml, cli/Cargo.toml, cli/Cargo.lock')"
+mkdir -p "$REPO/.github" "$REPO/cli"
+printf 'version: 2\n' >"$REPO/.github/dependabot.yml"
+printf '[package]\n' >"$REPO/cli/Cargo.toml"
+printf 'x\n' >"$REPO/cli/Cargo.lock"
+commit
+check "review-exempt paths raise no always-review fact" \
+  '.always_review_hits == [] and .ci_config_touched == false and .manifest_or_lockfile_touched == false'
+
+new_repo exemptpartial "$(printf -- '- Review-exempt paths: .github/dependabot.yml, AGENTS.md')"
+mkdir -p "$REPO/.github/workflows"
+printf 'version: 2\n' >"$REPO/.github/dependabot.yml"
+printf 'on: push\n' >"$REPO/.github/workflows/ci.yml"
+printf '# changed\n' >>"$REPO/AGENTS.md"
+commit
+check "exemption covers only its own paths; AGENTS.md is never exempt" \
+  '.always_review_hits == ["AGENTS.md"] and .ci_config_touched == true'
+
 new_repo noagents
 printf 'x\n' >"$REPO/.gitlab-ci.yml"
 printf '# changed\n' >>"$REPO/AGENTS.md"
