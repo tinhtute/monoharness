@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- `install-zharness.sh` exits 2 when another zharness earlier on PATH (for example a mise shim of `~/.cargo/bin`) reports a different version; the new binary stays installed.
+- `AGENTS.md`: repo-wide rename sweeps exclude `.harness/plans/completed/`.
+
 ## [v0.36.0] — 2026-11-11
 
 ### Added
