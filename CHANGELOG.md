@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v0.36.0] — 2026-11-11
+
+### Added
+
+- Harness agents are tiered by task complexity in `models.json` (scout fast, worker sonnet, lead and verifier opus); the verifier runs on high effort with a fable advisor (#259, #260).
+- `AGENTS.md` § Unattended Shipping can declare review-exempt paths for the risk verdict (#262).
+
 ### Changed
 
 - **BREAKING:** the entry router skill `mono` is renamed `poteto` (`skills/poteto/`, `/poteto <task>`). Reinstall skills and remove the old `mono` skill.
