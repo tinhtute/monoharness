@@ -94,11 +94,13 @@ esac
 installed_version="$("${INSTALL_DIR}/zharness" --version)"
 echo "$installed_version"
 
-# An older zharness earlier on PATH (e.g. ~/.cargo/bin) would keep answering.
+# An older zharness earlier on PATH (e.g. ~/.cargo/bin) would keep answering;
+# fail so the shadowing is fixed. The new binary stays installed.
 if command -v zharness >/dev/null 2>&1; then
   path_version="$(zharness --version 2>/dev/null || true)"
   if [ "$path_version" != "$installed_version" ]; then
-    echo "warning: zharness on PATH is $(command -v zharness) (${path_version:-unknown}), not ${INSTALL_DIR}/zharness (${installed_version}); remove or reorder it" >&2
+    echo "error: zharness on PATH is $(command -v zharness) (${path_version:-unknown}), not ${INSTALL_DIR}/zharness (${installed_version}); remove or reorder it" >&2
+    exit 2
   fi
 fi
 

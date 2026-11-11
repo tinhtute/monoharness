@@ -99,7 +99,9 @@ begin_scenario() {
 
 invoke_install() {
   (
-    export PATH="$BIN_DIR:$PATH"
+    # Install target first: a host zharness elsewhere on PATH would trip the
+    # shadow check (exit 2) that S5 covers on its own.
+    export PATH="$INSTALL_TARGET_DIR:$BIN_DIR:$PATH"
     export ZHARNESS_INSTALL_DIR="$INSTALL_TARGET_DIR"
     bash "$SCRIPT_UNDER_TEST" "$@"
   )
@@ -171,15 +173,19 @@ invoke_install_with_path() {
   )
 }
 
-scenario_s5_shadowed_binary_warns() {
+scenario_s5_shadowed_binary_fails() {
   local failures=0 exit_code=0 stale_dir="$ROOT/s5-stale"
   begin_scenario "s5"
   mkdir -p "$stale_dir"
   printf '#!/usr/bin/env bash\necho "zharness 0.0.1-stale"\n' >"$stale_dir/zharness"
   chmod +x "$stale_dir/zharness"
   invoke_install_with_path "$stale_dir:$INSTALL_TARGET_DIR" >"$INSTALL_OUT" 2>"$INSTALL_ERR" || exit_code=$?
-  expect_eq "exit code" 0 "$exit_code" || failures=1
-  expect_file_has "warns about shadowing binary" "$INSTALL_ERR" "warning: zharness on PATH is $stale_dir/zharness (zharness 0.0.1-stale)" || failures=1
+  expect_eq "exit code" 2 "$exit_code" || failures=1
+  expect_file_has "fails naming the shadowing binary" "$INSTALL_ERR" "error: zharness on PATH is $stale_dir/zharness (zharness 0.0.1-stale)" || failures=1
+  if [ ! -x "$INSTALL_TARGET_DIR/zharness" ]; then
+    printf '    assert: installed binary stays in place\n      %s missing or not executable\n' "$INSTALL_TARGET_DIR/zharness" >&2
+    failures=1
+  fi
   return "$failures"
 }
 
@@ -188,7 +194,7 @@ scenario_s6_unshadowed_binary_silent() {
   begin_scenario "s6"
   invoke_install_with_path "$INSTALL_TARGET_DIR" >"$INSTALL_OUT" 2>"$INSTALL_ERR" || exit_code=$?
   expect_eq "exit code" 0 "$exit_code" || failures=1
-  expect_file_lacks "no shadow warning" "$INSTALL_ERR" "warning: zharness on PATH" || failures=1
+  expect_file_lacks "no shadow error" "$INSTALL_ERR" "zharness on PATH" || failures=1
   return "$failures"
 }
 
@@ -220,8 +226,8 @@ main() {
   run_scenario "S2 stale draft older than newest published -> install proceeds" scenario_s2_stale_draft_installs_newest_published
   run_scenario "S3 no drafts -> install newest published" scenario_s3_no_draft_installs_newest_published
   run_scenario "S4 explicit tag -> skip resolution, download requested tag" scenario_s4_explicit_tag_skips_resolution
-  run_scenario "S5 older zharness earlier on PATH -> warn with its path" scenario_s5_shadowed_binary_warns
-  run_scenario "S6 installed zharness first on PATH -> no shadow warning" scenario_s6_unshadowed_binary_silent
+  run_scenario "S5 older zharness earlier on PATH -> fail (exit 2) with its path, binary stays installed" scenario_s5_shadowed_binary_fails
+  run_scenario "S6 installed zharness first on PATH -> no shadow error" scenario_s6_unshadowed_binary_silent
   printf 'summary: %d passed, %d failed\n' "$PASSED" "$FAILED"
   [ "$FAILED" -eq 0 ]
 }
