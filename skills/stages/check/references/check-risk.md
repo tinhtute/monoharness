@@ -9,7 +9,7 @@ Run this skill's `scripts/risk-facts.sh "origin/$BASE" "$SHA"` from the reposito
 | Check | Needs review when |
 |---|---|
 | Size | `counted_lines` > 400 (docs, tests, generated files and lockfiles already excluded) |
-| Always-review paths | `always_review_hits` is non-empty, `ci_config_touched` or `manifest_or_lockfile_touched` is `true`, or the diff adds or changes a migration or schema |
+| Always-review paths | `always_review_hits` is non-empty, `ci_config_touched` or `manifest_or_lockfile_touched` is `true`, or the diff adds or changes a migration or schema; paths matching a `Review-exempt paths:` line of the base `AGENTS.md` never raise these facts (`AGENTS.md` itself is never exempt) |
 | Tests | `test_changes.removed_files`, `test_changes.skip_markers_added` or `test_changes.assertions_removed` is non-empty, or the diff removes a test case, removes or loosens an assertion, or changes an expected value to match new output without a stated reason |
 | Exercise | the PR body's `## Exercised` section reports `wrong:` |
 | Plan | the diff does something the PR's plan or Goal did not set out to do, or omits a planned phase, without saying so in the PR body |

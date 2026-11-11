@@ -22,6 +22,10 @@
 # always_review_hits: changed paths matching AGENTS.md itself or a glob on the
 #   "- Always-review paths:" line of <base>:AGENTS.md; every such line counts
 #   (missing file or line: none).
+# Review-exempt paths: changed paths matching a glob on a "- Review-exempt
+#   paths:" line of <base>:AGENTS.md are left out of always_review_hits,
+#   ci_config_touched and manifest_or_lockfile_touched. Read from <base>, so a
+#   PR cannot exempt itself; AGENTS.md itself is never exempt.
 # removed_files: test-pattern paths deleted outright (a rename is not a removal).
 # skip_markers_added: "path:line: text" for each added line outside docs that
 #   matches #[ignore, @skip, .skip(, pytest.mark.skip, t.Skip(, xit(, xdescribe(.
@@ -146,6 +150,28 @@ while IFS= read -r agents_line; do
   done
 done < <(git show "$base:AGENTS.md" 2>/dev/null | grep '^- Always-review paths:' || true)
 
+exempt=()
+while IFS= read -r agents_line; do
+  IFS=, read -ra raw <<<"${agents_line#- Review-exempt paths:}"
+  for g in "${raw[@]}"; do
+    g=${g//$'\r'/}
+    g=${g//\`/}
+    g="${g#"${g%%[![:space:]]*}"}"
+    g="${g%"${g##*[![:space:]]}"}"
+    [ -n "$g" ] && exempt+=("$g")
+  done
+done < <(git show "$base:AGENTS.md" 2>/dev/null | grep '^- Review-exempt paths:' || true)
+
+is_exempt() {
+  local g
+  [ "$1" = "AGENTS.md" ] && return 1
+  for g in ${exempt[@]+"${exempt[@]}"}; do
+    # shellcheck disable=SC2053 # $g is a glob on purpose
+    [[ $1 == $g ]] && return 0
+  done
+  return 1
+}
+
 # Changed paths with line counts. -z keeps unusual names intact.
 paths=()
 counts=()
@@ -180,6 +206,7 @@ for i in "${!paths[@]}"; do
   else
     counted=$((counted + n))
   fi
+  is_exempt "$p" && continue
   for g in "${globs[@]}"; do
     # shellcheck disable=SC2053 # $g is a glob on purpose
     if [[ $p == $g ]]; then
