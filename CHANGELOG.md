@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v0.37.0] — 2026-11-12
+
 ### Changed
 
-- **Breaking:** the managed layout moves from `.harness/` to `.monows/` (`WORKFLOW.md`, `PROJECT.md`, `plans/`), matching the skills and the monows consumer layout. `zharness update` renames an existing `.harness/` tree, re-keys the manifest, ownership ledger and captured originals, and refuses before writing when both copies exist. The pre-commit guards, `baseline.sh` and CI watch `.monows/plans/`; APPEND-ONLY resolves a plan moved from `.harness/plans/` to its predecessor.
+- **Breaking:** the managed layout moves from `.harness/` to `.monows/` (`WORKFLOW.md`, `PROJECT.md`, `plans/`), matching the skills and the monows consumer layout. `zharness update` renames an existing `.harness/` tree, re-keys the manifest, ownership ledger and captured originals, and refuses before writing when both copies exist. The pre-commit guards, `baseline.sh` and CI watch `.monows/plans/`; APPEND-ONLY resolves a plan moved from `.harness/plans/` to its predecessor. Migrate: run `zharness update` in each managed repo. (#268)
 
 ## [v0.36.1] — 2026-11-11
 
