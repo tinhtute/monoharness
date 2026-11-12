@@ -3,7 +3,8 @@
 # Safe to run multiple times: an identical file is left alone, a differing one
 # is backed up as <name>.md.backup.<timestamp> before it is overwritten.
 # The pre-rename agents (mono-scout, mono-worker, mono-lead, mono-verifier, and lead, now engineer) are retired, never deleted:
-# each is renamed to <name>.md.retired.<timestamp>.
+# each is renamed to <name>.md.retired.<timestamp>. `lead` is a generic name, so a lead.md is retired only when it
+# carries the harness agent's description; any other lead.md is the user's own and is kept.
 #
 # Usage:
 #   bash scripts/install-agents.sh
@@ -16,6 +17,7 @@ CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 DEST_DIR="$CLAUDE_DIR/agents"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 LEGACY_AGENTS="mono-scout mono-worker mono-lead mono-verifier lead"
+LEAD_MARKER='^description: Implementation delegate for a mono fanout wave'
 
 mkdir -p "$DEST_DIR"
 count=0
@@ -46,6 +48,10 @@ retired=0
 for name in $LEGACY_AGENTS; do
   legacy="$DEST_DIR/$name.md"
   [ -f "$legacy" ] || continue
+  if [ "$name" = lead ] && ! grep -q "$LEAD_MARKER" "$legacy"; then
+    echo "  · kept: $legacy (not the harness agent)"
+    continue
+  fi
   mv "$legacy" "$legacy.retired.$TIMESTAMP"
   retired=$((retired + 1))
   echo "  ⊘ retired: $legacy -> $legacy.retired.$TIMESTAMP"
