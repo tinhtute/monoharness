@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `lead` and `worker` stop with `BLOCKED` on a brief that reads two ways instead of picking a reading, and `worker` refuses a brief with no acceptance command. Reinstall with `bash scripts/install-agents.sh`.
+- `scout`'s description asks the main agent to use it proactively in place of the built-in Explore, inside or outside a wave; pair it with `Agent(Explore)` in `permissions.deny` (monoclaudian settings) to enforce it.
+- `work-fanout.md` maps each role to its harness agent, drops `haiku` from mechanical edits (`scout` never edits), sends an open spec back to the owner before spawning, and extends the retry ladder: add a real check first, then `effort: high`, then the next model (`worker` → `lead` → `lead` on `fable`), never effort past `high`.
+
 ## [v0.37.0] — 2026-11-12
 
 ### Changed

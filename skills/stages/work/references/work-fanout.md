@@ -21,12 +21,15 @@ Instructions are not concurrency control; a fence in the brief's prose is not a 
 
 Pass `model` explicitly on every dispatch and name it in the brief; never rely on the parent default. On Claude Code with the harness agents installed (`bash scripts/install-agents.sh`), dispatch the role's agent instead of `general-purpose` so the role and model show in the agent list: `scout` (`haiku`, read-only: file search, log reading, summaries; never code edits or judgment calls), `worker` (`sonnet`), `lead` (`opus`), `verifier` (`opus` at `high`, read-only, with the session's `fable` advisor, set by `/advisor fable` and inherited by subagents); use `scout` instead of the built-in `Explore`, whose model is not pinned; the Claude Code setup adds `test-runner` (`haiku`, read-only: runs a suite and returns only failures). `models.json` is the policy for these; `scripts/ci/test-agent-models.sh` fails when an agent's `model:` or `effort:` disagrees with it.
 
-| Role | Model |
+| Role | Agent and model |
 |---|---|
-| Mechanical edits (moves, renames, link fixes) | fast tier (e.g. `sonnet`, `haiku`) |
-| Ordinary implementation | the session's default tier |
-| Cross-cutting design, concurrency, subtle algorithms | strongest-judgment tier |
-| Verifier, judge, cross-review | a different model family from the worker, or the same family when the session's `advisorModel` is `fable` |
+| Search, log reading, summaries (no edits) | `scout` (fast tier, `haiku`) |
+| Bounded edits with a stated check: moves, renames, link fixes, docs, a clear spec with a test | `worker` (worker tier, `sonnet`) |
+| Ordinary implementation that needs judgment; migrations, perf, multi-layer changes even with a clear spec | `lead` (default tier, `opus`) |
+| Cross-cutting design, concurrency, subtle algorithms, no precedent in the codebase | `lead` dispatched with `model: fable` (strongest tier) at `medium` |
+| Verifier, judge, cross-review | `verifier`; a different model family from the worker, or the same family when the session's `advisorModel` is `fable` |
+
+A spec you cannot turn into ACCEPTANCE lines is not settled: settle it with the owner (`grill`) before spawning. Higher effort on an open spec only makes more assumptions for the owner, and the clearer the spec, the cheaper the agent that can do it.
 
 The owner's named model wins over this table. Evidence of the model that ran is the dispatch parameter and the sub-agent transcript's assistant `model` field; harness entries such as an advisor attachment are not the worker's model.
 
@@ -61,7 +64,12 @@ Spawn the whole wave in one message, in the background, each with its own worktr
    - context limit → a fresh worker with a smaller scope;
    - dropped connection, or no report and no visible cause → the same brief, once;
    - tool error → a different model;
-   - rejected result (wrong output) → a fresh worker with consolidated scope (the original brief, later directives, the prior report and branch), one rung up the ladder: the same agent at `effort: high` first, then the next model (`worker` → `lead`). Start each unit on its role's default effort; raise effort only after a failed check, not up front.
+   - rejected result (wrong output) → a fresh worker with consolidated scope (the original brief, later directives, the prior report and branch), one rung up the ladder:
+     1. no real check behind the result (no test, build or repro output) → add one to VERIFY and keep the agent;
+     2. the same agent at `effort: high`;
+     3. the next model at its default effort (`worker` → `lead` → `lead` with `model: fable`). Past `high`, change the model, not the effort.
+
+     Start each unit on its role's default effort; raise effort only after a failed check, not up front. A result that guessed at an open spec is not a rung: return to the owner instead.
 
    After the second failed retry → log `blocked` and plan around it; a gap never counts as a pass.
 4. Race: apply the rule declared up front. For a design bakeoff, score each candidate against a 3–6 point rubric, ask a cross-family judge for its pick, choose one base, and graft the best part of each loser by hand; wild divergence means the brief was under-specified, so reframe and re-run rather than averaging.
