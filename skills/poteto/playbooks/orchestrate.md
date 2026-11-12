@@ -4,7 +4,7 @@ A standing program handed to one coordinator: multi-day, many PRs, few owner tur
 
 Rules for the whole run:
 
-- **Two levels, one PR owner per PR:** the coordinator and the agents it spawns; `lead` and `worker` cannot spawn agents of their own. A `lead` (judgment) or `worker` (mechanical) agent in its own worktree (`isolation: worktree`) is the only writer of its branch; conflicts, rebases and fixes go to the PR owner, never to the coordinator. The owner's program request covers each PR owner pushing its own branch and opening its PR; no PR owner merges, merging stays with [ship.md § Land](ship.md#land).
+- **Two levels, one PR owner per PR:** the coordinator and the agents it spawns; `engineer` and `worker` cannot spawn agents of their own. An `engineer` (judgment) or `worker` (mechanical) agent in its own worktree (`isolation: worktree`) is the only writer of its branch; conflicts, rebases and fixes go to the PR owner, never to the coordinator. The owner's program request covers each PR owner pushing its own branch and opening its PR; no PR owner merges, merging stays with [ship.md § Land](ship.md#land).
 - **A verifier per PR:** `verifier`, a different model family from the PR owner (or the same family when the session's `advisorModel` is `fable`), read-only; its verdict covers one patch at one head SHA and carries across a rebase only under the `git patch-id` and base-change rule in [autopilot.md](autopilot.md); any other new push needs a new verdict.
 - **Standing Orders:** paste the plan's `## Standing Orders` into every spawn and retry brief, PR owners and verifiers alike.
 - **Rolling window:** at most 10 agents in flight; when a unit lands or is blocked, spawn the next ready unit instead of waiting on the batch.

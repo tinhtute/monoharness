@@ -9,7 +9,7 @@ Declare the mode before spawning. The grant covers only the PRs the owner named;
 
 Rules for the whole run:
 
-- **One PR owner per PR:** a `lead` or `worker` in its own worktree is the only writer of its branch; it never merges, in either mode.
+- **One PR owner per PR:** an `engineer` or `worker` in its own worktree is the only writer of its branch; it never merges, in either mode.
 - **Override labels are the owner's:** no agent applies `owner-reviewed` or `allow-test-weakening`. A change that loosens a gate (a raised budget, an allowlist entry) needs a verifier's proof and the coordinator's countersign in the Log; a disabled or soft-failed check comes out.
 - **A verdict covers one patch at one head SHA:** this is the verifier's `check full` verdict, not Land's head-bound `## Risk` verdict. After a rebase, the verdict holds only when `git patch-id` is the same at the verdict SHA and the new head and the base brought no change to a file the patch touches or calls into; otherwise a new verdict. Green CI covers only its own head and never stands in for a verdict.
 - **Off the base, not stacked:** each PR branches from the base and lands on its own. Stack only when a PR builds on another ([ship.md § Stacked or not](ship.md#stacked-or-not)): it rebases onto its parent's branch, the stack root onto the base, and a restack keeps only the verdicts the rule above lets hold.

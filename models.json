@@ -33,7 +33,7 @@
       "effort": "medium"
     },
     {
-      "agent": "lead",
+      "agent": "engineer",
       "tier": "default",
       "role": "ordinary implementation, guards, contract changes",
       "effort": "medium"
