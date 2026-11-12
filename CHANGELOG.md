@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `install-agents.sh` retires a `lead.md` only when it carries the old harness agent's description; a user's own `lead.md` is kept. CI covers both cases.
+- `work-fanout.md`: a `BLOCKED (spec)` that names a missing VERIFY or ACCEPTANCE line is the main agent's brief gap (fill it and re-brief), not the owner's; free re-briefs stop at two per unit, and a third `BLOCKED` or brief gap goes to the owner.
+
 ### Changed
 
 - **Breaking:** the `lead` agent is renamed `engineer`, so it no longer shares a name with the main session's lead role. `install-agents.sh` retires an installed `lead.md` as `lead.md.retired.<timestamp>`; dispatch `engineer` from now on. Reinstall with `bash scripts/install-agents.sh`.
