@@ -10,7 +10,7 @@ Core rule: one change, one measurement, keep or revert. Never stack untested cha
 4. Open `decision.tsv` outside the repository (the session scratchpad): one row per attempt with id, hypothesis, change, before, after, delta, tests, verdict (`kept` / `reverted`), note. Read it before each attempt.
 5. `hunt` — ground each hypothesis in a named mechanism ("defer X off the boot path because it blocks first paint"), not "try memoizing something". For a performance metric, order hypotheses by the `perf` step 4 mantras; borrow only the order, not its stop rule.
 6. `work` — loop, one hypothesis per iteration:
-   - Delegate the change to a sub-agent with a tight brief per [work-fanout.md](../../stages/work/references/work-fanout.md) (`worker` for mechanical changes, `lead` for ones needing judgment); review the diff rather than typing it. Independent live hypotheses may run in parallel, one worktree each.
+   - Delegate the change to a sub-agent with a tight brief per [work-fanout.md](../../stages/work/references/work-fanout.md) (`worker` for mechanical changes, `engineer` for ones needing judgment); review the diff rather than typing it. Independent live hypotheses may run in parallel, one worktree each.
    - Measure before and after on the frozen harness, then run the regression gate.
    - Keep only when the metric moves past noise and the gate stays green; otherwise revert in full. "Might help" is not kept.
    - One commit per kept change, staging only its files (never `git add -A`); with an active plan, log it in `## Log` with the SHA. Write the `decision.tsv` row either way.
