@@ -1,7 +1,7 @@
 //! The managed-set verbs: install, update, uninstall.
 //!
-//! This module owns exactly the managed doc set — `.harness/WORKFLOW.md`,
-//! the marked AGENTS block, the `.harness/PROJECT.md`
+//! This module owns exactly the managed doc set — `.monows/WORKFLOW.md`,
+//! the marked AGENTS block, the `.monows/PROJECT.md`
 //! scaffold, `.zharness` bookkeeping and the `.gitignore` entries. Nothing
 //! else in a repository is created, modified, or deleted.
 
@@ -43,8 +43,8 @@ pub const BLOCK_BEGIN: &str = "<!-- ZHARNESS:BEGIN -->";
 pub const BLOCK_END: &str = "<!-- ZHARNESS:END -->";
 pub const GITIGNORE_MARKER: &str = "# zharness v0.15 managed set";
 pub const PLAYBOOK_DIR_TGT: &str = "docs/playbooks";
-pub const WORKFLOW_TARGET: &str = ".harness/WORKFLOW.md";
-pub const PROJECT_TARGET: &str = ".harness/PROJECT.md";
+pub const WORKFLOW_TARGET: &str = ".monows/WORKFLOW.md";
+pub const PROJECT_TARGET: &str = ".monows/PROJECT.md";
 pub const AGENTS_TARGET: &str = "AGENTS.md";
 pub const GITIGNORE_TARGET: &str = ".gitignore";
 
@@ -689,7 +689,7 @@ mod tests {
     /// A fresh-overwrite target (WORKFLOW.md) that already exists
     /// with drifted content — e.g. hand-edited before zharness ever ran — is
     /// overwritten with upstream bytes unconditionally. Only the write-once
-    /// .harness/PROJECT.md is left as found.
+    /// .monows/PROJECT.md is left as found.
     #[test]
     fn install_fresh_overwrite_targets_drifted_local_file_overwritten() {
         let _env = IsolatedEnv::new();
@@ -805,8 +805,8 @@ mod tests {
         write_file(root, "CLAUDE.md", claude);
         write_file(root, "README.md", "readme");
         write_file(root, "workflow-state.yml", "state: legacy");
-        write_file(root, ".harness/plans/active/aaa.md", "# plan a");
-        write_file(root, ".harness/plans/active/bbb.md", "# plan b");
+        write_file(root, ".monows/plans/active/aaa.md", "# plan a");
+        write_file(root, ".monows/plans/active/bbb.md", "# plan b");
 
         let out = install_ok(root);
 
@@ -816,7 +816,7 @@ mod tests {
             "consumer CLAUDE.md rewritten — forbidden by R10/R18"
         );
         assert!(
-            out.contains("active plans under .harness/plans/active: 2")
+            out.contains("active plans under .monows/plans/active: 2")
                 && out.contains("reconcile which plan stays live"),
             "missing plan-reconcile advisory:\n{out}"
         );

@@ -1,4 +1,4 @@
-//! The `docs/` → `.harness/` layout migration that `update` performs.
+//! The `docs/` and `.harness/` → `.monows/` layout migrations that `update` performs.
 
 use super::check::check;
 use super::ownership::{Ownership, KIND_FILE, ORIGIN_CREATED, ORIGIN_PREEXISTING};
@@ -59,15 +59,15 @@ fn update_moves_old_layout_into_harness_keeping_plan_bytes() {
 
     update_ok(root);
 
-    assert_eq!(WORKFLOW_TARGET, ".harness/WORKFLOW.md");
-    assert_eq!(PROJECT_TARGET, ".harness/PROJECT.md");
+    assert_eq!(WORKFLOW_TARGET, ".monows/WORKFLOW.md");
+    assert_eq!(PROJECT_TARGET, ".monows/PROJECT.md");
     assert_eq!(
         read_file(root, WORKFLOW_TARGET),
         embedded_str("WORKFLOW.md")
     );
     assert_eq!(read_file(root, PROJECT_TARGET), PROJECT);
-    assert_eq!(read_file(root, ".harness/plans/active/p.md"), ACTIVE);
-    assert_eq!(read_file(root, ".harness/plans/completed/q.md"), COMPLETED);
+    assert_eq!(read_file(root, ".monows/plans/active/p.md"), ACTIVE);
+    assert_eq!(read_file(root, ".monows/plans/completed/q.md"), COMPLETED);
     for gone in ["docs/WORKFLOW.md", "docs/PROJECT.md", "docs/plans"] {
         assert!(!root.join(gone).exists(), "{gone} left behind");
     }
@@ -101,7 +101,7 @@ fn update_refuses_when_old_and_new_paths_both_exist() {
     let tmp = temp_repo();
     let root = tmp.path();
     old_layout(root);
-    write_file(root, ".harness/PROJECT.md", "a second copy\n");
+    write_file(root, ".monows/PROJECT.md", "a second copy\n");
     let before = tree_snapshot(root);
 
     let mut out = String::new();
@@ -116,7 +116,7 @@ fn update_refuses_when_old_and_new_paths_both_exist() {
     .expect_err("both copies present must refuse");
 
     assert!(
-        err.contains("docs/PROJECT.md") && err.contains(".harness/PROJECT.md"),
+        err.contains("docs/PROJECT.md") && err.contains(".monows/PROJECT.md"),
         "{err}"
     );
     assert_eq!(tree_snapshot(root), before, "a refused update wrote");
@@ -147,9 +147,107 @@ fn update_moves_then_migrates_a_legacy_plan_in_its_new_place() {
     let out = update_ok(root);
 
     assert!(
-        out.contains("migrated       .harness/plans/active/p.md"),
+        out.contains("migrated       .monows/plans/active/p.md"),
         "{out}"
     );
-    assert!(read_file(root, ".harness/plans/active/p.md").contains("## Log\n"));
+    assert!(read_file(root, ".monows/plans/active/p.md").contains("## Log\n"));
     assert!(!root.join("docs/plans").exists());
+}
+
+/// A repository as a v0.31–v0.36 binary left it: managed files under `.harness/`.
+fn harness_layout(root: &Path) {
+    write_file(root, ".harness/WORKFLOW.md", "old router\n");
+    write_file(root, ".harness/PROJECT.md", PROJECT);
+    write_file(root, ".harness/plans/active/p.md", ACTIVE);
+    write_file(root, ".harness/plans/completed/q.md", COMPLETED);
+    write_file(root, "AGENTS.md", "# Agents\n");
+    write_file(
+        root,
+        ".zharness/base/manifest.json",
+        &format!(
+            "{{\"zharness_version\":\"0.36.1\",\"installed_at\":\"2026-11-01T00:00:00Z\",\"files\":[{{\"path\":\".harness/WORKFLOW.md\",\"sha256\":\"{}\"}}]}}\n",
+            sha(b"old router\n")
+        ),
+    );
+    write_file(
+        root,
+        ".zharness/base/ownership.tsv",
+        "file\t.harness/WORKFLOW.md\tcreated_by_installer\nfile\t.harness/PROJECT.md\tpreexisting\n",
+    );
+}
+
+#[test]
+fn update_moves_harness_layout_into_monows_keeping_plan_bytes() {
+    let _env = IsolatedEnv::new();
+    let tmp = temp_repo();
+    let root = tmp.path();
+    harness_layout(root);
+
+    let out = update_ok(root);
+
+    assert!(out.contains(".harness/plans -> .monows/plans"), "{out}");
+    assert_eq!(read_file(root, PROJECT_TARGET), PROJECT);
+    assert_eq!(read_file(root, ".monows/plans/active/p.md"), ACTIVE);
+    assert_eq!(read_file(root, ".monows/plans/completed/q.md"), COMPLETED);
+    assert!(!root.join(".harness").exists(), ".harness/ left behind");
+    let base = load_base(root).unwrap();
+    assert!(base.keys().all(|k| !k.starts_with(".harness/")), "{base:?}");
+    let own = Ownership::load(root);
+    assert_eq!(own.get(KIND_FILE, WORKFLOW_TARGET), ORIGIN_CREATED);
+    assert_eq!(own.get(KIND_FILE, PROJECT_TARGET), ORIGIN_PREEXISTING);
+    assert!(!own.has(KIND_FILE, ".harness/WORKFLOW.md"));
+}
+
+#[test]
+fn update_refuses_when_harness_and_monows_both_exist() {
+    let _env = IsolatedEnv::new();
+    let tmp = temp_repo();
+    let root = tmp.path();
+    harness_layout(root);
+    write_file(root, ".monows/plans/active/other.md", ACTIVE);
+    let before = tree_snapshot(root);
+
+    let mut out = String::new();
+    let err = run_update(
+        UpdateOptions {
+            root: root.to_path_buf(),
+            version: "test".to_string(),
+            force: false,
+        },
+        &mut out,
+    )
+    .expect_err("both copies present must refuse");
+
+    assert!(
+        err.contains(".harness/plans") && err.contains(".monows/plans"),
+        "{err}"
+    );
+    assert_eq!(tree_snapshot(root), before, "a refused update wrote");
+}
+
+#[test]
+fn update_refuses_when_docs_and_harness_both_hold_plans() {
+    let _env = IsolatedEnv::new();
+    let tmp = temp_repo();
+    let root = tmp.path();
+    old_layout(root);
+    write_file(root, ".harness/plans/active/other.md", ACTIVE);
+    let before = tree_snapshot(root);
+
+    let mut out = String::new();
+    let err = run_update(
+        UpdateOptions {
+            root: root.to_path_buf(),
+            version: "test".to_string(),
+            force: false,
+        },
+        &mut out,
+    )
+    .expect_err("two old plan trees must refuse");
+
+    assert!(
+        err.contains("docs/plans") && err.contains(".harness/plans"),
+        "{err}"
+    );
+    assert_eq!(tree_snapshot(root), before, "a refused update wrote");
 }

@@ -16,7 +16,7 @@ const WORKFLOW_MD: &[u8] = include_bytes!(concat!(
     "/docs/embedded/WORKFLOW.md"
 ));
 
-/// The write-once project identity template, written to `.harness/PROJECT.md` only
+/// The write-once project identity template, written to `.monows/PROJECT.md` only
 /// when that file is absent.
 pub const PROJECT_TEMPLATE: &str = "templates/project.identity.md";
 
@@ -253,8 +253,8 @@ mod tests {
                     "## Log",
                     "## Validation",
                     "## Current State and Next Action",
-                    "The canonical active path is `.harness/plans/active/{slug}.md`",
-                    "confirm no non-empty plan exists under `.harness/plans/active/`",
+                    "The canonical active path is `.monows/plans/active/{slug}.md`",
+                    "confirm no non-empty plan exists under `.monows/plans/active/`",
                     "approach: not-planned",
                     "exact_next_action: to-plan",
                     "- success_signal:",
@@ -326,7 +326,7 @@ mod tests {
                     "- escalate_when:",
                     "every requirement appears in some phase `goal:`",
                     "validation expectations",
-                    ".harness/plans/active/{slug}.md",
+                    ".monows/plans/active/{slug}.md",
                     "After a phase/task definition is written, it is immutable",
                     "work/check/handoff may change only that phase's lifecycle status in this file",
                     "`to-plan` runs only for `high-risk`",
@@ -362,7 +362,7 @@ mod tests {
                 required: &[
                     "## Log",
                     "## Current State and Next Action",
-                    "slice `.harness/plans/active/{slug}.md` by section",
+                    "slice `.monows/plans/active/{slug}.md` by section",
                     "set that phase's plan status to `in-progress`",
                     "`start|done|blocked|decision`",
                     "A `blocked` entry is written immediately",
@@ -459,7 +459,7 @@ mod tests {
                 required: &[
                     "## Validation",
                     "Loaded by [check.md](check.md) step 2",
-                    "count every non-empty markdown plan under `.harness/plans/active/` before matching the requested initiative",
+                    "count every non-empty markdown plan under `.monows/plans/active/` before matching the requested initiative",
                     "Require exactly one active plan in total",
                     "stop even when only one matches the request",
                     "Read only its selected phase and `## Current State and Next Action`",
@@ -542,10 +542,10 @@ mod tests {
                     "Before closing the final phase, require every prior phase to be `done`",
                     "Only after the plan shows every phase `done`",
                     "`lifecycle_status: completed`",
-                    "git mv .harness/plans/active/{slug}.md .harness/plans/completed/{slug}.md",
+                    "git mv .monows/plans/active/{slug}.md .monows/plans/completed/{slug}.md",
                     "exactly one file may represent the initiative afterwards",
-                    ".harness/plans/active/{slug}.md",
-                    ".harness/plans/completed/{slug}.md",
+                    ".monows/plans/active/{slug}.md",
+                    ".monows/plans/completed/{slug}.md",
                     "Preserve every phase/task definition",
                     "`## Log` is the sole task execution-status source",
                     "drop `start` and `done` entries",
@@ -564,9 +564,9 @@ mod tests {
                 required: &[
                     "a plan with `## Map` → also its frontier",
                     "Select the active plan by name",
-                    "exactly one non-empty file may exist under `.harness/plans/active/*.md`",
+                    "exactly one non-empty file may exist under `.monows/plans/active/*.md`",
                     "Remain read-only",
-                    ".harness/plans/active/{slug}.md",
+                    ".monows/plans/active/{slug}.md",
                     "never the whole file",
                     "Read task execution status only from append-only `## Log`",
                     "the sole task execution-status source",

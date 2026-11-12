@@ -12,7 +12,7 @@
 #   scripts/workflow/baseline.sh [--plan <file>] [--list] [-- cmd...]
 # Without `-- cmd...` the commands are the `## Gate Commands` bash block of
 # AGENTS.md (comment and blank lines skipped). `--list` prints them and exits.
-# Without `--plan` the plan is the one non-empty .harness/plans/active/*.md.
+# Without `--plan` the plan is the one non-empty .monows/plans/active/*.md.
 #
 # Exit codes: 0 baseline recorded (whatever the commands returned); 2 usage
 # error, no or several active plans, or no commands.
@@ -50,7 +50,7 @@ if [ "$list" = 1 ]; then printf '%s\n' "${cmds[@]}"; exit 0; fi
 
 if [ -z "$plan" ]; then
   found=()
-  for f in .harness/plans/active/*.md; do [ -s "$f" ] && found+=("$f"); done
+  for f in .monows/plans/active/*.md; do [ -s "$f" ] && found+=("$f"); done
   [ "${#found[@]}" -eq 1 ] || { echo "baseline: expected one non-empty active plan, found ${#found[@]}; pass --plan" >&2; exit 2; }
   plan="${found[0]}"
 fi

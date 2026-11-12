@@ -369,13 +369,13 @@ mod tests {
         let _env = IsolatedEnv::new();
         let repo = temp_repo();
         let root = repo.path();
-        // `.harness` as a regular file makes the first managed write fail.
-        write_file(root, ".harness", "not a directory\n");
+        // `.monows` as a regular file makes the first managed write fail.
+        write_file(root, ".monows", "not a directory\n");
 
         let mut out = String::new();
         assert!(
             install(root, "t", &mut out).is_err(),
-            "install reported success with .harness/ blocked\n{out}"
+            "install reported success with .monows/ blocked\n{out}"
         );
         let own = Ownership::load(root);
         assert_eq!(
@@ -398,12 +398,12 @@ mod tests {
         let _env = IsolatedEnv::new();
         let repo = temp_repo();
         let root = repo.path();
-        write_file(root, ".harness", "not a directory\n");
+        write_file(root, ".monows", "not a directory\n");
 
         let mut out = String::new();
         assert!(
             install(root, "t", &mut out).is_err(),
-            "install reported success with .harness/ blocked\n{out}"
+            "install reported success with .monows/ blocked\n{out}"
         );
         let own = Ownership::load(root);
         for want in gitignore_wants() {

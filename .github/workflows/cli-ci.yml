@@ -5,9 +5,9 @@ on:
     branches: [master]
     paths:
       - "cli/**"
-      - ".harness/plans/**"
+      - ".monows/plans/**"
       - "skills/stages/**"
-      - ".harness/WORKFLOW.md"
+      - ".monows/WORKFLOW.md"
       - "scripts/install-git-hooks.sh"
       - "scripts/ci/hook-guard.sh"
       - "scripts/ci/pr-guards.sh"

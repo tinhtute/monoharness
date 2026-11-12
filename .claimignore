@@ -37,11 +37,11 @@ docs/evals/  # frozen ADR 0010 and research audit citations of the removed lean-
 # moved under docs/guides in the docs-restructure. The record is not rewritten.
 docs/prompt-engineering-principles.md  # ADR 0004 Decision table, historical path before the move to docs/guides/
 docs/workflow-harness/migration.md     # ADR 0004 Decision table, historical path before the move to docs/guides/
-# v0.31.0 moved the managed files from docs/ to .harness/. Frozen ADRs, research
+# v0.31.0 moved the managed files from docs/ to .harness/, and v0.37.0 renamed .harness/ to .monows/. Frozen ADRs, research
 # and the 0.14 migration guide cite them at the paths they held then.
-docs/WORKFLOW.md        # historical path; now .harness/WORKFLOW.md (v0.31.0), cited by frozen ADRs/research
-docs/PROJECT.md         # historical path; now .harness/PROJECT.md (v0.31.0), cited by frozen ADRs
-docs/plans/completed/   # historical path; now .harness/plans/completed/ (v0.31.0), cited by frozen ADRs/research
+docs/WORKFLOW.md        # historical path; now .monows/WORKFLOW.md (v0.31.0), cited by frozen ADRs/research
+docs/PROJECT.md         # historical path; now .monows/PROJECT.md (v0.31.0), cited by frozen ADRs
+docs/plans/completed/   # historical path; now .monows/plans/completed/ (v0.31.0), cited by frozen ADRs/research
 # Accepted ADRs are not covered by the directory entry above (verify-doc-links.sh); each citation needs its own line.
-docs/plans/completed/outcome-spec.md        # ADR 0014 Status authority; historical path, now .harness/plans/completed/outcome-spec.md (v0.31.0)
-docs/plans/completed/lean-sdlc-workflow.md  # ADR 0016 Status authority; historical path, now .harness/plans/completed/lean-sdlc-workflow.md (v0.31.0)
+docs/plans/completed/outcome-spec.md        # ADR 0014 Status authority; historical path, now .monows/plans/completed/outcome-spec.md (v0.31.0)
+docs/plans/completed/lean-sdlc-workflow.md  # ADR 0016 Status authority; historical path, now .monows/plans/completed/lean-sdlc-workflow.md (v0.31.0)

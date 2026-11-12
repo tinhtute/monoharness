@@ -1,7 +1,7 @@
 //! `update`: refresh the managed set (ADR 0011).
 //!
-//! A pre-0.31 `docs/` layout is first moved into `.harness/`. WORKFLOW.md is
-//! overwritten, `.harness/PROJECT.md` is written only when absent, and the AGENTS block is replaced between its markers
+//! A pre-0.37 `docs/` or `.harness/` layout is first moved into `.monows/`. WORKFLOW.md is
+//! overwritten, `.monows/PROJECT.md` is written only when absent, and the AGENTS block is replaced between its markers
 //! unless it was edited by hand since the last write. A single active plan in
 //! the older 9-section format is migrated. Every refusal is decided before the
 //! first write, so a refused update leaves every file as it was.
@@ -83,12 +83,15 @@ pub fn run_update(o: UpdateOptions, out: &mut String) -> Result<(), String> {
             return Err(e);
         }
     };
-    let plans_dir = if moves.iter().any(|(o, _)| o == "docs/plans") {
-        "docs/plans/active"
-    } else {
-        migrate::ACTIVE_PLANS_DIR
+    let old_plans = moves
+        .iter()
+        .find(|(_, n)| n == layout::PLANS_DIR)
+        .map(|(o, _)| o.clone());
+    let plans_dir = match &old_plans {
+        Some(o) => format!("{o}/active"),
+        None => migrate::ACTIVE_PLANS_DIR.to_string(),
     };
-    let mut mig: PlanMigration = match migrate::prepare_plan_migration_in(root, plans_dir) {
+    let mut mig: PlanMigration = match migrate::prepare_plan_migration_in(root, &plans_dir) {
         Ok(m) => m,
         Err(e) => {
             out.push_str(&format!(
@@ -99,8 +102,11 @@ pub fn run_update(o: UpdateOptions, out: &mut String) -> Result<(), String> {
     };
 
     layout::apply(root, &moves, &mut base_files)?;
-    if let Some(rest) = mig.path.strip_prefix("docs/plans/") {
-        mig.path = format!("{}/plans/{rest}", layout::HARNESS_DIR);
+    if let Some(rest) = old_plans
+        .as_deref()
+        .and_then(|o| mig.path.strip_prefix(&format!("{o}/")))
+    {
+        mig.path = format!("{}/{rest}", layout::PLANS_DIR);
     }
     let mut planned: Vec<(String, String)> = moves
         .iter()
@@ -238,7 +244,7 @@ mod tests {
         IsolatedEnv,
     };
 
-    /// .harness/PROJECT.md is write-once (ADR 0011): update scaffolds it when
+    /// .monows/PROJECT.md is write-once (ADR 0011): update scaffolds it when
     /// absent and never touches an existing one, whatever the template does.
     #[test]
     fn update_project_write_once() {

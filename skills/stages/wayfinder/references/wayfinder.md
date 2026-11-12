@@ -1,6 +1,6 @@
 # Playbook: wayfinder
 
-Use when the way to a lockable Goal is fogged: decisions hang on other decisions, facts, or prototypes, and resolving them takes more than one session. Keeps a decision map in the one active plan at `.harness/plans/active/{slug}.md`, resolves it one decision at a time, then hands it to `brainstorm lock`. A map plans; it never builds. Until the lock, it owns only that plan's partial `## Goal` and `## Map`.
+Use when the way to a lockable Goal is fogged: decisions hang on other decisions, facts, or prototypes, and resolving them takes more than one session. Keeps a decision map in the one active plan at `.monows/plans/active/{slug}.md`, resolves it one decision at a time, then hands it to `brainstorm lock`. A map plans; it never builds. Until the lock, it owns only that plan's partial `## Goal` and `## Map`.
 
 ## Map
 
@@ -55,7 +55,7 @@ lane: normal
 
 ## Steps
 
-1. **Start** — IF the one non-empty plan under `.harness/plans/active/` holds `## Map` and `requirements: none until the map is decided` → this is a resumed map: go to step 2. IF any other non-empty plan exists → stop and name it. Else ask the user for the destination (`outcome`, `success_signal`), then grill breadth-first only to name the frontier's questions, not to answer them. IF every decision fits this session and no fog shows → no map: run `grill`, then `brainstorm lock`. Write the file above; this session resolves nothing else.
+1. **Start** — IF the one non-empty plan under `.monows/plans/active/` holds `## Map` and `requirements: none until the map is decided` → this is a resumed map: go to step 2. IF any other non-empty plan exists → stop and name it. Else ask the user for the destination (`outcome`, `success_signal`), then grill breadth-first only to name the frontier's questions, not to answer them. IF every decision fits this session and no fog shows → no map: run `grill`, then `brainstorm lock`. Write the file above; this session resolves nothing else.
 2. **Work the map** — the frontier is every `open` line whose `blocked_by` lines are all `decided`. Fan out every frontier `research` line to sub-agents in parallel, briefed per `work-full.md` step 4 of `work`. Resolve at most one HITL question per session: a `grill` line runs `grill` on that question for as many rounds as it takes; never answer your own grill.
 3. **Record** — set the line to `status: decided → <one-line answer> | evidence: <path, URL, SHA, or user YYYY-MM-DD>`; the answer lives on that line only. Promote any fog the answer made precise into new `Q` lines. A line past the destination becomes `status: out-of-scope` plus a `non-goals:` entry; every line it blocks is dropped, marked out-of-scope, or loses that edge. A decision that invalidates another line → edit or drop that line. Update `open_items:`.
 4. **Graduate** — once every `Q` line is `decided` or `out-of-scope` and no `fog:` line remains → run `brainstorm lock` on this same plan; it keeps `## Map` as the decision record, derives requirements from the decisions, and writes the lane's phase and next action.
