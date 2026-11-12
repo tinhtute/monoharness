@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use zharness::embedded;
 
 fn projection_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../.harness")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../.monows")
 }
 
 fn embedded_projection() -> Vec<(String, Vec<u8>)> {

@@ -29,7 +29,7 @@ lane: high-risk
 ## Phases and Verification
 - approach: repeat the v0.31.0 `docs/` → `.harness/` migration (`cli/src/installer/layout.rs`) with one more hop, then the guards, CI, and finally this repo's own tree. Rejected: a symlink `.harness → .monows`, which leaves two names for one contract and still needs a guard pass.
 - phase_slug: `installer`
-  status: pending
+  status: done
   - goal: R1, R2, R3 | depends_on: none
   - surfaces: `cli/src/installer/**`, `cli/src/lib.rs`, `cli/src/embedded.rs`, `cli/docs/embedded/WORKFLOW.md`, `cli/tests/**` | avoided: `scripts/**`, the repo's own `.harness/`
   - wave 1:
@@ -37,7 +37,7 @@ lane: high-risk
     - T2 Rewrite the router paths and the pinned contract phrases (owner: main agent) — output: R3 — check: `cd cli && cargo test`
   - phase check: `cd cli && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test`
 - phase_slug: `guards`
-  status: pending
+  status: done
   - goal: R4, R5 | depends_on: `installer`
   - surfaces: `scripts/install-git-hooks.sh`, `scripts/ci/**`, `scripts/workflow/**`, `.github/workflows/**`, `.claimignore` | avoided: `cli/**`
   - wave 1:
@@ -45,7 +45,7 @@ lane: high-risk
     - T4 Retarget CI paths and the doc-link script (owner: main agent) — output: R5 — check: `bash scripts/ci/verify-doc-links.sh && bash scripts/ci/test-pr-guards.sh`
   - phase check: every AGENTS.md gate command
 - phase_slug: `repo`
-  status: pending
+  status: done
   - goal: R6, R7 | depends_on: `guards`
   - surfaces: `.harness/` → `.monows/`, `AGENTS.md`, `README.md`, `docs/**`, `site/**` | avoided: completed-plan bytes
   - wave 1:
@@ -56,12 +56,16 @@ lane: high-risk
 ## Log
 - 2026-11-12T09:40Z — main — decision — plan opened from the #268 risk judgment (needs review: guards, installer and router still on `.harness/`); kept under `.harness/plans/active/` until phase `repo` moves it, because the guards watch only that path today
 - 2026-11-12T09:45Z — main — decision — owner answered Q1 yes (both files in .monows/), Q2 no (monows owns engine/config/state), Q3 0.37.0 stacked on #268
+- 2026-11-12T10:55:35Z — repo — decision — baseline: 10470a891c6b9293144850b6a6a8207ea70cff24 cd cli && cargo test -q rc=0
+- 2026-11-12T10:55:50Z — repo — decision — baseline: 10470a891c6b9293144850b6a6a8207ea70cff24 bash scripts/ci/test-guards.sh rc=0
+- 2026-11-12T10:55:51Z — repo — decision — baseline: 10470a891c6b9293144850b6a6a8207ea70cff24 bash scripts/ci/verify-doc-links.sh rc=0
+- 2026-11-12T10:55Z — main — done — phases installer, guards and repo landed on `chore/skills-monows-paths` with the #268 skills commit (R7: one branch); `update` moves `.harness/` → `.monows/`, refuses on two copies; guard S6c covers APPEND-ONLY across the move
 
 ## Validation
 
 ## Current State and Next Action
-- active_phase: installer
-- lifecycle_status: planned
-- blockers: none
-- open_items: PR #268 stays unmerged until R7
-- exact_next_action: T1 starts on a branch stacked on `chore/skills-monows-paths`
+- active_phase: repo
+- lifecycle_status: in_review
+- blockers: `risk-verdict` needs the owner's `owner-reviewed` label (high-risk lane; agents never apply it)
+- open_items: release 0.37.0 after merge
+- exact_next_action: owner reviews PR #268 and labels it; then merge and cut 0.37.0

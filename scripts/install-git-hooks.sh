@@ -66,7 +66,7 @@ HOOKS_DIR="$(cd "$REPO_ROOT" && git rev-parse --path-format=absolute --git-path 
 #       presence and shape are checked. Unresolvable bounds or an empty
 #       allowlist reject (fail closed).
 #   PLAN-SHAPE (#217): a non-empty plan staged/pushed under
-#       .harness/plans/active/ must have a `## Goal` with non-empty `outcome:`,
+#       .monows/plans/active/ must have a `## Goal` with non-empty `outcome:`,
 #       `success_signal:` and `authority:` bullets (an empty `authority:` with
 #       sub-bullets directly below counts), and every `R<n>:` line in
 #       it must carry `acceptance:` naming a backticked command (before any
@@ -83,7 +83,7 @@ HOOKS_DIR="$(cd "$REPO_ROOT" && git rev-parse --path-format=absolute --git-path 
 #       whole plan file is not a range this guard sees; a rename git detects
 #       (-M, 50% similarity) compares against its source.
 #   BASELINE (#219): in a non-empty plan staged/pushed under
-#       .harness/plans/active/, the first `done` Log entry must sit below a
+#       .monows/plans/active/, the first `done` Log entry must sit below a
 #       separate entry reading `baseline: <sha> <cmd> rc=<n>`
 #       (scripts/workflow/baseline.sh writes it); a `done` entry cannot carry
 #       its own baseline. Exempt when that `done` was already on the old side.
@@ -93,7 +93,7 @@ HOOKS_DIR="$(cd "$REPO_ROOT" && git rev-parse --path-format=absolute --git-path 
 #       this HEAD (the Go tree they build is deleted, and their phase ranges no
 #       longer match). The floor is a constant, not a marker an agent writes:
 #       an entry that did not exist at that commit is never exempt.
-#   PHASE-DONE: a plan staged/pushed under .harness/plans/completed/ whose Current
+#   PHASE-DONE: a plan staged/pushed under .monows/plans/completed/ whose Current
 #   State declares lifecycle_status: completed must show every phase
 #   status: done in ## Phases and Verification. Found 2026-09-07: a handoff
 #   moved a plan to completed/ with 4 of 7 phases still reading status:
@@ -391,8 +391,11 @@ zharness_guard_historical_floor_hashes() {  # <root> <path> <out-file> <floor>
   blob="$scratch/floor.md"
   if ! git -C "$root" show "${floor}:${path}" > "$blob" 2>/dev/null; then
     case "$path" in
-      .harness/plans/completed/*)
-        git -C "$root" show "${floor}:.harness/plans/active/${path##*/}" > "$blob" 2>/dev/null || : > "$blob"
+      .monows/plans/completed/*)
+        git -C "$root" show "${floor}:.monows/plans/active/${path##*/}" > "$blob" 2>/dev/null \
+          || git -C "$root" show "${floor}:.harness/plans/completed/${path##*/}" > "$blob" 2>/dev/null \
+          || git -C "$root" show "${floor}:.harness/plans/active/${path##*/}" > "$blob" 2>/dev/null \
+          || : > "$blob"
         ;;
       *) : > "$blob" ;;
     esac
@@ -572,7 +575,7 @@ zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base
 }
 
 zharness_guard_at_most_one_active_plan() { # <repo-root> [worktree|staged]
-  # R5: at most one non-empty file under .harness/plans/active/. Zero is idle.
+  # R5: at most one non-empty file under .monows/plans/active/. Zero is idle.
   # No associative arrays — bash 3.2 safe (same constraint as the hash file).
   # In staged mode the index is the subject: the commit is what gets published,
   # so an unstaged or untracked worktree file is not yet a claim (ADR 0009).
@@ -585,9 +588,9 @@ zharness_guard_at_most_one_active_plan() { # <repo-root> [worktree|staged]
       [ "${size:-0}" -gt 0 ] || continue
       n=$((n + 1))
       names="$names $f"
-    done <<< "$(git -C "$root" ls-files --cached -- '.harness/plans/active/*.md' 2>/dev/null)"
+    done <<< "$(git -C "$root" ls-files --cached -- '.monows/plans/active/*.md' 2>/dev/null)"
   else
-    for f in "$root"/.harness/plans/active/*.md; do
+    for f in "$root"/.monows/plans/active/*.md; do
       [ -f "$f" ] || continue
       [ -s "$f" ] || continue
       n=$((n + 1))
@@ -595,9 +598,9 @@ zharness_guard_at_most_one_active_plan() { # <repo-root> [worktree|staged]
     done
   fi
   if [ "$n" -gt 1 ]; then
-    echo "❌ R5 ACTIVE-PLAN GUARD REJECTED: more than one non-empty file under .harness/plans/active/" >&2
+    echo "❌ R5 ACTIVE-PLAN GUARD REJECTED: more than one non-empty file under .monows/plans/active/" >&2
     echo "   paths:$names" >&2
-    echo "   git mv the finished plan to .harness/plans/completed/ and keep at most one active." >&2
+    echo "   git mv the finished plan to .monows/plans/completed/ and keep at most one active." >&2
     return 1
   fi
   return 0
@@ -680,10 +683,10 @@ zharness_guard_plan_paths() {              # <base> <head>
   # selector never sees (ADR 0009). -M resolves a rename to its destination.
   if [ "$2" = ":" ]; then
     git diff --cached --name-only --diff-filter=ACMR -M -- \
-      '.harness/plans/active/*.md' '.harness/plans/completed/*.md'
+      '.monows/plans/active/*.md' '.monows/plans/completed/*.md'
   else
     git diff --name-only --diff-filter=ACMR -M "$1" "$2" -- \
-      '.harness/plans/active/*.md' '.harness/plans/completed/*.md'
+      '.monows/plans/active/*.md' '.monows/plans/completed/*.md'
   fi
 }
 
@@ -700,17 +703,17 @@ zharness_guard_old_blob() {                # <base> <path> <out-file> [<head>]
   # predecessor path so a closure re-executes its new entries, not every entry
   # the plan ever recorded. With <head>, a rename git detects in base..head
   # names the predecessor, so renaming a plan cannot empty APPEND-ONLY's old
-  # side. Plans lived under docs/plans/ before v0.31.0, so the
-  # layout move resolves to that path too. No predecessor found means an empty
+  # side. Plans lived under docs/plans/ before v0.31.0 and .harness/plans/
+  # before v0.37.0, so each layout move resolves to those paths too. No predecessor found means an empty
   # old side, which re-executes everything — the conservative direction.
   local base="$1" path="$2" out="$3" alt src=""
   if git show "$base:$path" > "$out" 2>/dev/null; then return 0; fi
   if [ $# -ge 4 ]; then src=$(zharness_guard_rename_source "$base" "$4" "$path") || src=""; fi
   if [ -n "$src" ] && git show "$base:$src" > "$out" 2>/dev/null; then return 0; fi
-  set -- "docs/plans/${path#.harness/plans/}"
+  set -- ".harness/plans/${path#.monows/plans/}" "docs/plans/${path#.monows/plans/}"
   case "$path" in
-    .harness/plans/completed/*)
-      set -- "$@" ".harness/plans/active/${path##*/}" "docs/plans/active/${path##*/}"
+    .monows/plans/completed/*)
+      set -- "$@" ".monows/plans/active/${path##*/}" ".harness/plans/active/${path##*/}" "docs/plans/active/${path##*/}"
       ;;
   esac
   for alt in "$@"; do
@@ -805,7 +808,7 @@ zharness_append_only_problems() {          # <old-file> <new-file> <compaction-c
 zharness_guard_append_only() {             # <path> <old-file> <new-file> <base>
   local comp=0 probs
   case "$1" in
-    .harness/plans/completed/*)
+    .monows/plans/completed/*)
       if ! git cat-file -e "$4:$1" 2>/dev/null &&
         awk '/^---$/{n++; next} n==1 && /^status:[[:blank:]]*completed[[:blank:]]*$/{f=1} END{exit !f}' "$3" &&
         grep -qE '^[[:space:]]*- lifecycle_status:[[:blank:]]*completed[[:blank:]]*$' "$3"; then comp=1; fi ;;
@@ -844,7 +847,7 @@ zhuards_guard_plans() {                    # <path-list-space-separated> <base> 
       git show "$head:$f" > "$tmp/new.md" 2>/dev/null || : > "$tmp/new.md"
     fi
     case "$f" in
-      .harness/plans/active/*.md)
+      .monows/plans/active/*.md)
         if [ -s "$tmp/new.md" ] && ! zharness_guard_plan_shape "$f" "$tmp/new.md"; then rc=1; fi
         if [ -s "$tmp/new.md" ] && ! zharness_guard_baseline "$f" "$tmp/old.md" "$tmp/new.md"; then rc=1; fi ;;
     esac
@@ -977,7 +980,7 @@ if ! zharness_guard_at_most_one_active_plan "$ROOT" staged; then
 fi
 # Worktree state is reported, not gated: only the index becomes the commit.
 if ! zharness_guard_at_most_one_active_plan "$ROOT" worktree >/dev/null 2>&1; then
-  echo "ℹ️  note: more than one non-empty .harness/plans/active/*.md in the worktree (unstaged; not gating)."
+  echo "ℹ️  note: more than one non-empty .monows/plans/active/*.md in the worktree (unstaged; not gating)."
 fi
 if [ -n "$plans" ] && ! zhuards_guard_plans "$plans" "$gbase" "$ghead" "$tmpdir"; then
   guard_failed=1
@@ -985,7 +988,7 @@ fi
 
 if [ -n "$plans" ]; then
   while IFS= read -r f; do
-    case "$f" in .harness/plans/completed/*) ;; *) continue ;; esac
+    case "$f" in .monows/plans/completed/*) ;; *) continue ;; esac
     git show ":$f" > "$tmpdir/completed.md"
     zharness_guard_completed_plan_phases_done "$f" "$tmpdir/completed.md" || guard_failed=1
   done <<< "$plans"
@@ -1131,7 +1134,7 @@ while read -r local_ref local_sha remote_ref _ <&3; do
   printf '%s\n' "$plans"
   zhuards_guard_plans "$plans" "$gbase" "$ghead" "$_zhtmp" || failed=1
   while IFS= read -r f; do
-    case "$f" in .harness/plans/completed/*) ;; *) continue ;; esac
+    case "$f" in .monows/plans/completed/*) ;; *) continue ;; esac
     git show "$ghead:$f" > "$_zhtmp/completed.md"
     zharness_guard_completed_plan_phases_done "$f" "$_zhtmp/completed.md" || failed=1
   done <<< "$plans"

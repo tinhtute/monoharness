@@ -59,7 +59,7 @@ run_guard() ( # <guard-file> <label>
   mkdir -p "$tmp/$2"
   zhuards_guard_plans "$plans" "$gbase" "$ghead" "$tmp/$2" || failed=1
   while IFS= read -r f; do
-    case "$f" in .harness/plans/completed/*) ;; *) continue ;; esac
+    case "$f" in .monows/plans/completed/*) ;; *) continue ;; esac
     git show "$ghead:$f" > "$tmp/$2/completed.md"
     zharness_guard_completed_plan_phases_done "$f" "$tmp/$2/completed.md" || failed=1
   done <<< "$plans"

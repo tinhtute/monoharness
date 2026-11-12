@@ -6,7 +6,7 @@ What a "repository", a "workspace", and the zharness registry mean in this harne
 
 | Term | Meaning here |
 |---|---|
-| Repository | One Git working tree with its own `AGENTS.md`, `.harness/WORKFLOW.md`, `.harness/PROJECT.md`, and `.harness/plans/`. The harness workflow (stages, plans, guards) runs inside exactly one repository. |
+| Repository | One Git working tree with its own `AGENTS.md`, `.monows/WORKFLOW.md`, `.monows/PROJECT.md`, and `.monows/plans/`. The harness workflow (stages, plans, guards) runs inside exactly one repository. |
 | Workspace | Not a harness concept. The word is the host's or the user's (an IDE window, a monorepo, a folder holding several clones). The harness defines no workspace file, root, or state. |
 | Registry | A machine-wide list of repository roots that zharness has installed into. An inventory, nothing more. |
 
@@ -89,7 +89,7 @@ Covers the behavior documented above using a throwaway directory and canary stri
    cat "$XDG_CONFIG_HOME/zharness/repos"        # two absolute roots, nothing else
    zharness update --check --all; echo "rc=$?"  # current for both, rc=0
    zharness update --all; echo "rc=$?"          # "--all requires --check", rc=1
-   echo x >> "$T/b/.harness/WORKFLOW.md"
+   echo x >> "$T/b/.monows/WORKFLOW.md"
    zharness update --check --all; echo "rc=$?"  # drift for b only, rc=1
    mv "$T/b" "$T/b2"
    zharness update --check --all; echo "rc=$?"  # "missing: .../b", rc=0

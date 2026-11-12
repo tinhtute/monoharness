@@ -9,7 +9,7 @@ code, tests, CI, and runtime evidence define the work.
 It is not a task database, story tracker, agent orchestrator, or application
 runtime. The binary scaffolds docs; it does not run the lifecycle.
 
-Start with [`AGENTS.md`](AGENTS.md), then [`.harness/WORKFLOW.md`](.harness/WORKFLOW.md).
+Start with [`AGENTS.md`](AGENTS.md), then [`.monows/WORKFLOW.md`](.monows/WORKFLOW.md).
 
 ## Give this to a coding agent
 
@@ -17,7 +17,7 @@ Copy the block into the consumer repository chat when you want the agent to
 install, refresh, or work with zharness.
 
 ```text
-Work in this git repository. Read https://github.com/tinhtute/monoharness/blob/master/README.md and, once they exist, this repo's AGENTS.md and .harness/WORKFLOW.md. If zharness is not on PATH or outdated, install/upgrade it with scripts/install-zharness.sh. If this repo has no .harness/WORKFLOW.md, run zharness install. Before upgrading, independently install the six workflow skills (brainstorm, to-plan, work, check, handoff, watzup) using the skills instructions below. If a required skill or reference is missing, report the dependency and stop workflow execution. If the repo is initialized or zharness install reports drifted files, run zharness update to refresh WORKFLOW and conservatively retire recorded legacy procedures (edited/unknown files and recovery data are retained; PROJECT.md is never overwritten, and an edited AGENTS.md block makes update refuse with a diff). Plans live only in .harness/plans/ — multi-session or complex work uses exactly one file at .harness/plans/active/{slug}.md, moved to .harness/plans/completed/ upon verified handoff. Small changes need no plan. zharness only manages the doc set (install/update/uninstall) — it does not run the lifecycle. Missing AGENTS.md: zharness install, do not invent the file. Claude Code reads CLAUDE.md, not AGENTS.md; if CLAUDE.md is missing, the consumer writes a thin file containing the line @AGENTS.md.
+Work in this git repository. Read https://github.com/tinhtute/monoharness/blob/master/README.md and, once they exist, this repo's AGENTS.md and .monows/WORKFLOW.md. If zharness is not on PATH or outdated, install/upgrade it with scripts/install-zharness.sh. If this repo has no .monows/WORKFLOW.md, run zharness install. Before upgrading, independently install the six workflow skills (brainstorm, to-plan, work, check, handoff, watzup) using the skills instructions below. If a required skill or reference is missing, report the dependency and stop workflow execution. If the repo is initialized or zharness install reports drifted files, run zharness update to refresh WORKFLOW and conservatively retire recorded legacy procedures (edited/unknown files and recovery data are retained; PROJECT.md is never overwritten, and an edited AGENTS.md block makes update refuse with a diff). Plans live only in .monows/plans/ — multi-session or complex work uses exactly one file at .monows/plans/active/{slug}.md, moved to .monows/plans/completed/ upon verified handoff. Small changes need no plan. zharness only manages the doc set (install/update/uninstall) — it does not run the lifecycle. Missing AGENTS.md: zharness install, do not invent the file. Claude Code reads CLAUDE.md, not AGENTS.md; if CLAUDE.md is missing, the consumer writes a thin file containing the line @AGENTS.md.
 ```
 
 ## What it solves
@@ -109,7 +109,7 @@ its steps into a todo list, and calls the skill each step names.
 | retro | watzup → retro → save approved lessons |
 
 A typo does not need a plan. A migration spanning sessions does: it gets one
-`.harness/plans/active/<plan>.md`, moved to `.harness/plans/completed/` after
+`.monows/plans/active/<plan>.md`, moved to `.monows/plans/completed/` after
 validation. When a request leaves a material product choice open, the agent
 stops before mutation and asks.
 
@@ -124,8 +124,8 @@ To edit or regenerate them, install the `tldraw-diagram` skill from
 The managed set is:
 
 - a compact `AGENTS.md` entrypoint (marked `ZHARNESS` block only);
-- `.harness/WORKFLOW.md`, the stage router;
-- a `.harness/PROJECT.md` identity scaffold;
+- `.monows/WORKFLOW.md`, the stage router;
+- a `.monows/PROJECT.md` identity scaffold;
 - `.zharness/base/` for update tracking (a sha256 manifest and the ownership ledger).
 
 It does not write `CLAUDE.md`. It does not install application architecture,
@@ -160,11 +160,11 @@ zharness update --check [--all]
 zharness uninstall
 ```
 
-`.harness/WORKFLOW.md` is a pure upstream mirror: update always overwrites it
+`.monows/WORKFLOW.md` is a pure upstream mirror: update always overwrites it
 with the latest bytes. Legacy procedures are retired only using recorded hashes
 and ownership. Matching installer-created copies are removed; matching copies
 with proven pre-install originals are restored. Edited or uncertain files and
-their recovery data are retained with notices. See the [migration guide](docs/guides/workflow-harness/skill-procedure-migration.md). `.harness/PROJECT.md` is written only
+their recovery data are retained with notices. See the [migration guide](docs/guides/workflow-harness/skill-procedure-migration.md). `.monows/PROJECT.md` is written only
 when absent; after that it belongs to the project. The marked `AGENTS.md` block
 is replaced between its markers; if it was edited since zharness last wrote it,
 update prints the diff, writes nothing, and exits non-zero until you move the
@@ -253,7 +253,7 @@ bash scripts/ci/test-guards.sh
 
 This repository is the source of the binary and skills. Edit workflow procedures
 in `skills/stages/<stage>/references/`. Edit the managed router in
-`cli/docs/embedded/WORKFLOW.md`, then copy it to `.harness/WORKFLOW.md`. Machine-wide Claude Code bootstrap is `install.sh` in [monoclaudian](https://github.com/tinhtute/monoclaudian);
+`cli/docs/embedded/WORKFLOW.md`, then copy it to `.monows/WORKFLOW.md`. Machine-wide Claude Code bootstrap is `install.sh` in [monoclaudian](https://github.com/tinhtute/monoclaudian);
 that is not how a consumer app repo receives zharness.
 
 ## Contributing and security

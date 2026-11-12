@@ -24,4 +24,4 @@
 - entrypoints: <...>
 
 ## What are we working on right now?
-- plan: .harness/plans/active/<slug>.md (<status>)
+- plan: .monows/plans/active/<slug>.md (<status>)

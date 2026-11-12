@@ -10,7 +10,7 @@ use std::path::Path;
 
 use super::write_file_atomic;
 
-pub const ACTIVE_PLANS_DIR: &str = ".harness/plans/active";
+pub const ACTIVE_PLANS_DIR: &str = ".monows/plans/active";
 
 /// The 9-section plan format that predates the 5-section one.
 const LEGACY_PLAN_SECTIONS: [&str; 9] = [
@@ -418,7 +418,7 @@ mod tests {
         let repo = temp_repo();
         let root = repo.path();
         install_ok(root);
-        let plan = ".harness/plans/active/p.md";
+        let plan = ".monows/plans/active/p.md";
         write_file(root, plan, &legacy_plan(&LEGACY_PLAN_SECTIONS));
 
         let out = update_ok(root);
@@ -446,7 +446,7 @@ mod tests {
         let repo = temp_repo();
         let root = repo.path();
         install_ok(root);
-        let plan = ".harness/plans/active/p.md";
+        let plan = ".monows/plans/active/p.md";
         let input = format!("{}## Notes\nx\n", legacy_plan(&LEGACY_PLAN_SECTIONS));
         write_file(root, plan, &input);
 

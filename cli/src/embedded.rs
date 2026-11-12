@@ -16,7 +16,7 @@ const WORKFLOW_MD: &[u8] = include_bytes!(concat!(
     "/docs/embedded/WORKFLOW.md"
 ));
 
-/// The write-once project identity template, written to `.harness/PROJECT.md` only
+/// The write-once project identity template, written to `.monows/PROJECT.md` only
 /// when that file is absent.
 pub const PROJECT_TEMPLATE: &str = "templates/project.identity.md";
 

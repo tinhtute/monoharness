@@ -10,7 +10,7 @@ This is the personal mono-harness repository for `therealtinhtute`: a `skills.sh
 
 Skills live in `skills/poteto/` and `skills/{stages,reason,tools}/<name>/`; the `zharness` crate in `cli/`; the harness agents (`scout`, `worker`, `lead`, `verifier`) in `agents/`, their model policy in `models.json`, installed by `bash scripts/install-agents.sh`; machine setup (global CLAUDE.md, rules, settings, mods, installer, statusline) lives in the separate repo https://github.com/tinhtute/monoclaudian; protocol, ADRs, and plans in `docs/`; workflow procedures in each owning skill's `references/`. The workflow chain and its stage contracts: `skills/stages/README.md`.
 
-Plans are committed markdown (`.harness/plans/active/{slug}.md`); pre-commit guards (`scripts/install-git-hooks.sh`) enforce proof re-execution, an independent judge on high-risk and `full` checks, and at most one active plan. Edit procedures in `skills/stages/<stage>/references/`. For the managed router, change `cli/docs/embedded/WORKFLOW.md` and copy the same bytes to `.harness/WORKFLOW.md`; `cd cli && cargo test --test projection_parity` checks this mirror. Editing a file under `skills/stages/*/references/` → run `cd cli && cargo test`: contracts in `cli/src/embedded.rs` and `cli/tests/skill_reference_resolution.rs` pin their text and companion files, which `validate-skill.sh` does not check. Repo-wide find/replace or rename sweeps exclude `.harness/plans/completed/`: the APPEND-ONLY guard keeps their Validation entries and Log blocked/decision entries immutable, so they stay as history.
+Plans are committed markdown (`.monows/plans/active/{slug}.md`); pre-commit guards (`scripts/install-git-hooks.sh`) enforce proof re-execution, an independent judge on high-risk and `full` checks, and at most one active plan. Edit procedures in `skills/stages/<stage>/references/`. For the managed router, change `cli/docs/embedded/WORKFLOW.md` and copy the same bytes to `.monows/WORKFLOW.md`; `cd cli && cargo test --test projection_parity` checks this mirror. Editing a file under `skills/stages/*/references/` → run `cd cli && cargo test`: contracts in `cli/src/embedded.rs` and `cli/tests/skill_reference_resolution.rs` pin their text and companion files, which `validate-skill.sh` does not check. Repo-wide find/replace or rename sweeps exclude `.monows/plans/completed/`: the APPEND-ONLY guard keeps their Validation entries and Log blocked/decision entries immutable, so they stay as history.
 
 ## Gate Commands
 
@@ -71,7 +71,7 @@ The recipe `skills/stages/check/references/check-exercise.md` starts from. Run `
 cd cli && cargo build -q && BIN=$PWD/target/debug/zharness
 export XDG_CONFIG_HOME=$(mktemp -d)   # keep the real repo registry untouched
 T=$(mktemp -d) && cd "$T" && git init -q
-"$BIN" install     # expect rc=0; .harness/WORKFLOW.md, .harness/PROJECT.md, AGENTS.md, .gitignore created
+"$BIN" install     # expect rc=0; .monows/WORKFLOW.md, .monows/PROJECT.md, AGENTS.md, .gitignore created
 "$BIN" uninstall   # expect rc=0; `git status --porcelain` is empty afterwards
 ```
 
@@ -85,11 +85,11 @@ T=$(mktemp -d) && cd "$T" && git init -q
 <!-- ZHARNESS:BEGIN -->
 ## Harness
 
-Start from the requested outcome; the repository is the system of record. Read `.harness/WORKFLOW.md` and only the material the task needs.
+Start from the requested outcome; the repository is the system of record. Read `.monows/WORKFLOW.md` and only the material the task needs.
 
 - Answers, reviews, diagnoses, plans, and status reports are read-only.
 - A bounded change needs no plan: implement and validate.
-- Use one `.harness/plans/active/` file when work spans sessions, has dependencies, or needs recovery; move it to `.harness/plans/completed/` only after validation.
+- Use one `.monows/plans/active/` file when work spans sessions, has dependencies, or needs recovery; move it to `.monows/plans/completed/` only after validation.
 - Before adding an externally observable policy, find its repository authority; IF materially different choices remain open → stop before edits (a configurable default is not authority).
 - Claim completion only with executable or observable evidence.
 

@@ -29,7 +29,7 @@ pass=0
 fail=0
 ok() { pass=$((pass + 1)); echo "  ok  - $1"; }
 bad() { fail=$((fail + 1)); echo "  FAIL - $1"; }
-# PLAN-SHAPE: every fixture plan staged under .harness/plans/active/ carries
+# PLAN-SHAPE: every fixture plan staged under .monows/plans/active/ carries
 # a well-formed Goal, so the guard under test is the only reason it fails.
 GOAL='## Goal
 - outcome: the fixture plan is guarded
@@ -461,28 +461,28 @@ else
 	ok "S5 untouched entry is not re-executed when a sibling is appended"
 fi
 
-# R5: at most one non-empty .harness/plans/active/*.md. Zero is idle. Empty files
+# R5: at most one non-empty .monows/plans/active/*.md. Zero is idle. Empty files
 # do not count. No `local -A`.
 r5=$(mktemp -d)
-mkdir -p "$r5/.harness/plans/active"
+mkdir -p "$r5/.monows/plans/active"
 if zharness_guard_at_most_one_active_plan "$r5" 2>/dev/null; then
 	ok "R5 zero active plans accepted"
 else
 	bad "R5 zero must accept"
 fi
-printf 'one\n' > "$r5/.harness/plans/active/one.md"
+printf 'one\n' > "$r5/.monows/plans/active/one.md"
 if zharness_guard_at_most_one_active_plan "$r5" 2>/dev/null; then
 	ok "R5 one active plan accepted"
 else
 	bad "R5 one must accept"
 fi
-printf 'two\n' > "$r5/.harness/plans/active/two.md"
+printf 'two\n' > "$r5/.monows/plans/active/two.md"
 if zharness_guard_at_most_one_active_plan "$r5" 2>/dev/null; then
 	bad "R5 two active plans must reject"
 else
 	ok "R5 two active plans rejected"
 fi
-: > "$r5/.harness/plans/active/two.md"
+: > "$r5/.monows/plans/active/two.md"
 if zharness_guard_at_most_one_active_plan "$r5" 2>/dev/null; then
 	ok "R5 empty second file does not count"
 else
@@ -521,11 +521,11 @@ EOF
 # and the entries it already carried must not be re-executed.
 s6=$(mktemp -d)
 gfix "$s6"
-gplan "$s6/.harness/plans/active/p.md" MARKER-S6-OLD
+gplan "$s6/.monows/plans/active/p.md" MARKER-S6-OLD
 git -C "$s6" add -A >/dev/null && git -C "$s6" commit -qm base
-mkdir -p "$s6/.harness/plans/completed"
-git -C "$s6" mv .harness/plans/active/p.md .harness/plans/completed/p.md
-cat >> "$s6/.harness/plans/completed/p.md" <<'EOF'
+mkdir -p "$s6/.monows/plans/completed"
+git -C "$s6" mv .monows/plans/active/p.md .monows/plans/completed/p.md
+cat >> "$s6/.monows/plans/completed/p.md" <<'EOF'
 
 - `2026-09-02T00:00:00Z` — closing gate, verdict `APPROVED`
   - proof_classes: output, unit, integration
@@ -536,9 +536,9 @@ s6rev=$( cd "$s6" && zharness_guard_revspec staged )
 s6base=$(printf '%s' "$s6rev" | cut -f1)
 s6head=$(printf '%s' "$s6rev" | cut -f2)
 s6paths=$( cd "$s6" && zharness_guard_plan_paths "$s6base" "$s6head" )
-[ "$s6paths" = ".harness/plans/completed/p.md" ] &&
+[ "$s6paths" = ".monows/plans/completed/p.md" ] &&
 	ok "S6 selector sees a plan renamed into completed/" ||
-	bad "S6 selector returned '$s6paths', want .harness/plans/completed/p.md"
+	bad "S6 selector returned '$s6paths', want .monows/plans/completed/p.md"
 
 s6tmp=$(mktemp -d)
 s6out=$( cd "$s6" && zhuards_guard_plans "$s6paths" "$s6base" "$s6head" "$s6tmp" 2>&1 )
@@ -553,16 +553,16 @@ else
 fi
 rm -rf "$s6" "$s6tmp"
 
-# S6b: v0.31.0 moves docs/plans/ to .harness/plans/. Entries the moved plans
+# S6b: v0.31.0 moves docs/plans/ to .monows/plans/. Entries the moved plans
 # already carried must not be re-executed; one added in the move still is.
 s6b=$(mktemp -d)
 gfix "$s6b"
 gplan "$s6b/docs/plans/completed/q.md" MARKER-S6B-DONE
 gplan "$s6b/docs/plans/active/p.md" MARKER-S6B-ACTIVE
 git -C "$s6b" add -A >/dev/null && git -C "$s6b" commit -qm base
-mkdir -p "$s6b/.harness"
-git -C "$s6b" mv docs/plans .harness/plans
-cat >> "$s6b/.harness/plans/active/p.md" <<'EOF'
+mkdir -p "$s6b/.monows"
+git -C "$s6b" mv docs/plans .monows/plans
+cat >> "$s6b/.monows/plans/active/p.md" <<'EOF'
 
 - `2026-09-02T00:00:00Z` — move gate, verdict `APPROVED`
   - proof_classes: output, unit, integration
@@ -580,9 +580,39 @@ s6brc=$?
 if printf '%s' "$s6bout" | grep -q 'MARKER-S6B'; then
 	bad "S6b moved plans' pre-existing entries were re-executed"
 else
-	ok "S6b docs/plans -> .harness/plans resolves to the predecessor"
+	ok "S6b docs/plans -> .monows/plans resolves to the predecessor"
 fi
 rm -rf "$s6b" "$s6btmp"
+
+# S6c: v0.37.0 moves .harness/plans/ to .monows/plans/. Same contract as S6b.
+s6c=$(mktemp -d)
+gfix "$s6c"
+gplan "$s6c/.harness/plans/completed/q.md" MARKER-S6C-DONE
+gplan "$s6c/.harness/plans/active/p.md" MARKER-S6C-ACTIVE
+git -C "$s6c" add -A >/dev/null && git -C "$s6c" commit -qm base
+mkdir -p "$s6c/.monows"
+git -C "$s6c" mv .harness/plans .monows/plans
+cat >> "$s6c/.monows/plans/active/p.md" <<'EOF'
+
+- `2026-09-02T00:00:00Z` — move gate, verdict `APPROVED`
+  - proof_classes: output, unit, integration
+  - `false`
+EOF
+git -C "$s6c" add -A >/dev/null
+s6crev=$( cd "$s6c" && zharness_guard_revspec staged )
+s6cpaths=$( cd "$s6c" && zharness_guard_plan_paths "$(printf '%s' "$s6crev" | cut -f1)" "$(printf '%s' "$s6crev" | cut -f2)" )
+s6ctmp=$(mktemp -d)
+s6cout=$( cd "$s6c" && zhuards_guard_plans "$s6cpaths" "$(printf '%s' "$s6crev" | cut -f1)" "$(printf '%s' "$s6crev" | cut -f2)" "$s6ctmp" 2>&1 )
+s6crc=$?
+[ "$s6crc" -ne 0 ] &&
+	ok "S6c an entry added in the layout move is guarded" ||
+	bad "S6c the move's new entry must be guarded, guard exited $s6crc"
+if printf '%s' "$s6cout" | grep -q 'MARKER-S6C'; then
+	bad "S6c moved plans' pre-existing entries were re-executed"
+else
+	ok "S6c .harness/plans -> .monows/plans resolves to the predecessor"
+fi
+rm -rf "$s6c" "$s6ctmp"
 
 # S7: a push carrying two commits. The entry lands in the first of them, so a
 # HEAD~1..HEAD window never sees it; the range base does.
@@ -591,8 +621,8 @@ gfix "$s7"
 printf 'seed\n' > "$s7/seed.txt"
 git -C "$s7" add -A >/dev/null && git -C "$s7" commit -qm seed
 s7base=$(git -C "$s7" rev-parse HEAD)
-gplan "$s7/.harness/plans/active/p.md" MARKER-S7
-cat >> "$s7/.harness/plans/active/p.md" <<'EOF'
+gplan "$s7/.monows/plans/active/p.md" MARKER-S7
+cat >> "$s7/.monows/plans/active/p.md" <<'EOF'
 
 - `2026-09-02T00:00:00Z` — second gate, verdict `APPROVED`
   - proof_classes: output, unit, integration
@@ -609,7 +639,7 @@ s7prev=$( cd "$s7" && zharness_guard_plan_paths "$s7head~1" "$s7head" )
 	bad "S7 fixture is not exercising the gap: HEAD~1 window saw '$s7prev'"
 
 s7paths=$( cd "$s7" && zharness_guard_plan_paths "$s7base" "$s7head" )
-[ "$s7paths" = ".harness/plans/active/p.md" ] &&
+[ "$s7paths" = ".monows/plans/active/p.md" ] &&
 	ok "S7 the range selector sees the plan across both commits" ||
 	bad "S7 range selector returned '$s7paths'"
 
@@ -657,7 +687,7 @@ git -C "$hg" add -A >/dev/null && git -C "$hg" commit -qm base
 hgbase=$(git -C "$hg" rev-parse HEAD)
 awk '{print} /^zharness_run_proof\(\) \{/{print "  return 0"}' scripts/install-git-hooks.sh \
 	> "$hg/scripts/install-git-hooks.sh"
-gplan "$hg/.harness/plans/active/p.md" 'MARKER-HG; false'
+gplan "$hg/.monows/plans/active/p.md" 'MARKER-HG; false'
 git -C "$hg" add -A >/dev/null && git -C "$hg" commit -qm "neuter R2 + failing proof"
 hghead=$(git -C "$hg" rev-parse HEAD)
 hgtmp=$(mktemp -d)
@@ -665,7 +695,7 @@ awk '$0=="# ZGUARD-CORE-BEGIN"{on=1;next} $0=="# ZGUARD-CORE-END"{on=0} on' \
 	"$hg/scripts/install-git-hooks.sh" > "$hgtmp/head.sh"
 # shellcheck disable=SC1091
 ( cd "$hg" && source "$hgtmp/head.sh" &&
-	zhuards_guard_plans .harness/plans/active/p.md "$hgbase" "$hghead" "$hgtmp" ) >/dev/null 2>&1 &&
+	zhuards_guard_plans .monows/plans/active/p.md "$hgbase" "$hghead" "$hgtmp" ) >/dev/null 2>&1 &&
 	ok "HG fixture: the neutered head guard accepts the failing proof" ||
 	bad "HG fixture is not exercising the gap: the head guard rejected"
 ( cd "$hg" && ZHARNESS_BEFORE_SHA="$hgbase" ZHARNESS_HEAD_SHA="$hghead" bash "$HG" push ) >/dev/null 2>&1 &&
@@ -679,7 +709,7 @@ awk '$0=="# ZGUARD-CORE-BEGIN"{on=1;next} $0=="# ZGUARD-CORE-END"{on=0} on' \
 # and passes.
 git -C "$hg" reset -q --hard "$hgbase"
 printf '# honest edit\n' >> "$hg/scripts/install-git-hooks.sh"
-gplan "$hg/.harness/plans/active/p.md" MARKER-HG-OK
+gplan "$hg/.monows/plans/active/p.md" MARKER-HG-OK
 git -C "$hg" add -A >/dev/null && git -C "$hg" commit -qm "honest edit"
 hgout=$( cd "$hg" && ZHARNESS_BEFORE_SHA="$hgbase" ZHARNESS_HEAD_SHA="$(git rev-parse HEAD)" bash "$HG" push 2>&1 )
 hgrc=$?
@@ -693,10 +723,10 @@ rm -rf "$hg" "$hgtmp"
 # staged blobs. An unstaged second plan is worktree noise, not a claim.
 s8=$(mktemp -d)
 gfix "$s8"
-mkdir -p "$s8/.harness/plans/active"
-printf 'one\n' > "$s8/.harness/plans/active/one.md"
+mkdir -p "$s8/.monows/plans/active"
+printf 'one\n' > "$s8/.monows/plans/active/one.md"
 git -C "$s8" add -A >/dev/null && git -C "$s8" commit -qm one
-printf 'two\n' > "$s8/.harness/plans/active/two.md"
+printf 'two\n' > "$s8/.monows/plans/active/two.md"
 if zharness_guard_at_most_one_active_plan "$s8" staged 2>/dev/null; then
 	ok "S8 an unstaged second plan does not gate the commit"
 else
@@ -713,7 +743,7 @@ if zharness_guard_at_most_one_active_plan "$s8" staged 2>/dev/null; then
 else
 	ok "S8 two staged plans rejected"
 fi
-: > "$s8/.harness/plans/active/two.md"
+: > "$s8/.monows/plans/active/two.md"
 git -C "$s8" add -A >/dev/null
 if zharness_guard_at_most_one_active_plan "$s8" staged 2>/dev/null; then
 	ok "S8 an empty staged second file does not count"
@@ -859,8 +889,8 @@ git -C "$pp/w" push -q origin master 2>/dev/null
 pp_git() { ( cd "$pp/w" && git "$@" ) >/dev/null 2>&1; }
 pp_git checkout -qb feat
 printf 'x\n' > "$pp/w/flag.txt"
-mkdir -p "$pp/w/.harness/plans/active"
-cat > "$pp/w/.harness/plans/active/p.md" <<'EOF'
+mkdir -p "$pp/w/.monows/plans/active"
+cat > "$pp/w/.monows/plans/active/p.md" <<'EOF'
 ---
 lane: normal
 ---
@@ -871,7 +901,7 @@ lane: normal
   - proof_classes: output, unit, integration
   - `test -f flag.txt`
 EOF
-addgoal "$pp/w/.harness/plans/active/p.md"
+addgoal "$pp/w/.monows/plans/active/p.md"
 pp_git add -A && pp_git commit -qm "feat: land plan"
 pp_git rm -q flag.txt && pp_git commit -qm "fix: drop flag"
 [ "$(git -C "$pp/w" rev-list --count master..feat)" = 2 ] &&
@@ -908,13 +938,13 @@ rm -rf "$pp"
 # pre-cutover range whose proofs cannot run at this HEAD is accepted; an
 # unresolvable floor appends nothing and changes no behavior.
 ftmp=$(mktemp -d)
-mkdir -p "$ftmp/repo/.harness/plans/active"
+mkdir -p "$ftmp/repo/.monows/plans/active"
 (
 	cd "$ftmp/repo" || exit 1
 	git init -q .
 	git config user.email t@example.com
 	git config user.name t
-	cat > .harness/plans/active/p.md <<'EOF'
+	cat > .monows/plans/active/p.md <<'EOF'
 ---
 status: active
 lane: normal
@@ -926,7 +956,7 @@ lane: normal
 EOF
 	git add -A && git commit -qm floor
 	git rev-parse HEAD > "$ftmp/floor"
-	cat >> .harness/plans/active/p.md <<'EOF'
+	cat >> .monows/plans/active/p.md <<'EOF'
 - `2026-01-02T00:00:00Z` — phase `p2` — verdict: APPROVED — mode: gate
   - proof_classes: output, unit, integration
   - `false`
@@ -934,13 +964,13 @@ EOF
 	git add -A && git commit -qm after
 )
 : > "$ftmp/hashes"
-zharness_guard_historical_floor_hashes "$ftmp/repo" .harness/plans/active/p.md "$ftmp/hashes" "$(cat "$ftmp/floor")"
+zharness_guard_historical_floor_hashes "$ftmp/repo" .monows/plans/active/p.md "$ftmp/hashes" "$(cat "$ftmp/floor")"
 [ "$(wc -l < "$ftmp/hashes" | tr -d " ")" = 1 ] &&
 	ok "FLOOR emits the floor commit's entry hashes" ||
 	bad "FLOOR expected 1 hash, got $(wc -l < "$ftmp/hashes")"
 
 : > "$ftmp/hashes2"
-zharness_guard_historical_floor_hashes "$ftmp/repo" .harness/plans/active/p.md "$ftmp/hashes2" deadbeef
+zharness_guard_historical_floor_hashes "$ftmp/repo" .monows/plans/active/p.md "$ftmp/hashes2" deadbeef
 [ ! -s "$ftmp/hashes2" ] &&
 	ok "FLOOR unresolvable floor appends nothing" ||
 	bad "FLOOR unresolvable floor appended $(wc -l < "$ftmp/hashes2") hash(es)"
@@ -1117,10 +1147,10 @@ r6case() {                                  # <extra-path> -> guard rc
 	d=$(mktemp -d)
 	(
 		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
-			mkdir -p .harness/plans/active docs && cp "$tmp/r6-old.md" .harness/plans/active/p.md &&
+			mkdir -p .monows/plans/active docs && cp "$tmp/r6-old.md" .monows/plans/active/p.md &&
 			printf '# x\n' > AGENTS.md && git add -A && git commit -qm base &&
-			cp "$tmp/r6-new.md" .harness/plans/active/p.md && mkdir -p "$(dirname "$1")" && printf 'y\n' >> "$1" && git add -A &&
-			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g"
+			cp "$tmp/r6-new.md" .monows/plans/active/p.md && mkdir -p "$(dirname "$1")" && printf 'y\n' >> "$1" && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .monows/plans/active/p.md HEAD : "$d/g"
 	) >/dev/null 2>&1
 	rc=$?
 	rm -rf "$d"
@@ -1141,11 +1171,11 @@ r6branch() {                                # <default-branch> -> guard rc
 	d=$(mktemp -d)
 	(
 		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
-			mkdir -p .harness/plans/active docs .github && cp "$tmp/r6-old.md" .harness/plans/active/p.md &&
+			mkdir -p .monows/plans/active docs .github && cp "$tmp/r6-old.md" .monows/plans/active/p.md &&
 			git add -A && git commit -qm base && git checkout -qb feat &&
 			printf 'y\n' > .github/ci.yml && git add -A && git commit -qm ci &&
-			cp "$tmp/r6-new.md" .harness/plans/active/p.md && printf 'y\n' > docs/a.md && git add -A &&
-			mkdir g && ZHARNESS_DEFAULT_BRANCH="$1" zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g"
+			cp "$tmp/r6-new.md" .monows/plans/active/p.md && printf 'y\n' > docs/a.md && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH="$1" zhuards_guard_plans .monows/plans/active/p.md HEAD : "$d/g"
 	) >/dev/null 2>&1
 	rc=$?
 	rm -rf "$d"
@@ -1201,11 +1231,11 @@ r7range() { # <rust-source> -> guard rc
 	d=$(mktemp -d)
 	(
 		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
-			mkdir -p .harness/plans/active src && cp "$tmp/r7-old.md" .harness/plans/active/p.md &&
+			mkdir -p .monows/plans/active src && cp "$tmp/r7-old.md" .monows/plans/active/p.md &&
 			printf 'pub fn f() -> u8 { 1 }\n' > src/lib.rs && git add -A && git commit -qm base &&
-			cp "$tmp/r7-new.md" .harness/plans/active/p.md && printf '%s\n' "$1" >> src/lib.rs && git add -A &&
+			cp "$tmp/r7-new.md" .monows/plans/active/p.md && printf '%s\n' "$1" >> src/lib.rs && git add -A &&
 			mkdir g && PATH="$tmp/bin:$PATH" FAKE_PASSED=1 ZHARNESS_DEFAULT_BRANCH=master \
-			zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g"
+			zhuards_guard_plans .monows/plans/active/p.md HEAD : "$d/g"
 	) >/dev/null 2>&1
 	rc=$?
 	rm -rf "$d"
@@ -1264,19 +1294,19 @@ r8range() { # <judge_model> <judged_sha: base|work|old|side|head-of-master> -> g
 	d=$(mktemp -d)
 	(
 		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
-			mkdir -p .harness/plans/active && printf 'c0\n' > a.txt && git add -A && git commit -qm c0 &&
+			mkdir -p .monows/plans/active && printf 'c0\n' > a.txt && git add -A && git commit -qm c0 &&
 			old=$(git rev-parse HEAD) &&
 			printf '{\n  "judges": ["fable", "opus"]\n}\n' > models.json &&
-			cp "$tmp/r8-old.md" .harness/plans/active/p.md && git add -A && git commit -qm c1 &&
+			cp "$tmp/r8-old.md" .monows/plans/active/p.md && git add -A && git commit -qm c1 &&
 			base=$(git rev-parse HEAD) &&
 			git checkout -qb side && printf 's\n' > s.txt && git add -A && git commit -qm side &&
 			side=$(git rev-parse HEAD) && git checkout -q master && git checkout -qb feat &&
 			printf 'w\n' > w.txt && git add -A && git commit -qm work && work=$(git rev-parse HEAD) &&
 			case "$2" in base) s=$base ;; work) s=$work ;; old) s=$old ;; side) s=$side ;; esac &&
 			r8entry high-risk gate "  - judge_model: $1\n" "  - judged_sha: $s\n" &&
-			cp "$tmp/r8-new.md" .harness/plans/active/p.md && git add -A &&
-			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g" &&
-			git commit -qm entry && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md "$base" HEAD "$d/g"
+			cp "$tmp/r8-new.md" .monows/plans/active/p.md && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .monows/plans/active/p.md HEAD : "$d/g" &&
+			git commit -qm entry && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .monows/plans/active/p.md "$base" HEAD "$d/g"
 	) >/dev/null 2>&1
 	rc=$?
 	rm -rf "$d"
@@ -1303,14 +1333,14 @@ r8rebase() { # <same|diff|absent> -> PR-range guard rc after master moves on
 	d=$(mktemp -d)
 	(
 		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
-			mkdir -p .harness/plans/active && printf 'c0\n' > a.txt && git add -A && git commit -qm c0 &&
+			mkdir -p .monows/plans/active && printf 'c0\n' > a.txt && git add -A && git commit -qm c0 &&
 			printf '{\n  "judges": ["fable", "opus"]\n}\n' > models.json &&
-			cp "$tmp/r8-old.md" .harness/plans/active/p.md && git add -A && git commit -qm c1 &&
+			cp "$tmp/r8-old.md" .monows/plans/active/p.md && git add -A && git commit -qm c1 &&
 			git checkout -qb feat && printf 'w\n' > w.txt && git add -A && git commit -qm work &&
 			s=$(git rev-parse HEAD) &&
 			if [ "$1" = absent ]; then s=0123456789abcdef0123456789abcdef01234567; fi &&
 			r8entry high-risk gate "  - judge_model: fable\n" "  - judged_sha: $s\n" &&
-			cp "$tmp/r8-new.md" .harness/plans/active/p.md && git add -A && git commit -qm entry &&
+			cp "$tmp/r8-new.md" .monows/plans/active/p.md && git add -A && git commit -qm entry &&
 			git checkout -q master && printf 'm\n' > m.txt && git add -A && git commit -qm c2 &&
 			git checkout -q feat && git rebase -q master &&
 			if [ "$1" = diff ]; then
@@ -1318,7 +1348,7 @@ r8rebase() { # <same|diff|absent> -> PR-range guard rc after master moves on
 					printf 'w2\n' > w.txt && git add -A && git commit -qm work && git cherry-pick "$e"
 			fi &&
 			mb=$(git merge-base master HEAD) && mkdir g &&
-			ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md "$mb" HEAD "$d/g"
+			ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .monows/plans/active/p.md "$mb" HEAD "$d/g"
 	) > "$tmp/r8rebase.out" 2>&1
 	rc=$?
 	rm -rf "$d"
@@ -1423,9 +1453,9 @@ shape_range() { # <plan-path> -> guard rc for a Goal whose R1 lacks acceptance
 	rm -rf "$d"
 	return $rc
 }
-shape_range .harness/plans/active/p.md && bad "PLAN-SHAPE a staged active plan missing acceptance must be rejected" ||
+shape_range .monows/plans/active/p.md && bad "PLAN-SHAPE a staged active plan missing acceptance must be rejected" ||
 	ok "PLAN-SHAPE a staged active plan missing acceptance is rejected"
-shape_range .harness/plans/completed/p.md && ok "PLAN-SHAPE a completed plan is not linted" ||
+shape_range .monows/plans/completed/p.md && ok "PLAN-SHAPE a completed plan is not linted" ||
 	bad "PLAN-SHAPE must leave completed plans alone"
 
 # APPEND-ONLY (issue #218): committed Validation entries and Log
@@ -1453,13 +1483,13 @@ ao_case() { # <new-path> <status> <lifecycle> <log-block> <validation-block> -> 
 	d=$(mktemp -d)
 	(
 		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
-			mkdir -p .harness/plans/active .harness/plans/completed &&
+			mkdir -p .monows/plans/active .monows/plans/completed &&
 			ao_plan active in-progress "$ao_log_start
 $ao_log_dec
 $ao_log_done" "$ao_v_rc
 
-$ao_v_ok" > .harness/plans/active/p.md && git add -A && git commit -qm base &&
-			if [ "$1" != .harness/plans/active/p.md ]; then git mv .harness/plans/active/p.md "$1"; fi &&
+$ao_v_ok" > .monows/plans/active/p.md && git add -A && git commit -qm base &&
+			if [ "$1" != .monows/plans/active/p.md ]; then git mv .monows/plans/active/p.md "$1"; fi &&
 			ao_plan "$2" "$3" "$4" "$5" > "$1" && git add -A && mkdir g &&
 			if [ -n "${AO_RANGE:-}" ]; then # the pushed range, as CI and pre-push see it
 				git commit -qm next && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans "$1" HEAD~1 HEAD "$d/g"
@@ -1474,38 +1504,38 @@ $ao_v_ok" > .harness/plans/active/p.md && git add -A && git commit -qm base &&
 ao_full_log="$ao_log_start
 $ao_log_dec
 $ao_log_done"
-ao_case .harness/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_rc
+ao_case .monows/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_rc
 
 $ao_v_ok" && ok "APPEND-ONLY an unchanged history is accepted" ||
 	bad "APPEND-ONLY an unchanged history must be accepted"
-ao_case .harness/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_ok" &&
+ao_case .monows/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_ok" &&
 	bad "APPEND-ONLY deleting a REQUEST_CHANGES entry must be rejected" ||
 	ok "APPEND-ONLY deleting a REQUEST_CHANGES entry is rejected"
-ao_case .harness/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_rc
+ao_case .monows/plans/active/p.md active in-progress "$ao_full_log" "$ao_v_rc
 
 $(printf '%s\n' "$ao_v_ok" | sed 's/judge_model: fable/judge_model: opus/')" &&
 	bad "APPEND-ONLY rewriting a committed Validation entry must be rejected" ||
 	ok "APPEND-ONLY rewriting a committed Validation entry is rejected"
-ao_case .harness/plans/active/p.md active in-progress "$ao_log_start
+ao_case .monows/plans/active/p.md active in-progress "$ao_log_start
 - 2026-11-01T00:05Z — main — decision — keep the parser (edited)
 $ao_log_done" "$ao_v_rc
 
 $ao_v_ok" && bad "APPEND-ONLY rewriting a Log decision must be rejected" ||
 	ok "APPEND-ONLY rewriting a Log decision is rejected"
 # The sanctioned compaction: start/done dropped, the last entry per phase kept.
-ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec
+ao_case .monows/plans/completed/p.md completed completed "$ao_log_dec
 $ao_log_absorb" "$ao_v_ok" && ok "APPEND-ONLY the handoff compaction is accepted" ||
 	bad "APPEND-ONLY the handoff compaction must be accepted"
-ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec
+ao_case .monows/plans/completed/p.md completed completed "$ao_log_dec
 $ao_log_absorb" "$ao_v_rc" && bad "APPEND-ONLY a compaction dropping the phase's last entry must be rejected" ||
 	ok "APPEND-ONLY a compaction dropping the phase's last entry is rejected"
-ao_case .harness/plans/completed/p.md completed completed "$ao_log_absorb" "$ao_v_ok" &&
+ao_case .monows/plans/completed/p.md completed completed "$ao_log_absorb" "$ao_v_ok" &&
 	bad "APPEND-ONLY a compaction dropping a decision must be rejected" ||
 	ok "APPEND-ONLY a compaction dropping a decision is rejected"
-ao_case .harness/plans/completed/p.md completed completed "$ao_log_dec" "$ao_v_ok" &&
+ao_case .monows/plans/completed/p.md completed completed "$ao_log_dec" "$ao_v_ok" &&
 	bad "APPEND-ONLY a compaction with no absorb decision must be rejected" ||
 	ok "APPEND-ONLY a compaction with no absorb decision is rejected"
-ao_case .harness/plans/active/p.md active completed "$ao_log_dec
+ao_case .monows/plans/active/p.md active completed "$ao_log_dec
 $ao_log_absorb" "$ao_v_ok" && bad "APPEND-ONLY a compaction that stays under active/ must be rejected" ||
 	ok "APPEND-ONLY a compaction that stays under active/ is rejected"
 
@@ -1514,11 +1544,11 @@ $ao_log_absorb" "$ao_v_ok" && bad "APPEND-ONLY a compaction that stays under act
 # neither rejects nor re-judges the entries it carries.
 for ao_mode in staged range; do
 	ao_r=""; [ "$ao_mode" = range ] && ao_r=1
-	AO_RANGE=$ao_r ao_case .harness/plans/active/p2.md active in-progress "$ao_full_log" "$ao_v_rc
+	AO_RANGE=$ao_r ao_case .monows/plans/active/p2.md active in-progress "$ao_full_log" "$ao_v_rc
 
 $ao_v_ok" && ok "APPEND-ONLY a pure rename of an active plan is accepted ($ao_mode)" ||
 		bad "APPEND-ONLY a pure rename must be accepted without re-judging old entries ($ao_mode)"
-	AO_RANGE=$ao_r ao_case .harness/plans/active/p2.md active in-progress "$ao_log_start
+	AO_RANGE=$ao_r ao_case .monows/plans/active/p2.md active in-progress "$ao_log_start
 $ao_log_done" "" && bad "APPEND-ONLY dropping entries under a rename must be rejected ($ao_mode)" ||
 		{ grep -q "APPEND-ONLY GUARD REJECTED" "$tmp/ao.out" && ok "APPEND-ONLY dropping entries under a rename is rejected ($ao_mode)" ||
 			bad "APPEND-ONLY rename drop rejected for the wrong reason ($ao_mode): $(head -3 "$tmp/ao.out")"; }
@@ -1535,9 +1565,9 @@ bl_case() { # <log-block> -> guard rc for that Log staged over an empty-Log base
 	d=$(mktemp -d)
 	(
 		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
-			mkdir -p .harness/plans/active && bl_plan '' > .harness/plans/active/p.md && git add -A && git commit -qm base &&
-			bl_plan "$1" > .harness/plans/active/p.md && git add -A &&
-			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$d/g"
+			mkdir -p .monows/plans/active && bl_plan '' > .monows/plans/active/p.md && git add -A && git commit -qm base &&
+			bl_plan "$1" > .monows/plans/active/p.md && git add -A &&
+			mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .monows/plans/active/p.md HEAD : "$d/g"
 	) >/dev/null 2>&1
 	rc=$?
 	rm -rf "$d"
@@ -1574,7 +1604,7 @@ bl_case "$bl_start" && ok "BASELINE a plan with no done entry needs no baseline 
 bd=$(mktemp -d)
 (
 	cd "$bd" && git init -q -b master && git config user.email t@t && git config user.name t &&
-		mkdir -p .harness/plans/active && bl_plan "$bl_start" > .harness/plans/active/p.md &&
+		mkdir -p .monows/plans/active && bl_plan "$bl_start" > .monows/plans/active/p.md &&
 		printf '# A\n\n## Gate Commands\n\n```bash\n# a comment\ntest -d .\n\nfalse\n```\n\n## Other\n\n```bash\nnot-a-gate\n```\n' > AGENTS.md &&
 		git add -A && git commit -qm base
 ) >/dev/null 2>&1
@@ -1586,7 +1616,7 @@ false" ] && ok "BASELINE baseline.sh reads the AGENTS.md gate commands only" ||
 bl_sha=$(git -C "$bd" rev-parse HEAD)
 ( cd "$bd" && bash "$bl_bin" -- 'test -d .' 'exit 3' ) >/dev/null 2>&1
 bl_rc=$?
-bl_log=$(awk '$0=="## Log"{on=1;next} /^## /{on=0} on && /baseline:/' "$bd/.harness/plans/active/p.md")
+bl_log=$(awk '$0=="## Log"{on=1;next} /^## /{on=0} on && /baseline:/' "$bd/.monows/plans/active/p.md")
 [ "$bl_rc" = 0 ] && printf '%s\n' "$bl_log" | grep -q " — main — decision — baseline: $bl_sha test -d \. rc=0\$" &&
 	printf '%s\n' "$bl_log" | grep -q "baseline: $bl_sha exit 3 rc=3\$" &&
 	[ "$(printf '%s\n' "$bl_log" | grep -c .)" = 2 ] &&
@@ -1594,12 +1624,12 @@ bl_log=$(awk '$0=="## Log"{on=1;next} /^## /{on=0} on && /baseline:/' "$bd/.harn
 	bad "BASELINE baseline.sh rc=$bl_rc log: $bl_log"
 (
 	cd "$bd" &&
-		awk -v d="$bl_done" '{print} /baseline: .* exit 3 rc=3$/{print d}' .harness/plans/active/p.md > p.tmp &&
-		mv p.tmp .harness/plans/active/p.md && git add .harness/plans/active/p.md && mkdir g &&
-		ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .harness/plans/active/p.md HEAD : "$bd/g"
+		awk -v d="$bl_done" '{print} /baseline: .* exit 3 rc=3$/{print d}' .monows/plans/active/p.md > p.tmp &&
+		mv p.tmp .monows/plans/active/p.md && git add .monows/plans/active/p.md && mkdir g &&
+		ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .monows/plans/active/p.md HEAD : "$bd/g"
 ) >/dev/null 2>&1 && ok "BASELINE the guard accepts a done entry after baseline.sh ran" ||
 	bad "BASELINE the guard must accept a done entry after baseline.sh ran"
-( cd "$bd" && git rm -qf .harness/plans/active/p.md && bash "$bl_bin" -- true ) >/dev/null 2>&1
+( cd "$bd" && git rm -qf .monows/plans/active/p.md && bash "$bl_bin" -- true ) >/dev/null 2>&1
 [ $? = 2 ] && ok "BASELINE baseline.sh exits 2 with no active plan" ||
 	bad "BASELINE baseline.sh must exit 2 with no active plan"
 rm -rf "$bd"
