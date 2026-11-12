@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 lane: high-risk
 ---
 # Move the zharness managed layout from .harness/ to .monows/
@@ -62,10 +62,18 @@ lane: high-risk
 - 2026-11-12T10:55Z — main — done — phases installer, guards and repo landed on `chore/skills-monows-paths` with the #268 skills commit (R7: one branch); `update` moves `.harness/` → `.monows/`, refuses on two copies; guard S6c covers APPEND-ONLY across the move
 
 ## Validation
+- 2026-11-12T14:00Z — phase `repo` — verdict: APPROVE — mode: full
+  - `cd cli && cargo test --test projection_parity` — router mirror matches (R3)
+  - `test ! -e .harness && bash scripts/ci/verify-doc-links.sh` — rc=0 (R6)
+  - `bash scripts/ci/test-guards.sh` — 186 passed, 0 failed (R4; BSD awk fixture fixed on this branch)
+  - `git merge-base --is-ancestor 70d6016 44159f7` — rc=0, #268 skills commit and the layout move landed in one merge (R7)
+  - requirements: R1-R6 met by #268 CI (cli-ci, docs-ci, skills-ci green) | R7 met (one branch, merge 44159f7) | release 0.37.0 tagged `cli/v0.37.0`
+  - rollback_point: cli/v0.36.1
+  - judge: owner-reviewed label on #268
 
 ## Current State and Next Action
-- active_phase: repo
-- lifecycle_status: in_review
-- blockers: `risk-verdict` needs the owner's `owner-reviewed` label (high-risk lane; agents never apply it)
-- open_items: release 0.37.0 after merge
-- exact_next_action: owner reviews PR #268 and labels it; then merge and cut 0.37.0
+- active_phase: none
+- lifecycle_status: completed
+- blockers: none
+- open_items: none
+- exact_next_action: none

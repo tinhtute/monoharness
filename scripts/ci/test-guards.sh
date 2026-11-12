@@ -41,7 +41,7 @@ GOAL='## Goal
 addgoal() { # <plan-file> — insert $GOAL after the frontmatter
 	local t
 	t=$(mktemp)
-	awk -v g="$GOAL" '{print} /^---$/ && ++n == 2 {print ""; printf "%s", g}' "$1" > "$t" && cat "$t" > "$1"
+	G="$GOAL" awk '{print} /^---$/ && ++n == 2 {print ""; printf "%s", ENVIRON["G"]}' "$1" > "$t" && cat "$t" > "$1"
 	rm -f "$t"
 }
 
