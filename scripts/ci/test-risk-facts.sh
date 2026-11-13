@@ -3,6 +3,9 @@
 # Fixture tests for skills/stages/check/scripts/risk-facts.sh: each case builds
 # a throwaway repository, commits a base and a change, and asserts on the JSON.
 set -euo pipefail
+# Run from inside a Git hook, the caller's GIT_* would steer fixture repos.
+# shellcheck disable=SC2046
+unset $(git rev-parse --local-env-vars)
 
 SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/skills/stages/check/scripts/risk-facts.sh"
 ROOT="$(mktemp -d)"
@@ -272,7 +275,8 @@ check "assertions moved between files are not removed" \
 GATE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/test-weakening.sh"
 with_facts() {
   mkdir -p "$REPO/skills/stages/check/scripts"
-  cp "$SCRIPT" "$REPO/skills/stages/check/scripts/risk-facts.sh"
+  # cat, not cp: a read-only worktree's 0555 mode would make the copy unwritable.
+  cat "$SCRIPT" >"$REPO/skills/stages/check/scripts/risk-facts.sh"
   rust_tests src/lib.rs
 }
 gate() { (cd "$REPO" && bash "$GATE" main change); }

@@ -33,9 +33,12 @@ jobs:
           tool: cargo-mutants
 
       - name: Run cargo mutants on cli/src/installer
+        # --in-place: tests read ../skills, ../docs and the .monows mirror, so
+        # the default copy of cli/ alone fails the unmutated baseline (exit 4).
+        # The checkout is throwaway, so mutating it directly is safe.
         run: |
           rc=0
-          cargo mutants --file 'src/installer/**/*.rs' --timeout-multiplier 3 || rc=$?
+          cargo mutants --in-place --file 'src/installer/**/*.rs' --timeout-multiplier 3 || rc=$?
           echo "cargo mutants exit code: $rc"
           case "$rc" in 0 | 2 | 3) exit 0 ;; *) exit "$rc" ;; esac
 

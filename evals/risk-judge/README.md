@@ -2,9 +2,9 @@
 
 Measures the check-risk judge (`skills/stages/check/references/check-risk.md`) against the owner's own labels, so its verdict is a calibrated signal and not a guess. Issue #221 (partial).
 
-**Status: scaffold only.** `labels.csv` holds a header and no rows. The owner labels PRs by hand; nobody else writes that file, and nothing here generates, infers, or imports labels. Until labels exist, `report.py` exits non-zero with `no labels yet (n=0)`.
+**Status: labeled, not yet gating.** `labels.csv` holds the owner's labels and `predictions.csv` the judge's verdicts; `report.py <split>` prints the current rates. The owner labels PRs by hand; nobody else writes `labels.csv`, and nothing here generates, infers, or imports labels.
 
-**The threshold gate is pending labels.** Auto-merge policy (`AGENTS.md` § Unattended Shipping) is unchanged. Tying it to a measured rate needs an agreed threshold and enough labels; neither exists yet.
+**The threshold gate is still open.** Auto-merge policy (`AGENTS.md` § Unattended Shipping) is not yet tied to a measured rate. Three things block it: no threshold is agreed, the owner has not confirmed that it applies to TPR (§ Metrics), and the `test` split holds no `needs-review` label, so its TPR reads `n/a`.
 
 ## Files
 
@@ -60,4 +60,4 @@ python3 -I evals/risk-judge/test_report.py
 
 ## Mutation testing
 
-The nightly `mutants-nightly` workflow (`.github/workflows/mutants-nightly.yml`) runs `cargo mutants` on `cli/src/installer` and uploads the report as an artifact. It does not gate PRs.
+The nightly `mutants-nightly` workflow (`.github/workflows/mutants-nightly.yml`) runs `cargo mutants --in-place` on `cli/src/installer`, writes the caught/missed/timeout/unviable counts to the run summary, and uploads the report as an artifact. It does not gate PRs. `--in-place` is required: the crate's tests read files outside `cli/`, so cargo-mutants' default copy of `cli/` fails the unmutated baseline.
