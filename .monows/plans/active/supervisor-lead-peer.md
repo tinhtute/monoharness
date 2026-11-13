@@ -78,6 +78,8 @@ lane: high-risk
 - 2026-11-13T04:56:44Z — retro-supervisor — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d bash scripts/ci/test-skill-scripts.sh rc=0
 - 2026-11-13T04:56:50Z — retro-supervisor — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d (cd cli && cargo test) rc=0
 - 2026-11-13T04:56:50Z — retro-supervisor — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d bash scripts/ci/verify-doc-links.sh rc=0
+- 2026-11-13T05:02Z — retro-supervisor/T4 — done — `bash scripts/ci/test-skill-scripts.sh` rc=0 (30 passed, 0 failed) on 4a427e8 (engineer, opus, committed on `feat/retro-supervisor` in its own worktree; tested source 4a427e8); changed `skills/stages/retro/scripts/session-digest.py`, `scripts/ci/test-skill-scripts.sh`; red first: 23 passed, 7 failed before the implementation; default and `--json` output byte-identical before and after on the fixture and 2 real logs; Lead probe: a multi-line command and result each print one signal line; repeat threshold is 3 identical untruncated inputs; `test-weakening.sh origin/master HEAD` clean; stop_if: not matched; noted risk: every errored result is a signal (a grep miss counts), so T5's triggers may fire often
+- 2026-11-13T05:02Z — retro-supervisor — decision — wave 2 starts: T5 on one `worker` (sonnet) in its own worktree from this commit
 
 ## Validation
 - 2026-11-13T03:54Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
@@ -125,4 +127,4 @@ lane: high-risk
 - lifecycle_status: in-progress
 - blockers: none
 - open_items: deferred minors in the judge-session 04:25Z Validation requests
-- exact_next_action: integrate T4, then run T5
+- exact_next_action: integrate T5, then the phase check, verifier and the independent `check full`
