@@ -23,7 +23,7 @@ Kinds:
 | playbook `perf` | `perf-issue` | rename | shorter and already unambiguous | `7b48396` 2026-10-23 |
 | playbook `ship` | `shipping` | rename | ours lands one PR behind a risk verdict; theirs lands a verified stack bottom-up | `e83c556` 2026-10-23 |
 | playbook `pause` | `pause-safely` | rename | shorter | `13b36da` 2026-11-09 |
-| playbook `swarm` | skill `swarm` | rewrite | a playbook over `work-swarm.md` that runs on `work full`; theirs is one skill | pending (renamed from `fanout`, `96d9318` 2026-10-23) |
+| playbook `swarm` | skill `swarm` | rewrite | a playbook over `work-swarm.md` that runs on `work full`; theirs is one skill | `5ce7106` 2026-11-13 |
 | playbook `autopilot` | `autopilot-full`, `autopilot-stack` | split | one file; the `full` mode decides whether it merges | `f5fdfd7` 2026-11-09 |
 | skill `ambition` | `sharpen` | rename | adds lenses and a prompt linter | `0974b3e` 2026-10-30 |
 | skill `mono-write` | `unslop`, `technical-writing` | split | covers only research drafts and changelogs | `e2adba3` 2026-11-06 |

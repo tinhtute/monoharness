@@ -1,6 +1,6 @@
 ---
 name: arena
-version: "1.0.0"
+version: "1.1.0"
 description: "Design bakeoff: sub-agents build one artifact several ways, a rubric picks the base, the best parts of the rest are grafted on. Use when the right design is unclear."
 argument-hint: "[artifact to design] [runners and models]"
 compatibility: Designed for Claude Code
@@ -21,8 +21,8 @@ compatibility: Designed for Claude Code
 2. **Fan out.** Spawn every runner in one message, in the background, on an identical brief built per `work` [work-swarm.md](../../stages/work/references/work-swarm.md); only the output path differs.
 3. **Cross-judge.** Score each candidate yourself, then ask a judge for its pick and reasons; a judge on a different model family from the runners is recommended.
 4. **Pick a base.** The highest rubric total wins; on a tie, the simpler candidate.
-5. **Graft by hand.** Copy the best part of each loser into the base, one rubric point at a time; never merge whole candidates.
-6. **Verify.** Run the artifact's check on the merged result.
+5. **Graft by hand.** Copy the best part of each loser into the base, one rubric point at a time; never merge whole candidates. Candidates that converge on one shape are strong agreement: note it and ship that shape with no graft.
+6. **Verify.** Run the artifact's check on the merged result. A problem the check finds that every candidate missed means the frame was wrong: reframe and re-run. One a candidate caught means a missed graft: return to step 5. Never patch over it.
 
 Candidates that diverge wildly mean the brief was under-specified: reframe the rubric or the brief and re-run; never average them.
 
