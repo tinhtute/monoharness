@@ -72,6 +72,7 @@ lane: high-risk
 - 2026-11-13T03:58Z — judge-session — decision — out-of-surface follow-ups, not done here: `skills/poteto/playbooks/ship.md:38` Land step has no step for the Lead to set the id; `CHANGELOG.md` has no Unreleased entry for the verdict-line change; `scripts/ci/test-risk-facts.sh:275,295` fails in a read-only worktree (0555 fixture copy)
 - 2026-11-13T04:12Z — judge-session — decision — second independent `check full` on e1e4282: APPROVE_WITH_REQUESTS, prior requests 1-5 closed; Lead reproduced new requests 1 (`none` passes on an independent verdict) and 3 (removing the end anchor leaves 23/0); all new requests minor, fix-or-defer is the owner's call
 - 2026-11-13T04:20Z — judge-session — decision — owner chose to fix e1e4282 requests 1 and 3 before the PR: the gate rejects `judge_session: none` on an independent verdict and names the field; a hand-written body with text after the closing paren fails only with the end anchor (mutation without it: 25 passed, 1 failed); check-risk.md template shows `| none`; `check_out_lacks` moved up with the helpers; `test-risk-verdict` 26/0, `test-risk-facts` 29/0, cargo 92 passed, shellcheck and doc links clean; requests 2, 4, 5 stay follow-ups; needs a third independent `check full`
+- 2026-11-13T04:36Z — judge-session — decision — third independent `check full` on 86c724f: APPROVED; Lead reproduced the none-branch mutation (24 passed, 2 failed); remaining requests are minor or nit and stay follow-ups; push and PR approved by the owner after this check
 
 ## Validation
 - 2026-11-13T03:54Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
@@ -100,10 +101,23 @@ lane: high-risk
   - judge: independent
   - judge_model: claude-fable-5-2
   - judged_sha: e1e42826d976823a62b83fb85fd597c1f64d4a2d
+- 2026-11-13T04:25Z — phase `judge-session` — verdict: APPROVED — mode: full
+  - `bash scripts/ci/test-risk-verdict.sh` — rc=0, 26 passed, 0 failed; mutations on the 86c724f gate: without the none branch 24 passed, 2 failed (the two none fixtures); without the end anchor 25 passed, 1 failed (text after the closing paren); head fixtures on the e1e4282 gate 24 passed, 2 failed
+  - `bash scripts/ci/test-risk-facts.sh` — rc=0, passed: 29 failed: 0 (writable detached worktree at 86c724f; rc=1 in the read-only tree at line 295 from the 0555 fixture copy)
+  - `cd cli && cargo test` — rc=0, 92 passed, 0 failed (87 lib, 3 projection_parity, 2 skill_reference_resolution)
+  - `bash scripts/ci/test-weakening.sh origin/master HEAD` — rc=0, no test weakening in origin/master...HEAD
+  - scope: on target — only the three planned surfaces and the plan file changed; avoided surfaces untouched; no open PR loses a verdict (gh pr list returned none); plan Validation and Log decision lines append-only across all four commits; shellcheck 0.11.0, verify-doc-links, pr-guards and validate-skills clean
+  - proof_classes: output, unit, integration (gate exercised on a throwaway repo: valid line rc=0, none on an independent verdict rc=1 naming it, same-session with none rc=1 on the judge alone, unreplaced placeholder rc=1, text after the closing paren rc=1; fixture suites; cargo integration tests)
+  - requirements: R1 met (test-risk-verdict.sh: the no-judge_session fixture fails, the fixture with it passes; check-risk.md § Risk Section documents the field)
+  - rollback_point: c909b48b16249abdcff90d5c6dcae6a17afb0c76
+  - requests: e1e4282 requests 1, 3 and 6 closed at 86c724f; open, all minor or nit and non-blocking: 1 .monows/plans/active/supervisor-lead-peer.md:37 and :105 read checked at 86c724f before that commit was judged, against the check-durable.md preflight; 2 skills/poteto/playbooks/ship.md:38-39 and CHANGELOG.md follow-ups have no owning phase; 3 scripts/ci/test-risk-verdict.sh:120 only discriminates where en_US.UTF-8 is installed; 4 (nit) scripts/ci/risk-verdict.sh:54 matches none exactly, so None, NONE and a lone dash pass on an independent verdict, shape-only under NG4; 5 (nit) skills/stages/check/references/check-risk.md:25 and scripts/ci/risk-verdict.sh:10-12 omit the none rule; 6 (nit) no fixture uses the documented same-session none form, and dropping the independent condition at risk-verdict.sh:54 leaves 26 passed 0 failed; 7 (nit) scripts/ci/test-risk-verdict.sh:126 asserts a substring all three session messages share; 8 (nit) scripts/ci/risk-verdict.sh:40 SHA and judge_model ranges stay locale-dependent, echoed at :57 and :63, both fail closed
+  - judge: independent
+  - judge_model: claude-fable-5-2
+  - judged_sha: 86c724f77244d4af4a4e7e6b0074b66a797ca4e3
 
 ## Current State and Next Action
 - active_phase: judge-session
 - lifecycle_status: checked
 - blockers: none
-- open_items: the fix for e1e4282 requests 1 and 3 awaits an independent `check full`; deferred: locale-dependent `abcé` fixture, SHA/judge_model locale nit; follow-ups in the Log (ship.md, CHANGELOG.md, test-risk-facts 0555)
-- exact_next_action: independent `check full` on the fix commit, then push `feat/judge-session` and open the PR (needs `owner-reviewed`)
+- open_items: PR for `feat/judge-session` needs the owner's `owner-reviewed` label (scripts/ci/** is always-review); deferred minors in the 04:25Z Validation requests; follow-ups in the Log (ship.md, CHANGELOG.md, test-risk-facts 0555)
+- exact_next_action: owner reviews and labels the `feat/judge-session` PR, then merge; next phase `architect` (R2) on the owner's go
