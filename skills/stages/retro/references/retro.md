@@ -3,6 +3,7 @@
 Output: at most 5 findings, severity-ranked, each in the schema below, exactly
 one marked `Next`. No preamble. Steps 1–5 are read-only; step 6 edits files only
 after the user approves the `Next` finding, and fixes that one finding only.
+A scout dispatched in supervisor mode follows § Supervisor mode instead.
 
 A retro targets the agent's **environment** (navigation, guards, steering,
 tools, information); the session's own code is evidence, not the target. Every
@@ -118,21 +119,6 @@ to keep, revise, or remove — until then report it as pending, not as improved.
 Hooks, CI providers, and branch protection change only when the user
 authorizes that file separately.
 
-## Supervisor mode
-
-Runs on `scout`, read-only, when `work-fanout.md` or `orchestrate.md` dispatches it. Steps 3–5 apply with these changes:
-
-- Input: the output of `python3 skills/stages/retro/scripts/session-digest.py --signals <session>` plus the active plan. Read only those two; skip step 2.
-- A `--signals` line has one of three forms: `signal: error tool=<name> result=<...>`, `signal: repeat tool=<name> count=<n> input=<...>` (identical input at least 3 times), `signal: merge pr=<N|?> command=<...>`.
-- Every errored result is a signal, including a read-only command's exit 1 (a grep with no match). Judge whether an error matters before reporting it.
-- For a `gh pr merge` signal, confirm `<lead-session>/subagents/agent-<judge_session>.jsonl` exists and names the merged SHA. Take `judge_session` from the merged PR's `**Verdict:**` line. A missing file or SHA is a finding.
-- Accepted gap: the digest omits `subagents/` logs, so sub-agent errors are invisible here.
-- Return at most 3 findings, each in exactly this shape, or the literal `no finding`:
-
-```
-Observation / Evidence / Suspected mechanism / Impact / Question for Lead / Recommendation / Escalation
-```
-
 <example id="1">
 ### 1. [S1] Automated checks — work claimed `cargo test` green; it was never run (Next)
 - evidence: digest shows 0 `cargo test` calls; turn 14 says "all tests pass"
@@ -150,3 +136,19 @@ Observation / Evidence / Suspected mechanism / Impact / Question for Lead / Reco
 - home: steering
 - fix mode: experiment
 </example>
+
+## Supervisor mode
+
+Runs on `scout`, read-only, when `work-fanout.md` § Aggregate or `orchestrate.md` step 6 dispatches it; no user waits on it. It replaces steps 1, 2 and 5 and the header's output rule; steps 3–4 apply.
+
+- Input: the `--signals` output the Lead passed, the active plan, and the Lead's session id. For a merge signal, also `gh pr view <n> --json state,body,labels,mergeCommit,headRefOid` and the judge transcript `~/.claude/projects/<slug>/<session-id>/subagents/agent-<judge_session>.jsonl` (the directory beside the Lead's `<session-id>.jsonl`). Read nothing else.
+- Lines: `signal: error tool=<name> result=<...>`, `signal: repeat tool=<name> count=<n> input=<...>` (identical input at least 3 times), `signal: merge pr=<N|?> command=<...>`. The digest already drops exit 1 from read-only commands (a grep with no match, a diff that differs); judge whether each remaining error matters before reporting it.
+- A merge signal can be a mention (an `echo`, a `grep`, a heredoc): continue only when `gh pr view` shows `state` `MERGED`. For `pr=?`, resolve the PR from the branch in the command's context (`gh pr view <branch>`); if that fails, write "PR unresolved" in a finding's Evidence, not a failure.
+- Check `judge_session` only on a merged PR whose `**Verdict:**` line reads `low risk` with `judge: independent` and that has no `owner-reviewed` label; any other merge is out of scope, no finding. In scope, the transcript must exist and name the judged head SHA from the Verdict line (not the merge commit); a missing file or SHA is a finding.
+- Accepted gap: the digest omits `subagents/` logs, so sub-agent errors are invisible here.
+
+Output: at most 3 findings, ranked by step 4, each in exactly this shape, or the literal `no finding`. No `Next` marker and no closing question; the Lead acts on the result.
+
+```
+Observation / Evidence / Suspected mechanism / Impact / Question for Lead / Recommendation / Escalation
+```
