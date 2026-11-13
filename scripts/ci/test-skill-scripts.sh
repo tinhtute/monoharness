@@ -104,6 +104,28 @@ expect "session-digest miss: empty log" 0
 case "$out" in *"tool calls: 0"*) ok "session-digest empty log counts zero" ;; *) bad "session-digest empty output: $out" ;; esac
 run python3 -I "$digest" no-such-session-id
 expect "session-digest usage: unknown session" 1
+# session-digest.py --signals: one line per errored result, repeated call (x3+), and gh pr merge
+tu() { printf '{"type":"assistant","message":{"content":[{"type":"tool_use","id":"%s","name":"Bash","input":{"command":"%s"}}]}}\n' "$1" "$2"; }
+tres() { printf '{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"%s","content":"%s","is_error":%s}]}}\n' "$1" "$2" "$3"; }
+{
+	tu e1 "make"; tres e1 "boom" true
+	for i in 1 2 3; do tu "r$i" "cargo test"; tres "r$i" "ok" false; done
+	tu m1 "gh pr merge 281 --merge"; tres m1 "merged" false
+} > "$tmp/signals.jsonl"
+run python3 -I "$digest" --signals "$tmp/signals.jsonl"
+expect "session-digest --signals hit: exits 0" 0
+case "$out" in *"signal: error tool=Bash result=boom"*) ok "session-digest --signals reports the errored result" ;; *) bad "session-digest --signals error line: $out" ;; esac
+case "$out" in *"signal: repeat tool=Bash count=3 input="*"cargo test"*) ok "session-digest --signals reports the repeated call" ;; *) bad "session-digest --signals repeat line: $out" ;; esac
+case "$out" in *"signal: merge pr=281 command=gh pr merge 281 --merge"*) ok "session-digest --signals reports the merge with its PR" ;; *) bad "session-digest --signals merge line: $out" ;; esac
+if [ "$(printf '%s\n' "$out" | grep -vc '^signal: ')" -eq 0 ]; then ok "session-digest --signals prints only signal lines"; else bad "session-digest --signals extra lines: $out"; fi
+{
+	tu c1 "make"; tres c1 "ok" false
+	tu c2 "cargo test"; tres c2 "ok" false
+	tu c3 "cargo test"; tres c3 "ok" false
+} > "$tmp/clean.jsonl"
+run python3 -I "$digest" --signals "$tmp/clean.jsonl"
+expect "session-digest --signals miss: clean log exits 0" 0
+if [ -z "$out" ]; then ok "session-digest --signals clean log prints nothing"; else bad "session-digest --signals clean output: $out"; fi
 
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

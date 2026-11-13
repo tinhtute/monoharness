@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """Condense a Claude Code session log into the signals a retro needs.
 
-Usage: session-digest.py [--json] [SESSION_JSONL | SESSION_ID]
+Usage: session-digest.py [--json | --signals] [SESSION_JSONL | SESSION_ID]
 With no argument, reads the newest session for the current directory under
 ~/.claude/projects/<cwd-slug>/. Also reads `claude -p --output-format
 stream-json` traces. Prints plain text, or one JSON object with --json;
 reads nothing else.
+
+--signals prints only the lines a model should look at, one per signal, and
+nothing for a clean session; it exits 0 either way:
+  signal: error tool=<name> result=<first 160 chars>
+  signal: repeat tool=<name> count=<n> input=<first 200 chars>  (identical input, n >= 3)
+  signal: merge pr=<number or ?> command=<the gh pr merge command>
 """
 import collections
 import glob
@@ -15,6 +21,8 @@ import re
 import sys
 
 PROJECTS = os.path.expanduser("~/.claude/projects")
+REPEAT_SIGNAL = 3  # one identical retry is routine; a third run is a loop worth a look
+MERGE = re.compile(r"(?:^|[\s;&|(])gh\s+pr\s+merge\b(.*)", re.S)
 
 
 def resolve(arg):
@@ -49,15 +57,29 @@ def short(s, n=160):
     return s if len(s) <= n else s[: n - 1] + "…"
 
 
+def pr_number(rest):
+    """The PR a `gh pr merge` targets: a number, #N or a /pull/N URL; `?` means the current branch's PR."""
+    for token in rest.split():
+        if token in (";", "&&", "||", "|"):
+            break
+        m = re.fullmatch(r"#?(\d+)|\S*/pull/(\d+)\S*", token)
+        if m:
+            return m.group(1) or m.group(2)
+    return "?"
+
+
 def main():
     args = sys.argv[1:]
     as_json = "--json" in args
-    args = [a for a in args if a != "--json"]
+    as_signals = "--signals" in args
+    args = [a for a in args if a not in ("--json", "--signals")]
     path = resolve(args[0] if args else None)
     seen = set()
     calls = {}
     counts = collections.Counter()
     repeats = collections.Counter()
+    exact = collections.Counter()  # untruncated input, so --signals never merges distinct calls
+    merges = []
     errors, results, prompts, answers = [], [], [], []
     peak_context = output_tokens = compactions = 0
     final_output = None  # stream-json `result` record: per-record usage there is a partial snapshot
@@ -90,6 +112,11 @@ def main():
                         calls[b["id"]] = (b["name"], sig)
                         counts[b["name"]] += 1
                         repeats[(b["name"], sig)] += 1
+                        exact[(b["name"], json.dumps(b.get("input"), sort_keys=True))] += 1
+                        command = (b.get("input") or {}).get("command") if b["name"] == "Bash" else None
+                        hit = MERGE.search(command) if isinstance(command, str) else None
+                        if hit:
+                            merges.append((pr_number(hit.group(1)), short(command, 200)))
             elif rec.get("type") == "user":
                 if isinstance(content, str):
                     if not content.startswith("<"):
@@ -108,6 +135,16 @@ def main():
                     if b.get("is_error"):
                         errors.append((name, short(body)))
 
+    if as_signals:
+        for name, body in errors:
+            print(f"signal: error tool={name} result={body}")
+        for (name, full), n in exact.most_common():
+            if n < REPEAT_SIGNAL:
+                break
+            print(f"signal: repeat tool={name} count={n} input={short(full, 200)}")
+        for pr, command in merges:
+            print(f"signal: merge pr={pr} command={command}")
+        return
     if final_output is not None:
         output_tokens = final_output
     if as_json:
