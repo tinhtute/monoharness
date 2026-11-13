@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `how` skill (`skills/reason/how`), ported from pstack: explains how a subsystem works or where code belongs, with `file:line` citations. A narrow question is traced by the main agent; a complex one first sends 2–4 `scout`s, one per angle. The `investigation` playbook routes "how does X work" to it.
+
 ### Fixed
 
 - Pre-commit guards: committing a merge no longer re-judges `## Validation` entries the other parent already committed. An entry byte-identical to one in a `MERGE_HEAD` parent's copy of the plan is old, so R8 stops rejecting its `judged_sha` as out of range; an entry written into the merge itself is still guarded. The PR and pre-push ranges start at the merge-base and already treated such entries as old; fixtures now cover them and the master push range. The hook reads the guard core from the installer on every run, so no reinstall is needed.

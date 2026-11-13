@@ -4,6 +4,8 @@
 
 `playbooks/hillclimb.md` and `pause.md` adapt poteto-mode playbooks from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, MIT, Copyright 2026 Lauren Tan).
 
+`skills/reason/how` adapts the `how` skill from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, MIT, Copyright 2026 Lauren Tan); the recurrence rule in `skills/stages/retro/references/retro.md` step 3 adapts the mining guardrails of its `automate-me` skill.
+
 `playbooks/orchestrate.md` and `autopilot.md` adapt poteto-mode playbooks from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, `6b03002`, MIT, Copyright 2026 Lauren Tan).
 
 ## Names that differ from pstack

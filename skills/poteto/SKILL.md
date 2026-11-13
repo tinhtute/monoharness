@@ -18,7 +18,7 @@ Ask the user only through the agent's question tool (Claude Code `AskUserQuestio
 | Slow, latency, memory, throughput regression | [playbooks/perf.md](playbooks/perf.md) |
 | Push one metric toward a target over many keep-or-revert attempts | [playbooks/hillclimb.md](playbooks/hillclimb.md) |
 | Decide a design by building throwaway variants | [playbooks/prototype.md](playbooks/prototype.md) |
-| Question, review, diagnosis; nothing to change | [playbooks/investigation.md](playbooks/investigation.md) |
+| Question, review, diagnosis, "how does X work"; nothing to change | [playbooks/investigation.md](playbooks/investigation.md) |
 | Web research, read sources, deep dive into a topic | [playbooks/research.md](playbooks/research.md) |
 | "Be ambitious", make a task deeper, "what would an expert do" | [playbooks/ambition.md](playbooks/ambition.md) |
 | Get PRs green, address review comments, "check on PR X" | [playbooks/babysit.md](playbooks/babysit.md) |
