@@ -3,6 +3,9 @@
 # Fixture tests for skills/stages/check/scripts/risk-facts.sh: each case builds
 # a throwaway repository, commits a base and a change, and asserts on the JSON.
 set -euo pipefail
+# Run from inside a Git hook, the caller's GIT_* would steer fixture repos.
+# shellcheck disable=SC2046
+unset $(git rev-parse --local-env-vars)
 
 SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/skills/stages/check/scripts/risk-facts.sh"
 ROOT="$(mktemp -d)"

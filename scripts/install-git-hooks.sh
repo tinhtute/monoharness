@@ -93,6 +93,11 @@ HOOKS_DIR="$(cd "$REPO_ROOT" && git rev-parse --path-format=absolute --git-path 
 #       this HEAD (the Go tree they build is deleted, and their phase ranges no
 #       longer match). The floor is a constant, not a marker an agent writes:
 #       an entry that did not exist at that commit is never exempt.
+#   MERGE: at pre-commit during a merge, an entry byte-identical to one in a
+#       MERGE_HEAD parent's copy of the plan is old: it was committed and
+#       guarded on that side. A range needs no such rule; its lower bound is
+#       the merge-base (PR, pre-push) or the pushed-over tip (push), so the
+#       merged-in entries are old there or their judged commits are in range.
 #   PHASE-DONE: a plan staged/pushed under .monows/plans/completed/ whose Current
 #   State declares lifecycle_status: completed must show every phase
 #   status: done in ## Phases and Verification. Found 2026-09-07: a handoff
@@ -411,6 +416,31 @@ zharness_guard_historical_floor_hashes() {  # <root> <path> <out-file> <floor>
   rm -rf "$scratch"
 }
 
+zharness_guard_merge_parent_hashes() {     # <path> <out-file>
+  # MERGE: while a merge is being committed, append the sha256 of every
+  # Validation entry in <path> at each MERGE_HEAD parent. Those entries were
+  # committed, and guarded, on the merged-in side; HEAD's copy alone would make
+  # them new, and R8 then rejects a judged_sha only that parent reaches. An
+  # entry written into the merge itself matches no parent and stays new. Only
+  # the staged event calls this: a range already starts at the merge-base.
+  local path="$1" mh p scratch efile
+  mh=$(git rev-parse --git-path MERGE_HEAD 2>/dev/null) || return 0
+  [ -f "$mh" ] || return 0
+  scratch=$(mktemp -d)
+  while IFS= read -r p; do
+    p=$(git rev-parse --verify --quiet "${p}^{commit}" 2>/dev/null) || continue
+    zharness_guard_old_blob "$p" "$path" "$scratch/parent.md"
+    [ -s "$scratch/parent.md" ] || continue
+    rm -rf "$scratch/e" && mkdir -p "$scratch/e"
+    zharness_dump_entries "$scratch/parent.md" "$scratch/e"
+    for efile in "$scratch"/e/e*.txt; do
+      [ -f "$efile" ] || continue
+      sha256sum "$efile" | cut -d' ' -f1 >> "$2"
+    done
+  done < "$mh"
+  rm -rf "$scratch"
+}
+
 zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base> <head>]
   local path="$1" old="$2" new="$3" failed=0 rc_cmd cmd out body verdict cmds scratch h efile header line missing lane paths hollow=""
   # Old-side entry hashes live in a file, not an associative array: `local -A`
@@ -437,6 +467,9 @@ zharness_guard_entries_of_file() {         # <path> <old-file> <new-file> [<base
   # Validation entry was already committed.
   zharness_guard_historical_floor_hashes \
     "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" "$path" "$oldhashes" 4cd86cf
+  if [ $# -ge 5 ] && [ "$5" = ":" ]; then
+    zharness_guard_merge_parent_hashes "$path" "$oldhashes"
+  fi
 
   # R6: without a revision range (fixtures) only the declared lane applies.
   lane=$(zharness_lane_of "$new")

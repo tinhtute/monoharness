@@ -1364,6 +1364,84 @@ r8rebase absent && bad "R8 a judged_sha this clone does not have must be rejecte
 	{ grep -q "is not in the range" "$tmp/r8rebase.out" && ok "R8 an absent judged_sha object is rejected" ||
 		bad "R8 absent judged_sha rejected for the wrong reason: $(tail -3 "$tmp/r8rebase.out")"; }
 
+# R8 MERGE: a merge commit carries entries the other parent already committed
+# and guarded there. At pre-commit the MERGE_HEAD copy of the plan is old side,
+# so those entries are neither judged nor re-executed again; an entry written
+# into the merge itself is still judged. Through hook-guard.sh the PR range
+# starts at the merge-base, which holds the merged-in entries already, and the
+# push range sees their judged commit inside BEFORE..HEAD.
+r8m_entry() { # <stamp> <judged_sha> <proof> -> one Validation entry
+	printf -- '- `%s` — phase `main` — verdict: APPROVED — mode: gate\n  - `%s`\n  - proof_classes: output, unit, integration\n  - judge: independent\n  - judge_model: fable\n  - judged_sha: %s\n' "$1" "$3" "$2"
+}
+r8merge() { # <a|b> -> $tmp/r8m-<case>.{staged,pr,push}.{out,rc}
+	local d c="$1" inst="$PWD/scripts/install-git-hooks.sh" k
+	d=$(mktemp -d)
+	(
+		cd "$d" && git init -q -b master && git config user.email t@t && git config user.name t &&
+			git config commit.gpgsign false && git config core.hooksPath /dev/null &&
+			printf 'c0\n' > a.txt && git add -A && git commit -qm c0 && old=$(git rev-parse HEAD) &&
+			mkdir -p scripts .monows/plans/active && cp "$inst" scripts/install-git-hooks.sh &&
+			chmod u+w scripts/install-git-hooks.sh &&
+			printf '{\n  "judges": ["fable", "opus"]\n}\n' > models.json &&
+			cp "$tmp/r8-old.md" .monows/plans/active/p.md && git add -A && git commit -qm c1 &&
+			git checkout -qb feat && printf 'w\n' > w.txt && git add -A && git commit -qm work &&
+			feat=$(git rev-parse HEAD) && git checkout -q master &&
+			printf 'm\n' > m.txt && git add -A && git commit -qm judged && j=$(git rev-parse HEAD) &&
+			{ printf '\n'; r8m_entry 2026-11-10T00:00Z "$j" 'test -f m.txt'; } >> .monows/plans/active/p.md &&
+			git add -A && git commit -qm entry && git checkout -q feat &&
+			git merge -q --no-commit --no-ff master >/dev/null &&
+			if [ "$c" = b ]; then
+				{ printf '\n'; r8m_entry 2026-11-11T00:00Z "$old" 'test -d .'; } >> .monows/plans/active/p.md &&
+					git add -A
+			fi &&
+			{ mkdir g && ZHARNESS_DEFAULT_BRANCH=master zhuards_guard_plans .monows/plans/active/p.md HEAD : "$d/g"; } \
+				> "$tmp/r8m-$c.staged.out" 2>&1
+		echo $? > "$tmp/r8m-$c.staged.rc"
+		git commit -q --no-edit && h=$(git rev-parse HEAD) &&
+			ZHARNESS_DEFAULT_BRANCH=master ZHARNESS_BASE_REF=master ZHARNESS_HEAD_SHA="$h" \
+				bash "$HG" pr > "$tmp/r8m-$c.pr.out" 2>&1
+		echo $? > "$tmp/r8m-$c.pr.rc"
+		ZHARNESS_DEFAULT_BRANCH=master ZHARNESS_BEFORE_SHA="$feat" ZHARNESS_HEAD_SHA="$h" \
+			bash "$HG" push > "$tmp/r8m-$c.push.out" 2>&1
+		echo $? > "$tmp/r8m-$c.push.rc"
+	) >/dev/null 2>&1
+	rm -rf "$d"
+	for k in staged pr push; do [ -s "$tmp/r8m-$c.$k.rc" ] || echo 99 > "$tmp/r8m-$c.$k.rc"; done
+}
+r8merge a
+for k in staged pr; do
+	[ "$(cat "$tmp/r8m-a.$k.rc")" = 0 ] && ! grep -q 're-executing proof.*m\.txt' "$tmp/r8m-a.$k.out" &&
+		ok "R8 MERGE ($k): an entry already committed on the merged-in parent is old, not re-judged" ||
+		bad "R8 MERGE ($k): the merged-in entry must be accepted unjudged: rc=$(cat "$tmp/r8m-a.$k.rc") $(tail -4 "$tmp/r8m-a.$k.out")"
+done
+[ "$(cat "$tmp/r8m-a.push.rc")" = 0 ] &&
+	ok "R8 MERGE (push): the merged-in entry's judged commit lies in BEFORE..HEAD" ||
+	bad "R8 MERGE (push): the merged-in entry must be accepted: $(tail -4 "$tmp/r8m-a.push.out")"
+r8merge b
+for k in staged pr push; do
+	[ "$(cat "$tmp/r8m-b.$k.rc")" != 0 ] && grep -q 'R8 JUDGE-ID' "$tmp/r8m-b.$k.out" &&
+		grep -q 'offending entry starts: - `2026-11-11T00:00Z`' "$tmp/r8m-b.$k.out" &&
+		! grep -q 'offending entry starts: - `2026-11-10T00:00Z`' "$tmp/r8m-b.$k.out" &&
+		ok "R8 MERGE ($k): a new out-of-range entry written into the merge is still rejected" ||
+		bad "R8 MERGE ($k): only the new entry must be rejected by R8: rc=$(cat "$tmp/r8m-b.$k.rc") $(grep -E 'R8|offending' "$tmp/r8m-b.$k.out" | head -6)"
+done
+
+# FIXTURE-ENV: a fixture script re-run as a proof inherits the hook's GIT_DIR
+# and GIT_INDEX_FILE. Its throwaway repositories must not reach the caller's.
+fe=$(mktemp -d)
+fe_state() { git -C "$fe/caller" for-each-ref --format='%(refname) %(objectname)'; git -C "$fe/caller" symbolic-ref HEAD; git -C "$fe/caller" config --get core.bare; }
+for s in test-risk-facts.sh test-risk-verdict.sh test-agent-models.sh; do
+	rm -rf "$fe/caller" && git init -q -b master "$fe/caller" &&
+		git -C "$fe/caller" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --allow-empty -m init
+	fe_before=$(fe_state)
+	GIT_DIR="$fe/caller/.git" GIT_INDEX_FILE="$fe/caller/.git/index" bash "scripts/ci/$s" > "$fe/$s.out" 2>&1
+	fe_rc=$?
+	[ "$fe_rc" -eq 0 ] && [ "$(fe_state)" = "$fe_before" ] &&
+		ok "FIXTURE-ENV $s under a hook's GIT_DIR leaves the caller repo untouched" ||
+		bad "FIXTURE-ENV $s rc=$fe_rc; caller before: $fe_before; after: $(fe_state | tr '\n' ' ')"
+done
+rm -rf "$fe"
+
 # PLAN-SHAPE (issue #217): an active plan states its outcome, success signal
 # and authority, and every requirement names an acceptance command.
 shape() { # <goal-body> -> problems for a plan with that Goal

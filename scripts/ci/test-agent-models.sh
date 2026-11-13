@@ -2,6 +2,9 @@
 # models.json is the role -> model policy for the harness agents; each agents/*.md
 # must carry the model its tier names, and every agent file must have a policy row.
 set -euo pipefail
+# Run from inside a Git hook, the caller's GIT_* would steer fixture repos.
+# shellcheck disable=SC2046
+unset $(git rev-parse --local-env-vars)
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 policy="$root/models.json"
 fail=0
