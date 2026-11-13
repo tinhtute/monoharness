@@ -34,5 +34,5 @@ Pick from uncertainty, impact, dependency and recoverability, never from file or
 
 1. **Classify** — mode, lane, risk, surfaces. `tiny` → stop and route to `work bounded`.
 2. **Gather authority** — named sources, repo instructions, `grep -ri "<keywords>" docs/memory/`. Discovery clarifies scope, never expands it.
-3. **Compare options** — 2–3 paths with trade-offs and a recommendation.
+3. **Compare options** — 2–3 paths with trade-offs and a recommendation. For a trade-off marked `adr candidate`, dispatch the read-only `architect` agent before the lock (never for other trade-offs) and use its report (alternatives, strongest counterargument, reversal conditions) when presenting the choice.
 4. **Clarify the boundary** — ask what the Goal still lacks through the question tool (≤4 per call, recommended option first); find facts yourself; stop rather than invent an unresolved product decision. A Goal fuzzy end to end → `grill` first. `lock`/`refine` continue with steps 5–10 in `brainstorm-lock.md`.
