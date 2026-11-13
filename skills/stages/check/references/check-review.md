@@ -11,7 +11,7 @@ Loaded by [check.md](check.md) step 5 for `full`, or `bounded` on a diff.
 
 Off by default. Run it only when the owner asks for it by name and the mode is `full` or `high-risk`; never for `bounded`, `gate`, or on your own initiative. IF the owner has not named the models or a token budget → ask once; an unnamed budget means no panel.
 
-- **Size** — 2 to 3 reviewers, each an explicit `model` per `work-fanout.md`; at most one budget of 3× a single-agent review. A reviewer that exceeds its timebox is dropped.
+- **Size** — 2 to 3 reviewers, each an explicit `model` per `work-swarm.md`; at most one budget of 3× a single-agent review. A reviewer that exceeds its timebox is dropped.
 - **Same input** — resolve `base_sha` and `head_sha` (plus the dirty-diff hash) once. Each reviewer gets its own brief with those values and never sees another reviewer's output. Reject a report that names different SHAs.
 - **Axes** — each reviewer reports under `Spec` and `Standards`. A finding carries axis, file:line or requirement ID, and evidence.
 - **Dedup** — two findings are one when they share axis and file and their line ranges overlap or sit within 3 lines (a Spec finding without a file: same requirement ID). Keep the highest severity, the lowest reviewer index on a tie, and record `agreed: n/N`.

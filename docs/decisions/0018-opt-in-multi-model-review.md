@@ -15,10 +15,10 @@ Ship the mode as opt-in policy, not a default. The value is a hypothesis, so the
 | Parameter | Rule |
 |---|---|
 | Opt-in | Only when the owner asks for it by name and the mode is `full` or `high-risk`. Never `bounded` or `gate`, never automatic. |
-| Runner and models | Claude sub-agents with an explicit `model` per `work-fanout.md` "Models per role"; the owner names the models. Other CLIs are out of scope until an owner names one. |
+| Runner and models | Claude sub-agents with an explicit `model` per `work-swarm.md` "Models per role"; the owner names the models. Other CLIs are out of scope until an owner names one. |
 | Reviewer count | 2 to 3. |
 | Budget | The owner names it; the ceiling is 3x one single-agent review. No named budget means no panel. A reviewer over its timebox is dropped. |
-| Same input | One `base_sha`, `head_sha` and dirty-diff hash, resolved once and written into every brief. A report with other SHAs is rejected (`work-fanout.md:56`). |
+| Same input | One `base_sha`, `head_sha` and dirty-diff hash, resolved once and written into every brief. A report with other SHAs is rejected (`work-swarm.md:56`). |
 | Separate context | One brief per reviewer; no reviewer sees another's output. |
 | Axes | Each reviewer reports under `Spec` and `Standards`. A finding carries axis, file:line or requirement ID, and evidence. |
 | Dedup | Same axis and file with line ranges overlapping or within 3 lines (Spec without a file: same requirement ID) is one finding. Keep the highest severity, lowest reviewer index on a tie, record `agreed: n/N`. |
@@ -35,4 +35,4 @@ The owner can buy a second opinion for a risky change at a known ceiling, and th
 
 ## Authority
 
-`docs/research/2026-10-22-pstack-retro-5.md:9` (owner request); `docs/research/pstack-concepts-audit.md:62`; `skills/stages/check/references/check-review.md` (Multi-model panel section); `skills/stages/work/references/work-fanout.md:56`; `skills/stages/check/references/check.md:23`; issue #156.
+`docs/research/2026-10-22-pstack-retro-5.md:9` (owner request); `docs/research/pstack-concepts-audit.md:62`; `skills/stages/check/references/check-review.md` (Multi-model panel section); `skills/stages/work/references/work-swarm.md:56`; `skills/stages/check/references/check.md:23`; issue #156.

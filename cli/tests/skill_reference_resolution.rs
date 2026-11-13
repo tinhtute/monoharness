@@ -9,10 +9,7 @@ const STAGES: &[(&str, &[&str])] = &[
     ("grill", &["grill"]),
     ("wayfinder", &["wayfinder"]),
     ("to-plan", &["to-plan"]),
-    (
-        "work",
-        &["work", "work-bounded", "work-full", "work-fanout"],
-    ),
+    ("work", &["work", "work-bounded", "work-full", "work-swarm"]),
     (
         "check",
         &[

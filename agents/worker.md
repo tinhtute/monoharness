@@ -1,6 +1,6 @@
 ---
 name: worker
-description: Light peer for a mono fanout wave — owns one bounded task with a stated acceptance command: mechanical edits, link fixes, docs. Spawn with a full brief; it does not spawn sub-agents.
+description: Light peer for a mono swarm wave — owns one bounded task with a stated acceptance command: mechanical edits, link fixes, docs. Spawn with a full brief; it does not spawn sub-agents.
 model: sonnet
 effort: medium
 maxTurns: 40

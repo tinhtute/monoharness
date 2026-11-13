@@ -1,6 +1,6 @@
 ---
 name: engineer
-description: Implementation peer for a mono fanout wave — owns one bounded outcome that needs judgment: ordinary features, guards, contract and test changes. Spawn with a full brief; it does not spawn sub-agents.
+description: Implementation peer for a mono swarm wave — owns one bounded outcome that needs judgment: ordinary features, guards, contract and test changes. Spawn with a full brief; it does not spawn sub-agents.
 model: opus
 effort: medium
 maxTurns: 80

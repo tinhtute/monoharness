@@ -18,7 +18,7 @@ compatibility: Designed for Claude Code
 ## Process
 
 1. **Frame.** Name the artifact, a 3–6 point rubric, the runners (2–4) and each runner's model, and one output location per runner. Mixing model families widens the spread.
-2. **Fan out.** Spawn every runner in one message, in the background, on an identical brief built per `work` [work-fanout.md](../../stages/work/references/work-fanout.md); only the output path differs.
+2. **Fan out.** Spawn every runner in one message, in the background, on an identical brief built per `work` [work-swarm.md](../../stages/work/references/work-swarm.md); only the output path differs.
 3. **Cross-judge.** Score each candidate yourself, then ask a judge for its pick and reasons; a judge on a different model family from the runners is recommended.
 4. **Pick a base.** The highest rubric total wins; on a tie, the simpler candidate.
 5. **Graft by hand.** Copy the best part of each loser into the base, one rubric point at a time; never merge whole candidates.

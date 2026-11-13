@@ -26,7 +26,7 @@ Ask the user only through the agent's question tool (Claude Code `AskUserQuestio
 | Resume, "where was I", an active plan exists | [playbooks/session-pickup.md](playbooks/session-pickup.md) |
 | Pause, "stop here", save state to resume later | [playbooks/pause.md](playbooks/pause.md) |
 | Learn from recent sessions, retrospective | [playbooks/retro.md](playbooks/retro.md) |
-| One in-session wave of parallel sub-agents, swarm | [playbooks/fanout.md](playbooks/fanout.md) |
+| One in-session wave of parallel sub-agents, swarm | [playbooks/swarm.md](playbooks/swarm.md) |
 | Multi-day program of many units or PRs, "orchestrate" | [playbooks/orchestrate.md](playbooks/orchestrate.md) |
 | Carry a queue of PRs to verified (merge only in `full`), "autopilot" | [playbooks/autopilot.md](playbooks/autopilot.md) |
 
