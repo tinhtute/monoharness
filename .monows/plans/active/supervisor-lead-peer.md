@@ -42,7 +42,7 @@ lane: high-risk
     - T1 require `judge_session: <id>` (`[A-Za-z0-9-]+`) after `judge_model` on the `**Verdict:**` line; a low-risk verdict without it fails; the check-risk § Risk Section template and the judge brief tell the Lead to record the judge sub-agent's `agentId` (owner: `engineer`, writes `scripts/ci/risk-verdict.sh`, `scripts/ci/test-risk-verdict.sh`, `skills/stages/check/references/check-risk.md` only) — output: the fixture without the field fails, the fixture with it passes, all old fixtures updated — check: `bash scripts/ci/test-risk-verdict.sh && bash scripts/ci/test-risk-facts.sh && (cd cli && cargo test)` — stop_if: a fixture must be deleted or weakened to pass
   - phase check: `bash scripts/ci/test-risk-verdict.sh && bash scripts/ci/test-risk-facts.sh && (cd cli && cargo test)`
 - phase_slug: `architect`
-  status: in-progress
+  status: checked
   - goal: R2 | depends_on: none
   - surfaces: `agents/architect.md`, `models.json`, the agent lists in `AGENTS.md`, `CONTRIBUTING.md` and `README.md`, `skills/stages/grill/references/grill.md`, `skills/stages/brainstorm/references/brainstorm.md` | avoided: `agents/worker.md`, `agents/engineer.md`, `scripts/install-agents.sh`
   - escalate_when: the architect needs a tier other than `default`, or a write tool
@@ -124,10 +124,26 @@ lane: high-risk
   - judge: independent
   - judge_model: claude-fable-5-2
   - judged_sha: 86c724f77244d4af4a4e7e6b0074b66a797ca4e3
+- 2026-11-13T05:11Z — phase `architect` — verdict: APPROVE_WITH_REQUESTS — mode: gate
+  - `unset $(git rev-parse --local-env-vars); bash scripts/ci/test-agent-models.sh` — rc=0, agent models OK (5 agents); the bare command gives the same result in a plain shell but fails under the pre-commit hook (request 1); on a writable copy of fa9998f, Write added to the architect tools line gives rc=1 (read-only agent allows an edit tool) and a models.json without the architect row gives rc=1 (agent files and models.json rows differ)
+  - `cd cli && cargo test` — rc=0, 92 passed, 0 failed (87 lib, 3 projection_parity, 2 skill_reference_resolution)
+  - `bash scripts/ci/verify-doc-links.sh` — rc=0, doc links OK (0 findings; 4 claim(s) under known-removed v0.15 surfaces)
+  - `bash scripts/ci/validate-skills.sh` — rc=0, 19 skill(s) valid
+  - `bash scripts/ci/test-weakening.sh origin/master fa9998f40f00d297993db93135be40a32b602d7e` — rc=0, no test weakening in origin/master...fa9998f
+  - `grep -qx 'tools: Read, Grep, Glob, Bash' agents/architect.md && jq -e '.readOnly|index("architect")' models.json` — rc=0, index 2
+  - `D=$(mktemp -d) && CLAUDE_DIR=$D bash scripts/install-agents.sh && cmp agents/architect.md $D/agents/architect.md` — rc=0, 5 agent(s): 5 installed or updated, 0 unchanged, 0 legacy retired; the installed architect.md is byte-identical to agents/architect.md
+  - scope: on target — 487c182..fa9998f changes only the seven planned surfaces and this plan file; avoided agents/worker.md, agents/engineer.md, scripts/install-agents.sh untouched, as are cli/src/embedded.rs and scripts/ci; the plan diff only adds Log lines and moves status lines, no Validation or Log line removed; the chained phase check also ran rc=0; all commands ran in a read-only worktree at fa9998f, which stayed clean
+  - proof_classes: output, unit, integration (output: the installer exercised into a throwaway CLAUDE_DIR installs architect.md, plus the two failing mutations; unit: 87 cargo lib tests and the agent policy script; integration: cargo projection_parity and skill_reference_resolution, whose skill list at cli/tests/skill_reference_resolution.rs:8-9 covers the edited brainstorm and grill references)
+  - requirements: R2 met (agents/architect.md:7 tools are Read, Grep, Glob, Bash; models.json:17 lists it in readOnly and :49-54 gives it tier default, model opus matching architect.md:4; grill.md:21 dispatches it for each adr candidate, never for other trade-offs, before asking lock or refine; brainstorm.md:37 marks and dispatches before the lock; test-agent-models.sh and cargo test rc=0)
+  - rollback_point: 487c182550e6c639ebb53dc586cc55088960cc6d
+  - requests: 1 (major, non-blocking, older than this diff, always-review path) scripts/ci/test-agent-models.sh:42-44 runs its fixture git commands with the caller's git environment, so the bare script cited as a proof fails the pre-commit re-execution: rc=128 (.git/index: index file open failed) in a plain clone, and in a linked worktree rc=1 with a stray f staged into the committer's index and the outer hook run inside the fixture; reproduced on a scratch clone of fa9998f, where this entry passes the guard only with the unset prefix; 2 (minor) .monows/plans/active/supervisor-lead-peer.md:84 disposes verifier requests 2-4 and 9, and :85 request 1, but requests 5-8 have no recorded disposition; 3 (minor) scripts/ci/test-agent-models.sh:30-34 does not pin readOnly membership, so the R2 acceptance command still passes with architect removed from readOnly (proved here by the jq line instead; follow-up already at plan :85, always-review path); 4 (minor) the dispatch wording in grill.md:21 and brainstorm.md:37 is prose only, no test pins it, and gate mode ran no manual review of the agent prompt
+  - judge: independent
+  - judge_model: claude-fable-5-2
+  - judged_sha: fa9998f40f00d297993db93135be40a32b602d7e
 
 ## Current State and Next Action
 - active_phase: architect
-- lifecycle_status: in-progress
+- lifecycle_status: checked
 - blockers: none
-- open_items: deferred minors in the judge-session 04:25Z Validation requests
-- exact_next_action: independent phase gate on d55971f+this entry
+- open_items: requests 1-4 in the architect 05:11Z Validation entry (1 is major, outside this phase's surfaces); deferred minors in the judge-session 04:25Z Validation requests
+- exact_next_action: git: commit this gate entry on feat/architect, then push and open the R2 PR (owner go needed); the phase stays checked until closing handoff
