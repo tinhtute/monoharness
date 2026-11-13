@@ -4,7 +4,7 @@ Architecture decisions that are already made, already implemented, and expensive
 
 An ADR here is a record, not a proposal. It is written after the decision has landed in code, and it states what was decided, why, what was rejected, and what it costs. Nothing in this directory is a plan — plans live in `docs/plans/`. ADRs are the absorb path for expensive-to-reverse decisions; a completed plan is a run log, not project knowledge.
 
-Exception: the owner explicitly requested ADRs 0015, 0016 and 0020 before implementation. Their status distinguishes the accepted decision from pending implementation; phase execution remains in the plan.
+Exception: the owner explicitly requested ADRs 0015, 0016, 0020 and 0021 before implementation. Their status distinguishes the accepted decision from pending implementation; phase execution remains in the plan.
 
 ## Index
 
@@ -30,6 +30,7 @@ Exception: the owner explicitly requested ADRs 0015, 0016 and 0020 before implem
 | [0018](0018-opt-in-multi-model-review.md) | Multi-model review is an opt-in panel for `full` and high-risk checks | Accepted; policy only, tests pending |
 | [0019](0019-arena-and-transcript-recall.md) | Implementation arena and transcript recall: defer both, with limits fixed now | Accepted |
 | [0020](0020-orchestrate-and-autopilot.md) | Port orchestrate and autopilot as `mono` playbooks; merges only through Land, owners force-push only their own branch | Accepted; implementation pending |
+| [0021](0021-consumer-verification-generator.md) | A consumer-repo verification generator is in scope; ADR 0017 covers only this repo's gates | Accepted decision; implementation pending (#292) |
 
 ## Writing a new one
 

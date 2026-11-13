@@ -96,7 +96,7 @@ its steps into a todo list, and calls the skill each step names.
 | perf | baseline → hunt → mantras, cheapest first → work → check before/after |
 | hillclimb | metric + stop predicate → frozen harness → loop: one change, measure, keep or revert → check |
 | prototype | throwaway variants → observe in the real app → decide |
-| fanout | separate → spawn sub-agents → aggregate → check (one in-session wave) |
+| swarm | separate → spawn sub-agents → aggregate → check (one in-session wave) |
 | orchestrate | standing program: coordinator decides, PR owners and workers build, verify each unit; multi-day |
 | autopilot | brainstorm → PR owner per PR → full check → fix rounds → `/loop` → stack or land via ship § Land |
 | investigation | think or hunt; read-only, changes nothing |

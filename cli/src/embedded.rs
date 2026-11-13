@@ -388,7 +388,7 @@ mod tests {
             },
             PlaybookContract {
                 name: "work fan-out separates writers and verifies handbacks",
-                path: "work/references/work-fanout.md",
+                path: "work/references/work-swarm.md",
                 required: &[
                     "Loaded by [work-full.md](work-full.md) step 4",
                     "a fence in the brief's prose is not a lock",

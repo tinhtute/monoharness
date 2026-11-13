@@ -11,10 +11,11 @@ Recipe, first match wins: the host's run skill (Claude Code: `/run`); run comman
 ## How
 
 1. A step only a human can do (a login, a key, a running service): ask in an attended session; unattended, skip it and list it as `needs <action>`.
-2. Start what the recipe names, in the background, and wait for readiness in one bounded shell loop.
-3. Drive the changed path once and check one thing the tests can't easily show: what is stored, what the caller receives, what stayed unchanged.
-4. Drive one failure case where the change has one: invalid input, a missing file, an unauthorized caller.
-5. Stop everything you started.
+2. Start what the recipe names, in the background, and wait for readiness in one bounded shell loop. Ready means usable, not merely that a process answers: a health check can pass while migrations or seed data are still loading.
+3. Doctor: before driving, and again after any failed drive, run one read-only check that the instance is worth driving: it is up, it runs the build under test, and the port or socket belongs to this run. A failed doctor is `not exercised: <why>`, not a product failure.
+4. Drive the changed path once and check one thing the tests can't easily show: what is stored, what the caller receives, what stayed unchanged. A dry-run or test mode skips only what you observed it skip: check the files, network calls and git refs it claims to leave alone.
+5. Drive one failure case where the change has one: invalid input, a missing file, an unauthorized caller.
+6. Record each command and its observation, then stop everything you started by its PID or handle, never by process name. Cleanup removes instances and scratch state, never the evidence.
 
 A run that did not reach the changed path is not evidence, whatever it printed.
 

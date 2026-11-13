@@ -139,7 +139,7 @@ authorizes that file separately.
 
 ## Supervisor mode
 
-Runs on `scout`, read-only, when `work-fanout.md` § Aggregate or `orchestrate.md` step 6 dispatches it; no user waits on it. It replaces steps 1, 2 and 5 and the header's output rule; steps 3–4 apply.
+Runs on `scout`, read-only, when `work-swarm.md` § Aggregate or `orchestrate.md` step 6 dispatches it; no user waits on it. It replaces steps 1, 2 and 5 and the header's output rule; steps 3–4 apply.
 
 - Input: the `--signals` output the Lead passed, the active plan, and the Lead's session id. For a merge signal, also `gh pr view <n> --json state,body,labels,mergeCommit,headRefOid` and the judge transcript `~/.claude/projects/<slug>/<session-id>/subagents/agent-<judge_session>.jsonl` (the directory beside the Lead's `<session-id>.jsonl`). Read nothing else.
 - Lines: `signal: error tool=<name> result=<...>`, `signal: repeat tool=<name> count=<n> input=<...>` (identical input at least 3 times), `signal: merge pr=<N|?> command=<...>`. The digest already drops exit 1 from read-only commands (a grep with no match, a diff that differs); judge whether each remaining error matters before reporting it.
