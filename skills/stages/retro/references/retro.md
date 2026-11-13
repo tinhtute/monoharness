@@ -3,6 +3,7 @@
 Output: at most 5 findings, severity-ranked, each in the schema below, exactly
 one marked `Next`. No preamble. Steps 1–5 are read-only; step 6 edits files only
 after the user approves the `Next` finding, and fixes that one finding only.
+A scout dispatched in supervisor mode follows § Supervisor mode instead.
 
 A retro targets the agent's **environment** (navigation, guards, steering,
 tools, information); the session's own code is evidence, not the target. Every
@@ -135,3 +136,19 @@ authorizes that file separately.
 - home: steering
 - fix mode: experiment
 </example>
+
+## Supervisor mode
+
+Runs on `scout`, read-only, when `work-fanout.md` § Aggregate or `orchestrate.md` step 6 dispatches it; no user waits on it. It replaces steps 1, 2 and 5 and the header's output rule; steps 3–4 apply.
+
+- Input: the `--signals` output the Lead passed, the active plan, and the Lead's session id. For a merge signal, also `gh pr view <n> --json state,body,labels,mergeCommit,headRefOid` and the judge transcript `~/.claude/projects/<slug>/<session-id>/subagents/agent-<judge_session>.jsonl` (the directory beside the Lead's `<session-id>.jsonl`). Read nothing else.
+- Lines: `signal: error tool=<name> result=<...>`, `signal: repeat tool=<name> count=<n> input=<...>` (identical input at least 3 times), `signal: merge pr=<N|?> command=<...>`. The digest already drops exit 1 from read-only commands (a grep with no match, a diff that differs); judge whether each remaining error matters before reporting it.
+- A merge signal can be a mention (an `echo`, a `grep`, a heredoc): continue only when `gh pr view` shows `state` `MERGED`. For `pr=?`, resolve the PR from the branch in the command's context (`gh pr view <branch>`); if that fails, write "PR unresolved" in a finding's Evidence, not a failure.
+- Check `judge_session` only on a merged PR whose `**Verdict:**` line reads `low risk` with `judge: independent` and that has no `owner-reviewed` label; any other merge is out of scope, no finding. In scope, the transcript must exist and name the judged head SHA from the Verdict line (not the merge commit); a missing file or SHA is a finding.
+- Accepted gap: the digest omits `subagents/` logs, so sub-agent errors are invisible here.
+
+Output: at most 3 findings, ranked by step 4, each in exactly this shape, or the literal `no finding`. No `Next` marker and no closing question; the Lead acts on the result.
+
+```
+Observation / Evidence / Suspected mechanism / Impact / Question for Lead / Recommendation / Escalation
+```
