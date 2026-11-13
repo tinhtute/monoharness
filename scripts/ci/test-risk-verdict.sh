@@ -39,10 +39,14 @@ new_repo() {
 }
 
 # body LEVEL SHA JUDGE MODEL [SESSION]: a PR body with a filled Risk section;
-# SESSION defaults to a valid judge sub-agent id, and "-" omits the field.
+# SESSION defaults to a valid judge sub-agent id, "-" omits the field, and ""
+# writes an empty id.
 body() {
-  local session=", judge_session: ${5:-a1b2c3d4e5f6a7b8c}"
-  [ "${5:-}" = "-" ] && session=""
+  local session=", judge_session: a1b2c3d4e5f6a7b8c"
+  if [ "$#" -ge 5 ]; then
+    session=", judge_session: $5"
+    [ "$5" = "-" ] && session=""
+  fi
   printf '## Summary\n\nA change.\n\n## Risk\n\n**Verdict:** %s, judged on %s (judge: %s, judge_model: %s%s)\n\n- Size: 3 counted lines → ok\n\n## Exercised\n\nok\n' \
     "$1" "$2" "$3" "$4" "$session" >"$ROOT/body.md"
 }
@@ -91,6 +95,32 @@ check_rc "judge_session with a slash fails" 1
 check_out "judge_session with a slash names the field" judge_session
 body "low risk" "$(head_sha)" independent fable "agent abc"
 check_rc "judge_session with a space fails" 1
+
+check_out_lacks() { # <name> <unwanted-substring>: the gate never echoes it
+  local name=$1 unwanted=$2 out
+  out=$(cd "$REPO" && bash "$GATE" main change "$ROOT/body.md" 2>&1) || true
+  if grep -qF -- "$unwanted" <<<"$out"; then
+    FAILED=$((FAILED + 1))
+    echo "FAIL $name (output contains '$unwanted')"
+    printf '%s\n' "$out" | sed 's/^/     /'
+  else
+    PASSED=$((PASSED + 1))
+    echo "ok   $name"
+  fi
+}
+
+new_repo edgesession
+body "low risk" "$(head_sha)" independent fable ""
+check_rc "empty judge_session fails" 1
+body "low risk" "$(head_sha)" independent fable "ab)c)"
+check_rc "judge_session with a closing paren fails" 1
+body "low risk" "$(head_sha)" independent fable "abc) trailing junk"
+check_rc "judge_session followed by trailing text fails" 1
+body "low risk" "$(head_sha)" independent fable "abcé"
+check_rc "non-ASCII judge_session fails under a UTF-8 locale" 1 LC_ALL=en_US.UTF-8
+body "low risk" "$(head_sha)" independent fable "##[notice]x"
+check_rc "judge_session with a runner command fails" 1
+check_out_lacks "gate never echoes the judge_session value" "##["
 
 new_repo missing
 printf '## Summary\n\nNo risk section.\n' >"$ROOT/body.md"

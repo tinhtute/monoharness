@@ -31,10 +31,13 @@ head_sha=$(git rev-parse --verify --quiet "${head}^{commit}") || {
   exit 2
 }
 
+# The id is shape-checked in the C locale so [A-Za-z0-9-] means ASCII only.
+session_shape_ok() { local LC_ALL=C; [[ $1 =~ ^[A-Za-z0-9-]+$ ]]; }
+
 # The judge's claim, from the PR body.
 risk=$(tr -d '\r' <"$body" | awk '/^## Risk[[:space:]]*$/{on=1;next} on && /^## /{exit} on')
 verdict=$(printf '%s\n' "$risk" | grep -m1 '^\*\*Verdict:\*\*' || true)
-re='^\*\*Verdict:\*\* (low risk|needs review), judged on ([0-9a-f]+) \(judge: (independent|same-session), judge_model: ([A-Za-z0-9._-]+)(, judge_session: ([^)]*))?\)'
+re='^\*\*Verdict:\*\* (low risk|needs review), judged on ([0-9a-f]+) \(judge: (independent|same-session), judge_model: ([A-Za-z0-9._-]+)(, judge_session: (.*))?\)[[:space:]]*$'
 if [ -z "$risk" ]; then
   problems+=("no ## Risk section in the PR body")
 elif [[ ! $verdict =~ $re ]]; then
@@ -45,8 +48,9 @@ else
   [ "$v_level" = "low risk" ] || problems+=("verdict is '$v_level'")
   if [ -z "$v_has_session" ]; then
     problems+=("no judge_session after judge_model (check-risk.md § Risk Section)")
-  elif [[ ! $v_session =~ ^[A-Za-z0-9-]+$ ]]; then
-    problems+=("judge_session '$v_session' is not [A-Za-z0-9-]+ (check-risk.md § Risk Section)")
+  elif ! session_shape_ok "$v_session"; then
+    # Never echo the value: this log runs under pull_request_target.
+    problems+=("judge_session is not [A-Za-z0-9-]+ (check-risk.md § Risk Section)")
   fi
   [ "$v_sha" = "$head_sha" ] || problems+=("verdict judged on $v_sha, head is $head_sha")
   [ "$v_judge" = "independent" ] || problems+=("judge is '$v_judge', not independent")
