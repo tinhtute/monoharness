@@ -34,7 +34,7 @@ lane: high-risk
 - recovery: each phase is one merge commit; revert that merge to roll the phase back; the `judge-session` revert restores the old verdict regex, and nothing else reads `judge_session` until `retro-supervisor` lands
 - seams: `scripts/ci/risk-verdict.sh <base> <head> <body-file>` and its fixtures in `scripts/ci/test-risk-verdict.sh`; `scripts/ci/test-agent-models.sh` over `agents/*.md` and `models.json`; the `session-digest.py` CLI and its fixtures in `scripts/ci/test-skill-scripts.sh`; the embedded reference contracts under `cli/tests/`
 - phase_slug: `judge-session`
-  status: in-progress
+  status: checked
   - goal: R1 | depends_on: none
   - surfaces: `scripts/ci/risk-verdict.sh`, `scripts/ci/test-risk-verdict.sh`, `skills/stages/check/references/check-risk.md` | avoided: `skills/stages/check/scripts/risk-facts.sh`, `models.json`, `.github/**`
   - escalate_when: the gate cannot read `judge_session` without changing `.github/workflows/risk-verdict.yml`, or an open PR would lose a valid low-risk verdict at merge
@@ -70,6 +70,7 @@ lane: high-risk
 - 2026-11-13T03:58Z — judge-session — decision — verifier requests 1-5 fixed in the working tree, not committed: check-risk.md says the judge leaves the `judge_session` placeholder for the Lead; the gate anchors the verdict line's end, shape-checks the id under `LC_ALL=C`, and no longer echoes the id; 5 new fixtures, 4 red on 58a5d7d (paren, trailing text, `abcé` under en_US.UTF-8, echoed `##[`), the empty-id fixture already rejected; after the fix `test-risk-verdict` 23/0, `test-risk-facts` 29/0, cargo 92 passed, shellcheck and doc links clean; the fix needs its own independent `check full` once committed
 - 2026-11-13T03:58Z — judge-session — decision — a same-session verdict writes `judge_session: none` (the plan and Map are silent; least inventive value; CI rejects same-session anyway); owner confirmed 2026-11-13
 - 2026-11-13T03:58Z — judge-session — decision — out-of-surface follow-ups, not done here: `skills/poteto/playbooks/ship.md:38` Land step has no step for the Lead to set the id; `CHANGELOG.md` has no Unreleased entry for the verdict-line change; `scripts/ci/test-risk-facts.sh:275,295` fails in a read-only worktree (0555 fixture copy)
+- 2026-11-13T04:12Z — judge-session — decision — second independent `check full` on e1e4282: APPROVE_WITH_REQUESTS, prior requests 1-5 closed; Lead reproduced new requests 1 (`none` passes on an independent verdict) and 3 (removing the end anchor leaves 23/0); all new requests minor, fix-or-defer is the owner's call
 
 ## Validation
 - 2026-11-13T03:54Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
@@ -85,10 +86,23 @@ lane: high-risk
   - judge: independent
   - judge_model: claude-fable-5-2
   - judged_sha: 58a5d7dc32d2bfbf135341a6468ba16a483df2b1
+- 2026-11-13T04:09Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
+  - `bash scripts/ci/test-risk-verdict.sh` — rc=0, 23 passed, 0 failed; the e1e4282 fixtures on the 58a5d7d gate reproduce red at 19 passed, 4 failed (paren, trailing text, abcé under en_US.UTF-8, echoed ##[)
+  - `bash scripts/ci/test-risk-facts.sh` — rc=0, passed: 29 failed: 0 (writable detached worktree at e1e4282; rc=1 in the read-only tree at line 295 from the 0555 fixture copy)
+  - `cd cli && cargo test` — rc=0, 92 passed, 0 failed
+  - `bash scripts/ci/test-weakening.sh origin/master HEAD` — rc=0, no test weakening in origin/master...HEAD
+  - scope: on target — only the three planned surfaces and the plan file changed; avoided surfaces untouched; no open PR loses a verdict (gh pr list returned none); shellcheck 0.11.0 clean on both scripts
+  - proof_classes: output, unit, integration (gate exercised on a throwaway repo: valid line rc=0, missing field rc=1 naming it, unreplaced placeholder rc=1, text after the closing paren rc=1; fixture suites; cargo integration tests)
+  - requirements: R1 met (test-risk-verdict.sh: the no-judge_session fixture fails, the fixture with it passes; check-risk.md § Risk Section documents the field)
+  - rollback_point: c909b48b16249abdcff90d5c6dcae6a17afb0c76
+  - requests: prior requests 1-5 closed at e1e4282; new, all minor and non-blocking: 1 scripts/ci/risk-verdict.sh:35 and :51 pass judge_session: none on a judge: independent verdict (rc=0) although skills/stages/check/references/check-risk.md:23 reserves none for a verdict with no sub-agent; 2 skills/poteto/playbooks/ship.md:38-39 and CHANGELOG.md follow-ups have no owning phase in this plan; 3 scripts/ci/test-risk-verdict.sh:117 does not need the end anchor of risk-verdict.sh:40, removing the anchor leaves 23 passed 0 failed; 4 scripts/ci/test-risk-verdict.sh:119 only discriminates where en_US.UTF-8 is installed; 5 (nit) scripts/ci/risk-verdict.sh:40 SHA and judge_model ranges stay locale-dependent and are echoed at :55 and :61, both fail closed; 6 (nit) check-risk.md:34 template does not show none, test-risk-verdict.sh:99 defines a helper between fixtures
+  - judge: independent
+  - judge_model: claude-fable-5-2
+  - judged_sha: e1e42826d976823a62b83fb85fd597c1f64d4a2d
 
 ## Current State and Next Action
 - active_phase: judge-session
-- lifecycle_status: in-progress
+- lifecycle_status: checked
 - blockers: none
-- open_items: the fixes for verifier requests 1-5 await an independent `check full`; follow-ups in the Log (ship.md, CHANGELOG.md, test-risk-facts 0555)
-- exact_next_action: independent `check full` on the request-fix commit, then the owner's go for push and PR
+- open_items: minor requests from the e1e4282 check (`none` on independent verdicts, an end-anchor fixture, locale-dependent fixture, nits); follow-ups in the Log (ship.md, CHANGELOG.md, test-risk-facts 0555)
+- exact_next_action: owner decides fix-or-defer for the minor requests, then push `feat/judge-session` and open the PR (needs `owner-reviewed`)
