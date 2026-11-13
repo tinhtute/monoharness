@@ -35,7 +35,7 @@ In the steps below, "bottom of the stack" and "contiguous run" collapse to the s
 Run on any green PR, or when asked to land one; it replaces steps 3–6 for a single PR outside a release.
 
 1. Preconditions: `gh pr view <n> --json mergeable,headRefOid,baseRefName` is `MERGEABLE`; `gh pr checks <n> --watch --interval 30` passes (cap 60 min) apart from a `risk-verdict` check, which passes only after step 3; no unresolved review thread. Any fails → stop, report the blocker.
-2. Judge the risk on the head SHA per [check-risk.md](../../stages/check/references/check-risk.md): one independent fresh-context judge returns the `## Risk` section.
+2. Judge the risk on the head SHA per [check-risk.md](../../stages/check/references/check-risk.md): one independent fresh-context judge returns the `## Risk` section. Replace its `<judge sub-agent id>` with the judge's id as the host reported it to you (check-risk.md § Judge); without a sub-agent the verdict is same-session and the id is `none`.
 3. Write it into the PR body through a file: `gh pr view <n> --json body --jq .body > "$f"`, replace or append `## Risk`, `gh pr edit <n> --body-file "$f"`.
 4. Head moved since step 1 → the verdict is stale; start over once, moved again → stop.
 5. Act:
