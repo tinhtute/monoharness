@@ -80,6 +80,19 @@ check_out() { # <name> <want-substring>: the gate's output names the problem
   fi
 }
 
+check_out_lacks() { # <name> <unwanted-substring>: the gate never echoes it
+  local name=$1 unwanted=$2 out
+  out=$(cd "$REPO" && bash "$GATE" main change "$ROOT/body.md" 2>&1) || true
+  if grep -qF -- "$unwanted" <<<"$out"; then
+    FAILED=$((FAILED + 1))
+    echo "FAIL $name (output contains '$unwanted')"
+    printf '%s\n' "$out" | sed 's/^/     /'
+  else
+    PASSED=$((PASSED + 1))
+    echo "ok   $name"
+  fi
+}
+
 new_repo pass
 body "low risk" "$(head_sha)" independent fable
 check_rc "frontier model, head SHA, low risk passes" 0
@@ -96,19 +109,6 @@ check_out "judge_session with a slash names the field" judge_session
 body "low risk" "$(head_sha)" independent fable "agent abc"
 check_rc "judge_session with a space fails" 1
 
-check_out_lacks() { # <name> <unwanted-substring>: the gate never echoes it
-  local name=$1 unwanted=$2 out
-  out=$(cd "$REPO" && bash "$GATE" main change "$ROOT/body.md" 2>&1) || true
-  if grep -qF -- "$unwanted" <<<"$out"; then
-    FAILED=$((FAILED + 1))
-    echo "FAIL $name (output contains '$unwanted')"
-    printf '%s\n' "$out" | sed 's/^/     /'
-  else
-    PASSED=$((PASSED + 1))
-    echo "ok   $name"
-  fi
-}
-
 new_repo edgesession
 body "low risk" "$(head_sha)" independent fable ""
 check_rc "empty judge_session fails" 1
@@ -121,6 +121,12 @@ check_rc "non-ASCII judge_session fails under a UTF-8 locale" 1 LC_ALL=en_US.UTF
 body "low risk" "$(head_sha)" independent fable "##[notice]x"
 check_rc "judge_session with a runner command fails" 1
 check_out_lacks "gate never echoes the judge_session value" "##["
+body "low risk" "$(head_sha)" independent fable none
+check_rc "judge_session none on an independent verdict fails" 1
+check_out "judge_session none on an independent verdict names the field" judge_session
+printf '## Risk\n\n**Verdict:** low risk, judged on %s (judge: independent, judge_model: fable, judge_session: abc) and more\n' \
+  "$(head_sha)" >"$ROOT/body.md"
+check_rc "text after the verdict line's closing paren fails" 1
 
 new_repo missing
 printf '## Summary\n\nNo risk section.\n' >"$ROOT/body.md"

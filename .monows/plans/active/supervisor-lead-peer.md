@@ -71,6 +71,7 @@ lane: high-risk
 - 2026-11-13T03:58Z — judge-session — decision — a same-session verdict writes `judge_session: none` (the plan and Map are silent; least inventive value; CI rejects same-session anyway); owner confirmed 2026-11-13
 - 2026-11-13T03:58Z — judge-session — decision — out-of-surface follow-ups, not done here: `skills/poteto/playbooks/ship.md:38` Land step has no step for the Lead to set the id; `CHANGELOG.md` has no Unreleased entry for the verdict-line change; `scripts/ci/test-risk-facts.sh:275,295` fails in a read-only worktree (0555 fixture copy)
 - 2026-11-13T04:12Z — judge-session — decision — second independent `check full` on e1e4282: APPROVE_WITH_REQUESTS, prior requests 1-5 closed; Lead reproduced new requests 1 (`none` passes on an independent verdict) and 3 (removing the end anchor leaves 23/0); all new requests minor, fix-or-defer is the owner's call
+- 2026-11-13T04:20Z — judge-session — decision — owner chose to fix e1e4282 requests 1 and 3 before the PR: the gate rejects `judge_session: none` on an independent verdict and names the field; a hand-written body with text after the closing paren fails only with the end anchor (mutation without it: 25 passed, 1 failed); check-risk.md template shows `| none`; `check_out_lacks` moved up with the helpers; `test-risk-verdict` 26/0, `test-risk-facts` 29/0, cargo 92 passed, shellcheck and doc links clean; requests 2, 4, 5 stay follow-ups; needs a third independent `check full`
 
 ## Validation
 - 2026-11-13T03:54Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
@@ -104,5 +105,5 @@ lane: high-risk
 - active_phase: judge-session
 - lifecycle_status: checked
 - blockers: none
-- open_items: minor requests from the e1e4282 check (`none` on independent verdicts, an end-anchor fixture, locale-dependent fixture, nits); follow-ups in the Log (ship.md, CHANGELOG.md, test-risk-facts 0555)
-- exact_next_action: owner decides fix-or-defer for the minor requests, then push `feat/judge-session` and open the PR (needs `owner-reviewed`)
+- open_items: the fix for e1e4282 requests 1 and 3 awaits an independent `check full`; deferred: locale-dependent `abcé` fixture, SHA/judge_model locale nit; follow-ups in the Log (ship.md, CHANGELOG.md, test-risk-facts 0555)
+- exact_next_action: independent `check full` on the fix commit, then push `feat/judge-session` and open the PR (needs `owner-reviewed`)

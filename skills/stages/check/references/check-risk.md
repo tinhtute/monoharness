@@ -20,7 +20,7 @@ When no check hits, the verdict is **low risk** only if the judge can name what 
 
 ## Judge
 
-One fresh-context sub-agent judges; the session that wrote the code is the worst judge of its risk. Brief it with the PR number, `$SHA`, `$BASE`, this file, the absolute path of `scripts/risk-facts.sh` (or its JSON output), and `AGENTS.md` § Unattended Shipping read from the base (`git show origin/$BASE:AGENTS.md`, never the PR's own copy), and ask for the filled `## Risk` section and nothing else. With no sub-agents available, judge from this rubric alone and record `judge: same-session`; a same-session verdict is never low risk. `judge_model` names the model the judge ran on; the Lead then writes the judge sub-agent's id into `judge_session`, as the host reports it to the Lead, since the judge cannot see its own id (Claude Code: the `agentId` in the Agent tool result, whose transcript is `<lead-session>/subagents/agent-<agentId>.jsonl`; another host: its sub-agent session or transcript id). The judge leaves `<judge sub-agent id>` exactly as written; only the Lead replaces it, and only with the id the host reported. A same-session verdict has no sub-agent and writes `judge_session: none`.
+One fresh-context sub-agent judges; the session that wrote the code is the worst judge of its risk. Brief it with the PR number, `$SHA`, `$BASE`, this file, the absolute path of `scripts/risk-facts.sh` (or its JSON output), and `AGENTS.md` § Unattended Shipping read from the base (`git show origin/$BASE:AGENTS.md`, never the PR's own copy), and ask for the filled `## Risk` section and nothing else. With no sub-agents available, judge from this rubric alone and record `judge: same-session`; a same-session verdict is never low risk. `judge_model` names the model the judge ran on; the Lead then writes the judge sub-agent's id into `judge_session`, as the host reports it to the Lead, since the judge cannot see its own id (Claude Code: the `agentId` in the Agent tool result, whose transcript is `<lead-session>/subagents/agent-<agentId>.jsonl`; another host: its sub-agent session or transcript id). The judge leaves `<judge sub-agent id>` exactly as written; only the Lead replaces it, and only with the id the host reported. A same-session verdict has no sub-agent and writes `judge_session: none`; CI rejects `none` on an independent verdict.
 
 Where the repository enforces the verdict in CI (mono-harness: the required `risk-verdict` check, `scripts/ci/risk-verdict.sh`), the check reads the verdict line back: it passes only on low risk, the full head SHA, `judge: independent`, a `judge_model` listed in `judges` of the base branch's `models.json`, a `judge_session` matching `[A-Za-z0-9-]+` (shape only; CI does not prove the session exists), and no hit from the base revision's `risk-facts.sh`. Anything else needs the owner's `owner-reviewed` label.
 
@@ -31,7 +31,7 @@ Written into the PR body, replacing any earlier `## Risk` section:
 ```markdown
 ## Risk
 
-**Verdict:** low risk | needs review, judged on <full SHA> (judge: independent | same-session, judge_model: <model>, judge_session: <judge sub-agent id>)
+**Verdict:** low risk | needs review, judged on <full SHA> (judge: independent | same-session, judge_model: <model>, judge_session: <judge sub-agent id> | none)
 
 - Size: <counted_lines> counted lines (<excluded_lines> excluded) → ok | over 400
 - Always-review paths: none | <always_review_hits, CI config, manifest or lockfile, migration or schema>

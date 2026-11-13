@@ -51,6 +51,8 @@ else
   elif ! session_shape_ok "$v_session"; then
     # Never echo the value: this log runs under pull_request_target.
     problems+=("judge_session is not [A-Za-z0-9-]+ (check-risk.md § Risk Section)")
+  elif [ "$v_judge" = independent ] && [ "$v_session" = none ]; then
+    problems+=("judge_session none means no judge sub-agent, but judge is independent (check-risk.md § Judge)")
   fi
   [ "$v_sha" = "$head_sha" ] || problems+=("verdict judged on $v_sha, head is $head_sha")
   [ "$v_judge" = "independent" ] || problems+=("judge is '$v_judge', not independent")
