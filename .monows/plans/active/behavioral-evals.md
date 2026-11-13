@@ -17,8 +17,8 @@ lane: high-risk
 
 ## Map
 - Q1: What per-trial and per-suite cost and wall-time ceiling, and which cadence (every prompt PR, nightly, on demand), must the suite fit, given RSI died of cost, wrong measure, finished issues and neglect (user 2026-11-13)? | type: grill | by: HITL | blocked_by: Q4 | status: open
-- Q2: Can `claude plugin eval` run this repo's evals: does it load `agents/*.md` (shipped by `scripts/install-agents.sh`) or only skills; can it compare a candidate SHA against master at the same n instead of its with/without-plugin ablation; can code graders read a scaffolded git repo's diff and the agent's report token; can the judge be fable or opus instead of the haiku default; does it report pass^k? If not, which runner pieces must be built? | type: research | by: AFK | blocked_by: none | status: open
-- Q3: How does one trial load exactly the candidate SHA's agents and skills and nothing from `~/.claude` (global CLAUDE.md, rules, installed agents, memory, settings)? | type: research | by: AFK | blocked_by: none | status: open
+- Q2: Can `claude plugin eval` run this repo's evals: does it load `agents/*.md` (shipped by `scripts/install-agents.sh`) or only skills; can it compare a candidate SHA against master at the same n instead of its with/without-plugin ablation; can code graders read a scaffolded git repo's diff and the agent's report token; can the judge be fable or opus instead of the haiku default; does it report pass^k? If not, which runner pieces must be built? | type: research | by: AFK | blocked_by: none | status: decided → yes as the runner: it loads the plugin's `agents/*.md` (as `<plugin>:scout`, on its frontmatter model when `--model` is unset) and skills, `--judge-model` sets the LLM grader, and per-run results come back in `--json`; build two pieces around it: a grader over the `--keep-temp` workspace for git diff and SCOPE (no code or shell grader type exists, and `tool_used` matches a call even when it errors), and two plugin dirs for candidate against master (its ablation is with against without plugin) | evidence: probe 2026-11-13, claude 2.1.323, 2 cases, about $0.23
+- Q3: How does one trial load exactly the candidate SHA's agents and skills and nothing from `~/.claude` (global CLAUDE.md, rules, installed agents, memory, settings)? | type: research | by: AFK | blocked_by: none | status: decided → `claude plugin eval` gives each run a fresh `CLAUDE_CONFIG_DIR` and `HOME` with only the plugin under test loaded; the no-plugin arm got `Agent type 'scout' not found` despite `scout` in `~/.claude/agents`, and no reply carried the global CLAUDE.md marker | evidence: probe 2026-11-13, claude 2.1.323
 - Q4: What does the deleted `evals/rsi/` (`git show aa7100d^:evals/rsi/`, issues #192–#196, #203) show: cost and wall time per trial, which pieces are reusable (`fixture.sh`, the evaluator-only oracle, `split.py`, `cost.py`, `accept.py`), and what made it unused? | type: research | by: AFK | blocked_by: none | status: open
 - Q5: Which behaviors does the first suite cover: agent role contracts (report token, SCOPE, no test hacking), skill procedures (`poteto` routing, `check` gates, `check-risk` verdict), or both; and is #274's worker-deviation eval its first case set or settled separately first? | type: grill | by: HITL | blocked_by: none | status: open
 - Q6: Which real failures seed the cases: the #272/#273 fixtures (F3, F3b, F4, premise-else), `retro` findings, #288 drift-guards Q8 and Q9, pre-commit guard rejections, `session-digest.py` output? | type: research | by: AFK | blocked_by: Q5 | status: open
@@ -35,6 +35,7 @@ lane: high-risk
 - approach: not-planned
 
 ## Log
+- 2026-11-13 decision: `claude plugin eval` is the runner (runner and isolation questions); `--keep-temp` leaves its run dirs read-only, so cleanup runs `chmod -R u+rwx` before `trash`
 
 ## Validation
 
@@ -42,5 +43,5 @@ lane: high-risk
 - active_phase: none
 - lifecycle_status: planned
 - blockers: none
-- open_items: 14 map lines
+- open_items: 12 map lines
 - exact_next_action: wayfinder
