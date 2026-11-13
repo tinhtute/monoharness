@@ -78,6 +78,9 @@ lane: high-risk
 - 2026-11-13T04:56:44Z — architect — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d bash scripts/ci/test-agent-models.sh rc=0
 - 2026-11-13T04:56:49Z — architect — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d (cd cli && cargo test) rc=0
 - 2026-11-13T04:56:50Z — architect — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d bash scripts/ci/verify-doc-links.sh rc=0
+- 2026-11-13T05:02Z — architect/T2 — done — `bash scripts/ci/test-agent-models.sh` rc=0 (agent models OK, 5 agents) on 1cace0a (engineer, opus, committed on `feat/architect` in its own worktree; tested source 1cace0a); changed `agents/architect.md` (model opus, tools Read, Grep, Glob, Bash, effort high, maxTurns 30, sealed Problem / Alternatives / Strongest counterargument / Reversal conditions / Evidence gaps report), `models.json` (tier `default`, in `readOnly`, no advisor), the agent lists in `AGENTS.md`, `CONTRIBUTING.md`, `README.md`; stop_if: not matched; escalate_when: not matched
+- 2026-11-13T05:02Z — architect/T3 — done — `grep -n architect` on both files rc=0 and `(cd cli && cargo test)` rc=0 on 5d9877b (worker, sonnet, branch `feat/architect-t3` in its own worktree, merged into `feat/architect` as a43a772; tested source 5d9877b); one appended dispatch sentence each in `grill.md:21` and `brainstorm.md:37`; stop_if: not matched
+- 2026-11-13T05:02Z — architect — decision — combined tree a43a772: phase check `bash scripts/ci/test-agent-models.sh && (cd cli && cargo test) && bash scripts/ci/verify-doc-links.sh` rc=0 (5 agents; cargo 92 passed, 0 failed; doc links 0 findings); combined diff 487c182..a43a772 touches only the seven planned surfaces plus this plan; next: verifier on the combined diff, then the independent phase gate
 
 ## Validation
 - 2026-11-13T03:54Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
@@ -125,4 +128,4 @@ lane: high-risk
 - lifecycle_status: in-progress
 - blockers: none
 - open_items: deferred minors in the judge-session 04:25Z Validation requests
-- exact_next_action: integrate T2 and T3, then the independent phase gate
+- exact_next_action: verifier on the combined diff a43a772, then the independent phase gate
