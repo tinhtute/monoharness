@@ -7,8 +7,9 @@
 # Env:   OWNER_REVIEWED=true when the PR carries the `owner-reviewed` label.
 #
 # The PR body's `## Risk` section (check-risk.md § Risk Section) must carry
-#   **Verdict:** low risk, judged on <head SHA> (judge: independent, judge_model: <model>)
-# with <model> listed in `judges` of the base revision's models.json. The
+#   **Verdict:** low risk, judged on <head SHA> (judge: independent, judge_model: <model>, judge_session: <id>)
+# with <model> listed in `judges` of the base revision's models.json and <id>
+# the judge sub-agent's session id ([A-Za-z0-9-]+; shape only, not proof). The
 # verdict is the judge's claim; the base revision's risk-facts.sh re-derives
 # the mechanical facts here, and any hit fails the gate.
 set -uo pipefail
@@ -33,14 +34,20 @@ head_sha=$(git rev-parse --verify --quiet "${head}^{commit}") || {
 # The judge's claim, from the PR body.
 risk=$(tr -d '\r' <"$body" | awk '/^## Risk[[:space:]]*$/{on=1;next} on && /^## /{exit} on')
 verdict=$(printf '%s\n' "$risk" | grep -m1 '^\*\*Verdict:\*\*' || true)
-re='^\*\*Verdict:\*\* (low risk|needs review), judged on ([0-9a-f]+) \(judge: (independent|same-session), judge_model: ([A-Za-z0-9._-]+)\)'
+re='^\*\*Verdict:\*\* (low risk|needs review), judged on ([0-9a-f]+) \(judge: (independent|same-session), judge_model: ([A-Za-z0-9._-]+)(, judge_session: ([^)]*))?\)'
 if [ -z "$risk" ]; then
   problems+=("no ## Risk section in the PR body")
 elif [[ ! $verdict =~ $re ]]; then
   problems+=("no parseable **Verdict:** line (check-risk.md § Risk Section)")
 else
   v_level=${BASH_REMATCH[1]} v_sha=${BASH_REMATCH[2]} v_judge=${BASH_REMATCH[3]} v_model=${BASH_REMATCH[4]}
+  v_has_session=${BASH_REMATCH[5]} v_session=${BASH_REMATCH[6]}
   [ "$v_level" = "low risk" ] || problems+=("verdict is '$v_level'")
+  if [ -z "$v_has_session" ]; then
+    problems+=("no judge_session after judge_model (check-risk.md § Risk Section)")
+  elif [[ ! $v_session =~ ^[A-Za-z0-9-]+$ ]]; then
+    problems+=("judge_session '$v_session' is not [A-Za-z0-9-]+ (check-risk.md § Risk Section)")
+  fi
   [ "$v_sha" = "$head_sha" ] || problems+=("verdict judged on $v_sha, head is $head_sha")
   [ "$v_judge" = "independent" ] || problems+=("judge is '$v_judge', not independent")
   judges=$(git show "$base:models.json" 2>/dev/null | jq -r '.judges[]?' 2>/dev/null)

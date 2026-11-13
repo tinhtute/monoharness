@@ -38,10 +38,13 @@ new_repo() {
   g commit -q -m change
 }
 
-# body LEVEL SHA JUDGE MODEL: a PR body with a filled Risk section.
+# body LEVEL SHA JUDGE MODEL [SESSION]: a PR body with a filled Risk section;
+# SESSION defaults to a valid judge sub-agent id, and "-" omits the field.
 body() {
-  printf '## Summary\n\nA change.\n\n## Risk\n\n**Verdict:** %s, judged on %s (judge: %s, judge_model: %s)\n\n- Size: 3 counted lines → ok\n\n## Exercised\n\nok\n' \
-    "$1" "$2" "$3" "$4" >"$ROOT/body.md"
+  local session=", judge_session: ${5:-a1b2c3d4e5f6a7b8c}"
+  [ "${5:-}" = "-" ] && session=""
+  printf '## Summary\n\nA change.\n\n## Risk\n\n**Verdict:** %s, judged on %s (judge: %s, judge_model: %s%s)\n\n- Size: 3 counted lines → ok\n\n## Exercised\n\nok\n' \
+    "$1" "$2" "$3" "$4" "$session" >"$ROOT/body.md"
 }
 
 head_sha() { g rev-parse change; }
@@ -60,9 +63,34 @@ check_rc() { # <name> <want-rc> [ENV=VAL...]
   fi
 }
 
+check_out() { # <name> <want-substring>: the gate's output names the problem
+  local name=$1 want=$2 out
+  out=$(cd "$REPO" && bash "$GATE" main change "$ROOT/body.md" 2>&1) || true
+  if grep -qF -- "$want" <<<"$out"; then
+    PASSED=$((PASSED + 1))
+    echo "ok   $name"
+  else
+    FAILED=$((FAILED + 1))
+    echo "FAIL $name (output lacks '$want')"
+    printf '%s\n' "$out" | sed 's/^/     /'
+  fi
+}
+
 new_repo pass
 body "low risk" "$(head_sha)" independent fable
 check_rc "frontier model, head SHA, low risk passes" 0
+
+new_repo nosession
+body "low risk" "$(head_sha)" independent fable -
+check_rc "low risk without judge_session fails" 1
+check_out "low risk without judge_session names the field" judge_session
+
+new_repo badsession
+body "low risk" "$(head_sha)" independent fable "agent/abc"
+check_rc "judge_session with a slash fails" 1
+check_out "judge_session with a slash names the field" judge_session
+body "low risk" "$(head_sha)" independent fable "agent abc"
+check_rc "judge_session with a space fails" 1
 
 new_repo missing
 printf '## Summary\n\nNo risk section.\n' >"$ROOT/body.md"
