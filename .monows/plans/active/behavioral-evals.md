@@ -28,6 +28,7 @@ lane: high-risk
 - Q10: What references and runs the suite so it cannot rot unreferenced like RSI: a `check` step for PRs touching `agents/**` or `skills/**`, a CI job, a nightly workflow, a `risk-facts.sh` fact? | type: grill | by: HITL | blocked_by: Q1, Q8 | status: open
 - Q11: If Q10 puts paid runs in CI, the owner adds the API key secret and reviews the `.github/**` change. | type: task | by: HITL | blocked_by: Q10 | status: open
 - Q12: Real incidents seed about 6 cases against the 20–50 the destination implies; may the rest be planted or rule-derived cases (marked as such), and do they count toward the pass rule the same as incident cases? | type: grill | by: HITL | blocked_by: none | status: open
+- Q13: Does each case record a sync commit (the SHA at which it last matched the prompt it tests), and does a change to that prompt run drift triage before the suite (no effect, case stale, promise changed on purpose with cited evidence, promise may be broken), updating the case from the prompt rather than from the result, as pstack's `maintain-formal-verification-skill` steps 1 and 3–5 do? | type: grill | by: HITL | blocked_by: none | status: open | evidence: https://github.com/cursor/plugins/blob/24621dbcc59e205a7faadb0e06d540f91712b5cc/pstack/skills/maintain-formal-verification-skill/SKILL.md; owner decision 4, 2026-11-13
 - fog: headless evaluation of HITL skills (`grill`, `brainstorm`, `wayfinder`) that stop on the question tool
 - fog: how "eval before the prompt change" is enforced mechanically rather than written as prose
 - fog: non-Claude hosts (Codex, omp); RSI had an omp runtime and the README claims portability
@@ -44,5 +45,5 @@ lane: high-risk
 - active_phase: none
 - lifecycle_status: planned
 - blockers: none
-- open_items: 10 map lines
+- open_items: 11 map lines
 - exact_next_action: wayfinder
