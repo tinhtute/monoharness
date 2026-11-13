@@ -73,6 +73,7 @@ lane: high-risk
 - 2026-11-13T04:12Z — judge-session — decision — second independent `check full` on e1e4282: APPROVE_WITH_REQUESTS, prior requests 1-5 closed; Lead reproduced new requests 1 (`none` passes on an independent verdict) and 3 (removing the end anchor leaves 23/0); all new requests minor, fix-or-defer is the owner's call
 - 2026-11-13T04:20Z — judge-session — decision — owner chose to fix e1e4282 requests 1 and 3 before the PR: the gate rejects `judge_session: none` on an independent verdict and names the field; a hand-written body with text after the closing paren fails only with the end anchor (mutation without it: 25 passed, 1 failed); check-risk.md template shows `| none`; `check_out_lacks` moved up with the helpers; `test-risk-verdict` 26/0, `test-risk-facts` 29/0, cargo 92 passed, shellcheck and doc links clean; requests 2, 4, 5 stay follow-ups; needs a third independent `check full`
 - 2026-11-13T04:36Z — judge-session — decision — third independent `check full` on 86c724f: APPROVED; Lead reproduced the none-branch mutation (24 passed, 2 failed); remaining requests are minor or nit and stay follow-ups; push and PR approved by the owner after this check
+- 2026-11-13T04:57Z — judge-session — decision — PR #279 merged into master as 77c0f7d after the owner's `owner-reviewed` label; the phase stays `checked` until closing `handoff`; next `architect` (R2) and `retro-supervisor` (R3, its dependency now merged) run on separate branches from this commit, owner go 2026-11-13; R2 merges first, then master is merged into R3; the ship.md, CHANGELOG.md and test-risk-facts 0555 follow-ups go in a separate bounded PR outside this plan
 
 ## Validation
 - 2026-11-13T03:54Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
@@ -119,5 +120,5 @@ lane: high-risk
 - active_phase: judge-session
 - lifecycle_status: checked
 - blockers: none
-- open_items: PR for `feat/judge-session` needs the owner's `owner-reviewed` label (scripts/ci/** is always-review); deferred minors in the 04:25Z Validation requests; follow-ups in the Log (ship.md, CHANGELOG.md, test-risk-facts 0555)
-- exact_next_action: owner reviews and labels the `feat/judge-session` PR, then merge; next phase `architect` (R2) on the owner's go
+- open_items: deferred minors in the 04:25Z Validation requests
+- exact_next_action: work full phase architect and work full phase retro-supervisor, each on its own branch from this commit
