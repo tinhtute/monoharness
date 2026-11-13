@@ -163,6 +163,18 @@ g commit -q -m ci
 body "low risk" "$(head_sha)" independent fable
 check_rc "low-risk claim on a diff with a risk-facts hit fails" 1
 
+new_repo achanged
+printf '#[test]\nfn t() {\n    assert_eq!(2, 2);\n}\n' >"$REPO/src/lib.rs"
+g add -A
+g commit -q -m base-test
+g branch -q -f main
+printf '#[test]\nfn t() {\n    assert!(2 > 0);\n}\n' >"$REPO/src/lib.rs"
+g add -A
+g commit -q -m loosen
+body "low risk" "$(head_sha)" independent fable
+check_rc "low-risk claim on a diff that edits an assertion in place fails" 1
+check_out "the gate names the edited assertion" "assertions changed: src/lib.rs: 1"
+
 new_repo selfallow
 printf '{"judges": ["haiku"]}\n' >"$REPO/models.json"
 g add -A
