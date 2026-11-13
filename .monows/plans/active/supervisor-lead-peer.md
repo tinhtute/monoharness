@@ -51,7 +51,7 @@ lane: high-risk
     - T3 `grill` Done and `brainstorm` step 3 dispatch `architect` only for a trade-off marked `adr candidate`, before the lock (owner: `worker`, writes `skills/stages/grill/references/grill.md`, `skills/stages/brainstorm/references/brainstorm.md` only) — output: one dispatch sentence in each file — check: `grep -n architect skills/stages/grill/references/grill.md skills/stages/brainstorm/references/brainstorm.md && (cd cli && cargo test)` — stop_if: a `required` string in `cli/src/embedded.rs` would have to change
   - phase check: `bash scripts/ci/test-agent-models.sh && (cd cli && cargo test) && bash scripts/ci/verify-doc-links.sh`
 - phase_slug: `retro-supervisor`
-  status: planned
+  status: in-progress
   - goal: R3 | depends_on: judge-session
   - surfaces: `skills/stages/retro/scripts/session-digest.py`, `scripts/ci/test-skill-scripts.sh`, `skills/stages/retro/references/retro.md`, `skills/stages/work/references/work-fanout.md`, `skills/poteto/playbooks/orchestrate.md` | avoided: `agents/*.md`, `models.json`, `scripts/ci/risk-verdict.sh`
   - escalate_when: the pre-check cannot tell a signal from noise on the fixture digests, or the supervisor needs a tool beyond `scout`'s
@@ -74,6 +74,10 @@ lane: high-risk
 - 2026-11-13T04:20Z — judge-session — decision — owner chose to fix e1e4282 requests 1 and 3 before the PR: the gate rejects `judge_session: none` on an independent verdict and names the field; a hand-written body with text after the closing paren fails only with the end anchor (mutation without it: 25 passed, 1 failed); check-risk.md template shows `| none`; `check_out_lacks` moved up with the helpers; `test-risk-verdict` 26/0, `test-risk-facts` 29/0, cargo 92 passed, shellcheck and doc links clean; requests 2, 4, 5 stay follow-ups; needs a third independent `check full`
 - 2026-11-13T04:36Z — judge-session — decision — third independent `check full` on 86c724f: APPROVED; Lead reproduced the none-branch mutation (24 passed, 2 failed); remaining requests are minor or nit and stay follow-ups; push and PR approved by the owner after this check
 - 2026-11-13T04:57Z — judge-session — decision — PR #279 merged into master as 77c0f7d after the owner's `owner-reviewed` label; the phase stays `checked` until closing `handoff`; next `architect` (R2) and `retro-supervisor` (R3, its dependency now merged) run on separate branches from this commit, owner go 2026-11-13; R2 merges first, then master is merged into R3; the ship.md, CHANGELOG.md and test-risk-facts 0555 follow-ups go in a separate bounded PR outside this plan
+- 2026-11-13T04:56Z — retro-supervisor — start — phase in-progress on branch `feat/retro-supervisor` from 487c182; wave 1: T4 on one `engineer` (opus); wave 2: T5 on one `worker` (sonnet) after T4 integrates; `scripts/ci/test-skill-scripts.sh` is under `scripts/ci/**`, so this PR needs the owner's `owner-reviewed` label
+- 2026-11-13T04:56:44Z — retro-supervisor — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d bash scripts/ci/test-skill-scripts.sh rc=0
+- 2026-11-13T04:56:50Z — retro-supervisor — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d (cd cli && cargo test) rc=0
+- 2026-11-13T04:56:50Z — retro-supervisor — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d bash scripts/ci/verify-doc-links.sh rc=0
 
 ## Validation
 - 2026-11-13T03:54Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
@@ -117,8 +121,8 @@ lane: high-risk
   - judged_sha: 86c724f77244d4af4a4e7e6b0074b66a797ca4e3
 
 ## Current State and Next Action
-- active_phase: judge-session
-- lifecycle_status: checked
+- active_phase: retro-supervisor
+- lifecycle_status: in-progress
 - blockers: none
-- open_items: deferred minors in the 04:25Z Validation requests
-- exact_next_action: work full phase architect and work full phase retro-supervisor, each on its own branch from this commit
+- open_items: deferred minors in the judge-session 04:25Z Validation requests
+- exact_next_action: integrate T4, then run T5
