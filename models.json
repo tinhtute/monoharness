@@ -13,7 +13,8 @@
   ],
   "readOnly": [
     "scout",
-    "verifier"
+    "verifier",
+    "architect"
   ],
   "judges": [
     "fable",
@@ -44,6 +45,12 @@
       "role": "verifier, judge, cross-review of another agent's diff",
       "effort": "high",
       "advisor": "fable"
+    },
+    {
+      "agent": "architect",
+      "tier": "default",
+      "role": "read-only challenge of an adr-candidate trade-off: alternatives, strongest counterargument, reversal conditions",
+      "effort": "high"
     }
   ]
 }
