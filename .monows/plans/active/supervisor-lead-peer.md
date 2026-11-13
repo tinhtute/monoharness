@@ -42,7 +42,7 @@ lane: high-risk
     - T1 require `judge_session: <id>` (`[A-Za-z0-9-]+`) after `judge_model` on the `**Verdict:**` line; a low-risk verdict without it fails; the check-risk § Risk Section template and the judge brief tell the Lead to record the judge sub-agent's `agentId` (owner: `engineer`, writes `scripts/ci/risk-verdict.sh`, `scripts/ci/test-risk-verdict.sh`, `skills/stages/check/references/check-risk.md` only) — output: the fixture without the field fails, the fixture with it passes, all old fixtures updated — check: `bash scripts/ci/test-risk-verdict.sh && bash scripts/ci/test-risk-facts.sh && (cd cli && cargo test)` — stop_if: a fixture must be deleted or weakened to pass
   - phase check: `bash scripts/ci/test-risk-verdict.sh && bash scripts/ci/test-risk-facts.sh && (cd cli && cargo test)`
 - phase_slug: `architect`
-  status: planned
+  status: in-progress
   - goal: R2 | depends_on: none
   - surfaces: `agents/architect.md`, `models.json`, the agent lists in `AGENTS.md`, `CONTRIBUTING.md` and `README.md`, `skills/stages/grill/references/grill.md`, `skills/stages/brainstorm/references/brainstorm.md` | avoided: `agents/worker.md`, `agents/engineer.md`, `scripts/install-agents.sh`
   - escalate_when: the architect needs a tier other than `default`, or a write tool
@@ -74,6 +74,10 @@ lane: high-risk
 - 2026-11-13T04:20Z — judge-session — decision — owner chose to fix e1e4282 requests 1 and 3 before the PR: the gate rejects `judge_session: none` on an independent verdict and names the field; a hand-written body with text after the closing paren fails only with the end anchor (mutation without it: 25 passed, 1 failed); check-risk.md template shows `| none`; `check_out_lacks` moved up with the helpers; `test-risk-verdict` 26/0, `test-risk-facts` 29/0, cargo 92 passed, shellcheck and doc links clean; requests 2, 4, 5 stay follow-ups; needs a third independent `check full`
 - 2026-11-13T04:36Z — judge-session — decision — third independent `check full` on 86c724f: APPROVED; Lead reproduced the none-branch mutation (24 passed, 2 failed); remaining requests are minor or nit and stay follow-ups; push and PR approved by the owner after this check
 - 2026-11-13T04:57Z — judge-session — decision — PR #279 merged into master as 77c0f7d after the owner's `owner-reviewed` label; the phase stays `checked` until closing `handoff`; next `architect` (R2) and `retro-supervisor` (R3, its dependency now merged) run on separate branches from this commit, owner go 2026-11-13; R2 merges first, then master is merged into R3; the ship.md, CHANGELOG.md and test-risk-facts 0555 follow-ups go in a separate bounded PR outside this plan
+- 2026-11-13T04:56Z — architect — start — phase in-progress on branch `feat/architect` from 487c182; wave 1: T2 on one `engineer` (opus) and T3 on one `worker` (sonnet), each in its own worktree; stop_if pre-check: `test-agent-models.sh` reads `models.json` and `agents/*.md` with no fixed count, `install-agents.sh` globs `agents/*.md`, and the grill and brainstorm `required` strings in `cli/src/embedded.rs` need no change for an added sentence
+- 2026-11-13T04:56:44Z — architect — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d bash scripts/ci/test-agent-models.sh rc=0
+- 2026-11-13T04:56:49Z — architect — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d (cd cli && cargo test) rc=0
+- 2026-11-13T04:56:50Z — architect — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d bash scripts/ci/verify-doc-links.sh rc=0
 
 ## Validation
 - 2026-11-13T03:54Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
@@ -117,8 +121,8 @@ lane: high-risk
   - judged_sha: 86c724f77244d4af4a4e7e6b0074b66a797ca4e3
 
 ## Current State and Next Action
-- active_phase: judge-session
-- lifecycle_status: checked
+- active_phase: architect
+- lifecycle_status: in-progress
 - blockers: none
-- open_items: deferred minors in the 04:25Z Validation requests
-- exact_next_action: work full phase architect and work full phase retro-supervisor, each on its own branch from this commit
+- open_items: deferred minors in the judge-session 04:25Z Validation requests
+- exact_next_action: integrate T2 and T3, then the independent phase gate
