@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `scout`'s description asks the main agent to use it proactively in place of the built-in Explore, inside or outside a wave; pair it with `Agent(Explore)` in `permissions.deny` (monoclaudian settings) to enforce it.
 - `work-fanout.md` maps each role to its harness agent, drops `haiku` from mechanical edits (`scout` never edits), sends an open spec back to the owner before spawning, and extends the retry ladder: add a real check first, then `effort: high`, then the next model (`worker` → `lead` → `lead` on `fable`), never effort past `high`.
 
+### Added
+
+- `cli/tests/exercise_recipe.rs` runs the AGENTS.md § Exercise recipe on the built `zharness` binary in a fresh `git init` repository with a scratch `XDG_CONFIG_HOME`. After `install` then `uninstall`, `git status --porcelain` is empty, no file is left outside `.git` (ignored ones included), and the repository is no longer registered. A second case runs `install` from a subdirectory and checks that the files land at the git toplevel. The unit tests had covered only the library on a plain tempdir.
+
 ## [v0.37.0] — 2026-11-12
 
 ### Changed
