@@ -51,7 +51,7 @@ lane: high-risk
     - T3 `grill` Done and `brainstorm` step 3 dispatch `architect` only for a trade-off marked `adr candidate`, before the lock (owner: `worker`, writes `skills/stages/grill/references/grill.md`, `skills/stages/brainstorm/references/brainstorm.md` only) — output: one dispatch sentence in each file — check: `grep -n architect skills/stages/grill/references/grill.md skills/stages/brainstorm/references/brainstorm.md && (cd cli && cargo test)` — stop_if: a `required` string in `cli/src/embedded.rs` would have to change
   - phase check: `bash scripts/ci/test-agent-models.sh && (cd cli && cargo test) && bash scripts/ci/verify-doc-links.sh`
 - phase_slug: `retro-supervisor`
-  status: in-progress
+  status: checked
   - goal: R3 | depends_on: judge-session
   - surfaces: `skills/stages/retro/scripts/session-digest.py`, `scripts/ci/test-skill-scripts.sh`, `skills/stages/retro/references/retro.md`, `skills/stages/work/references/work-fanout.md`, `skills/poteto/playbooks/orchestrate.md` | avoided: `agents/*.md`, `models.json`, `scripts/ci/risk-verdict.sh`
   - escalate_when: the pre-check cannot tell a signal from noise on the fixture digests, or the supervisor needs a tool beyond `scout`'s
@@ -126,10 +126,27 @@ lane: high-risk
   - judge: independent
   - judge_model: claude-fable-5-2
   - judged_sha: 86c724f77244d4af4a4e7e6b0074b66a797ca4e3
+- 2026-11-13T05:38Z — phase `retro-supervisor` — verdict: APPROVED — mode: full
+  - `bash scripts/ci/test-skill-scripts.sh` — rc=0, 46 passed, 0 failed (read-only worktree at ff4d9a4); 10 of 12 mutations of session-digest.py fail the suite, including the verifier's M8 (45/1), M10 (44/2), M14 (44/2) and signals-in-default-mode (43/3)
+  - `cd cli && cargo test` — rc=0, 92 passed, 0 failed (87 lib, 3 projection_parity, 2 skill_reference_resolution)
+  - `bash scripts/ci/verify-doc-links.sh` — rc=0, doc links OK (0 findings)
+  - `bash scripts/ci/validate-skills.sh` — rc=0, 19 skill(s) valid
+  - `unset $(git rev-parse --local-env-vars); bash scripts/ci/test-risk-facts.sh` — rc=0, passed: 29 failed: 0 (writable detached worktree at ff4d9a4; rc=1 in the read-only tree at line 295 from the 0555 fixture copy)
+  - `bash scripts/ci/test-weakening.sh origin/master ff4d9a4` — rc=0, no test weakening in origin/master...ff4d9a4
+  - scope: on target — 487c182..ff4d9a4 changes only the five planned surfaces and this plan; avoided surfaces untouched; the plan diff removes only status and Current State lines; test-agent-models OK (4 agents, run with the git env unset); shellcheck 0.11.0 clean on scripts/ci/test-skill-scripts.sh; verifier requests 1-11 closed in the code and text, with residuals of 5 and 6 below; request 12 stays the accepted gap
+  - proof_classes: output, unit, integration (exercised on copies of two real session logs: --signals rc=0 with 29 and 17 signal lines and no other line; on fce501b1 --since 05:20Z prints 1 line and --since 05:45Z prints 0; a zone-less --since, --since without --signals and --json with --signals each exit 2; an unknown session exits 1; default and --json output byte-identical to the 487c182 script on both logs; the merge check driven once by hand: gh pr view 279 and 283 with the named fields rc=0, the judge transcript for 283 exists and names its judged head SHA; fixture suite; cargo integration tests pin the reference text)
+  - requirements: R3 met (retro.md § Supervisor mode replaces steps 1, 2 and 5, returns at most 3 findings in the named shape or no finding; work-fanout.md § Aggregate and orchestrate.md step 6 trigger it per wave and round, never per PR, on scout, which models.json puts on the fast tier; the --signals pre-check prints nothing on the clean fixture and one line per signal on the other; test-skill-scripts.sh and cargo test pass)
+  - success_signal: not yet met on master, by merge order only — R1 holds on origin/master 77c0f7d (PR 279 merged; test-risk-verdict 26 passed, 0 failed there); R2 waits on PR 283, which is OPEN and already carries the owner-reviewed label (master has no agents/architect.md); R3 passes on ff4d9a4 only (master has no --signals and no Supervisor mode); agents/ holds worker.md and engineer.md on master and on ff4d9a4; re-run the three acceptance commands on master after both merges, before the closing handoff
+  - rollback_point: 487c182550e6c639ebb53dc586cc55088960cc6d
+  - requests: all minor or nit, non-blocking: 1 (minor) skills/stages/retro/scripts/session-digest.py:38-39, :116 and :224 drop real failures as read-only exit 1: wc -l missing.txt, head -3 missing.txt, find /root -name x, echo hi > /etc/nope and grep foo a 2>/dev/null each print 0 signal lines with a failure text after Exit code 1; a non-leading redirect counts as read-only, and for head, tail, wc, cut, echo, printf and find exit 1 is a failure, not a miss; 2 (minor) skills/stages/work/references/work-fanout.md:62 and skills/poteto/playbooks/orchestrate.md:21 send the scout to the repo-only path skills/stages/retro/references/retro.md, which a consumer repo with installed skills does not have (verifier request 6 half closed); 3 (minor) skills/stages/retro/scripts/session-digest.py:57-58 treats an empty session id as no argument, so an unset CLAUDE_CODE_SESSION_ID in the triggers reads the newest log for the cwd with rc=0 (verifier request 5 residual); 4 (minor) scripts/ci/test-skill-scripts.sh:132-153 and :156-166 pin neither session-digest.py:178 (a record without a timestamp counts under --since) nor :102 (a command substitution is never read-only): both mutations leave 46 passed, 0 failed, though the 05:45Z Log entry claims both behaviours; 5 (nit) session-digest.py:51 fromisoformat accepts the trailing Z the triggers pass only on Python 3.11 or newer, no floor is declared, older hosts exit 2 (not run here, only 3.14 is installed); 6 (nit) .monows/plans/active/supervisor-lead-peer.md:15 R3 still says the supervisor reads only the digest and the plan, while skills/stages/retro/references/retro.md:144 also names gh pr view and the judge transcript; within R3's intent (the judge_session spot-check, T5) and bounded by Read nothing else; 7 (nit) the Log entry stamped 05:45Z was committed at 05:31Z (ff4d9a4)
+  - proof_gaps: none for the lane; the scout dispatch itself was not run end to end on a live signal (no model call in this check), and judge: independent is testimony the guard cannot verify; the test-risk-facts proof unsets the local git env first, because its fixture helper otherwise runs git init, add and commit against the real repository when the hook re-runs it
+  - judge: independent
+  - judge_model: claude-fable-5-2
+  - judged_sha: ff4d9a4a8a10cb79b39b1b1b070d537564794075
 
 ## Current State and Next Action
 - active_phase: retro-supervisor
-- lifecycle_status: in-progress
+- lifecycle_status: checked
 - blockers: none
-- open_items: deferred minors in the judge-session 04:25Z Validation requests
-- exact_next_action: the independent `check full` (final phase) on `feat/retro-supervisor`, judging the Goal success_signal
+- open_items: minor and nit requests 1-7 in the retro-supervisor 05:38Z Validation entry; deferred minors in the judge-session 04:25Z Validation requests; the Goal success_signal is not yet met on master (R2 in PR 283 and R3 on this branch are unmerged)
+- exact_next_action: `git` — open the retro-supervisor PR (always-review path, needs the owner's `owner-reviewed` label); after PR 283 and this PR merge, re-run the R1–R3 acceptance commands on `master`, then the closing `handoff`
