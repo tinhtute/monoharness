@@ -1368,8 +1368,9 @@ r8rebase absent && bad "R8 a judged_sha this clone does not have must be rejecte
 # and guarded there. At pre-commit the MERGE_HEAD copy of the plan is old side,
 # so those entries are neither judged nor re-executed again; an entry written
 # into the merge itself is still judged. Through hook-guard.sh the PR range
-# starts at the merge-base, which holds the merged-in entries already, and the
-# push range sees their judged commit inside BEFORE..HEAD.
+# starts at the merge-base, which holds the merged-in entries already; in this
+# fixture the push range re-judges them and finds their judged commit inside
+# BEFORE..HEAD.
 r8m_entry() { # <stamp> <judged_sha> <proof> -> one Validation entry
 	printf -- '- `%s` — phase `main` — verdict: APPROVED — mode: gate\n  - `%s`\n  - proof_classes: output, unit, integration\n  - judge: independent\n  - judge_model: fable\n  - judged_sha: %s\n' "$1" "$3" "$2"
 }

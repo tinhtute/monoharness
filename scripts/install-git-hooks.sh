@@ -95,9 +95,11 @@ HOOKS_DIR="$(cd "$REPO_ROOT" && git rev-parse --path-format=absolute --git-path 
 #       an entry that did not exist at that commit is never exempt.
 #   MERGE: at pre-commit during a merge, an entry byte-identical to one in a
 #       MERGE_HEAD parent's copy of the plan is old: it was committed and
-#       guarded on that side. A range needs no such rule; its lower bound is
-#       the merge-base (PR, pre-push) or the pushed-over tip (push), so the
-#       merged-in entries are old there or their judged commits are in range.
+#       guarded on that side. Ranges keep no such rule: PR and pre-push start
+#       at the merge-base with the default branch, which already holds what a
+#       base sync brings in. A push range (CI runs it on master only) treats a
+#       PR merge's entries as new on purpose; exempting a merge's second
+#       parent there would wave every PR's entries through.
 #   PHASE-DONE: a plan staged/pushed under .monows/plans/completed/ whose Current
 #   State declares lifecycle_status: completed must show every phase
 #   status: done in ## Phases and Verification. Found 2026-09-07: a handoff
