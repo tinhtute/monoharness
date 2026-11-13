@@ -80,6 +80,8 @@ lane: high-risk
 - 2026-11-13T04:56:50Z — retro-supervisor — decision — baseline: 487c182550e6c639ebb53dc586cc55088960cc6d bash scripts/ci/verify-doc-links.sh rc=0
 - 2026-11-13T05:02Z — retro-supervisor/T4 — done — `bash scripts/ci/test-skill-scripts.sh` rc=0 (30 passed, 0 failed) on 4a427e8 (engineer, opus, committed on `feat/retro-supervisor` in its own worktree; tested source 4a427e8); changed `skills/stages/retro/scripts/session-digest.py`, `scripts/ci/test-skill-scripts.sh`; red first: 23 passed, 7 failed before the implementation; default and `--json` output byte-identical before and after on the fixture and 2 real logs; Lead probe: a multi-line command and result each print one signal line; repeat threshold is 3 identical untruncated inputs; `test-weakening.sh origin/master HEAD` clean; stop_if: not matched; noted risk: every errored result is a signal (a grep miss counts), so T5's triggers may fire often
 - 2026-11-13T05:02Z — retro-supervisor — decision — wave 2 starts: T5 on one `worker` (sonnet) in its own worktree from this commit
+- 2026-11-13T05:03Z — retro-supervisor/T5 — done — `(cd cli && cargo test)` rc=0 and `bash scripts/ci/verify-doc-links.sh` rc=0 on cefd4e9 (worker, sonnet, branch `feat/retro-supervisor-t5` in its own worktree, fast-forwarded into `feat/retro-supervisor`; tested source cefd4e9); `retro.md` gains `## Supervisor mode` (scout, read-only, skips step 2, reads only the `--signals` output and the plan, at most 3 findings in the Observation / Evidence / Suspected mechanism / Impact / Question for Lead / Recommendation / Escalation shape or `no finding`, the `judge_session` merge check, the `subagents/` gap, judge error signals before reporting); one trigger sentence in `work-fanout.md` § Aggregate and in `orchestrate.md` step 6; a relative link to retro.md failed `skill_reference_resolution`, so the trigger names the repo path in backticks; stop_if: not matched
+- 2026-11-13T05:03Z — retro-supervisor — decision — combined tree cefd4e9: phase check `bash scripts/ci/test-skill-scripts.sh && (cd cli && cargo test) && bash scripts/ci/verify-doc-links.sh` rc=0 (30/0; cargo 92 passed, 0 failed; doc links 0 findings); validate-skills 19 valid; `test-weakening.sh origin/master HEAD` clean; combined diff 487c182..cefd4e9 touches only the five planned surfaces plus this plan; next: verifier on the combined diff, then the independent `check full` (final phase)
 
 ## Validation
 - 2026-11-13T03:54Z — phase `judge-session` — verdict: APPROVE_WITH_REQUESTS — mode: full
@@ -127,4 +129,4 @@ lane: high-risk
 - lifecycle_status: in-progress
 - blockers: none
 - open_items: deferred minors in the judge-session 04:25Z Validation requests
-- exact_next_action: integrate T5, then the phase check, verifier and the independent `check full`
+- exact_next_action: verifier on the combined diff cefd4e9, then the independent `check full`
