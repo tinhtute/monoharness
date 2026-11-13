@@ -59,6 +59,8 @@ Spawn the whole wave in one message, in the background, each with its own worktr
 
 ## Aggregate
 
+After each wave, run `python3 skills/stages/retro/scripts/session-digest.py --signals <your session>`; dispatch `scout` with the retro supervisor mode (`skills/stages/retro/references/retro.md`) only when it prints a signal, never per PR.
+
 1. A report is a claim: reject it unless it names the tested source and the acceptance output. A `BLOCKED` report is a request, not a rejected result, and costs no retry; answer its reason first: `spec` → settle it with the owner (`grill`), unless it names a missing VERIFY or ACCEPTANCE line, which is your brief gap: fill it and re-brief; `premise` → weigh the evidence, then re-brief or keep the DESIGN with your reason; `scope` → widen SCOPE, route the file to its owner, or hold it until after the merge. A `PASS (DESIGN deviation)` is a result, judged like any other against GOAL and ACCEPTANCE, never against the DESIGN. An intent the DESIGN carried but the GOAL left out is a brief gap, not a failed result: write it into the GOAL and re-brief; that costs no retry. Free re-briefs stop at two per unit: a third `BLOCKED` or brief gap on the same unit goes to the owner.
 2. Accept only after checking that source, its diff against SCOPE, and its acceptance check yourself. Inspect a worker tree with `git -C <worktree>` or a subshell `(cd <worktree> && …)` so your shell stays in the main checkout.
 3. A rejected or missing result gets a retry chosen by cause, at most 2 per unit, each logged with its cause:

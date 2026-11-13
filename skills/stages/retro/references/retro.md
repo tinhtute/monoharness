@@ -118,6 +118,21 @@ to keep, revise, or remove — until then report it as pending, not as improved.
 Hooks, CI providers, and branch protection change only when the user
 authorizes that file separately.
 
+## Supervisor mode
+
+Runs on `scout`, read-only, when `work-fanout.md` or `orchestrate.md` dispatches it. Steps 3–5 apply with these changes:
+
+- Input: the output of `python3 skills/stages/retro/scripts/session-digest.py --signals <session>` plus the active plan. Read only those two; skip step 2.
+- A `--signals` line has one of three forms: `signal: error tool=<name> result=<...>`, `signal: repeat tool=<name> count=<n> input=<...>` (identical input at least 3 times), `signal: merge pr=<N|?> command=<...>`.
+- Every errored result is a signal, including a read-only command's exit 1 (a grep with no match). Judge whether an error matters before reporting it.
+- For a `gh pr merge` signal, confirm `<lead-session>/subagents/agent-<judge_session>.jsonl` exists and names the merged SHA. Take `judge_session` from the merged PR's `**Verdict:**` line. A missing file or SHA is a finding.
+- Accepted gap: the digest omits `subagents/` logs, so sub-agent errors are invisible here.
+- Return at most 3 findings, each in exactly this shape, or the literal `no finding`:
+
+```
+Observation / Evidence / Suspected mechanism / Impact / Question for Lead / Recommendation / Escalation
+```
+
 <example id="1">
 ### 1. [S1] Automated checks — work claimed `cargo test` green; it was never run (Next)
 - evidence: digest shows 0 `cargo test` calls; turn 14 says "all tests pass"
