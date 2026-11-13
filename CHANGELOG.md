@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Pre-commit guards: committing a merge no longer re-judges `## Validation` entries the other parent already committed. An entry byte-identical to one in a `MERGE_HEAD` parent's copy of the plan is old, so R8 stops rejecting its `judged_sha` as out of range; an entry written into the merge itself is still guarded. The PR and pre-push ranges start at the merge-base and already treated such entries as old; fixtures now cover them and the master push range. The hook reads the guard core from the installer on every run, so no reinstall is needed.
+- `test-risk-facts.sh`, `test-risk-verdict.sh` and `test-agent-models.sh` unset the caller's `GIT_*` environment, so re-running them as a proof from a git hook no longer creates branches, moves refs or flips `core.bare` in the calling repository.
 - `install-agents.sh` retires a `lead.md` only when it carries the old harness agent's description; a user's own `lead.md` is kept. CI covers both cases.
 - `work-fanout.md`: a `BLOCKED (spec)` that names a missing VERIFY or ACCEPTANCE line is the main agent's brief gap (fill it and re-brief), not the owner's; free re-briefs stop at two per unit, and a third `BLOCKED` or brief gap goes to the owner.
 

@@ -3,6 +3,9 @@
 # throwaway repository with a base and a change commit, writes a PR body, and
 # asserts on the gate's exit code.
 set -euo pipefail
+# Run from inside a Git hook, the caller's GIT_* would steer fixture repos.
+# shellcheck disable=SC2046
+unset $(git rev-parse --local-env-vars)
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GATE="$HERE/risk-verdict.sh"
