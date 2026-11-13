@@ -76,7 +76,8 @@ if git show "$base:$facts_script" >"$tmp/facts.sh" 2>/dev/null &&
     (if .manifest_or_lockfile_touched then ["manifest or lockfile touched"] else [] end) +
     (.test_changes.removed_files // [] | map("removed test file: " + .)) +
     (.test_changes.skip_markers_added // [] | map("skip marker: " + .)) +
-    (.test_changes.assertions_removed // [] | map("assertions removed: " + .))
+    (.test_changes.assertions_removed // [] | map("assertions removed: " + .)) +
+    (.test_changes.assertions_changed // [] | map("assertions changed: " + .))
     | .[]' <<<"$facts")
 else
   problems+=("risk-facts: $base:$facts_script missing or failed (failed closed)")

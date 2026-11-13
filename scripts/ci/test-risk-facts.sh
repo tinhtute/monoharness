@@ -271,6 +271,26 @@ commit
 check "assertions moved between files are not removed" \
   '.test_changes.assertions_removed == [] and .test_changes.skip_markers_added == []'
 
+new_repo achange
+on_base rust_tests src/lib.rs
+printf '#[test]\nfn t() {\n    assert_eq!(1, 1);\n    assert!(2 > 0);\n}\n' >"$REPO/src/lib.rs"
+commit
+check "an assertion edited in place is changed, not removed" \
+  '.test_changes.assertions_changed == ["src/lib.rs: 1"] and .test_changes.assertions_removed == []'
+
+new_repo aadd
+on_base rust_tests src/lib.rs
+printf '#[test]\nfn u() {\n    assert_eq!(3, 3);\n}\n' >>"$REPO/src/lib.rs"
+commit
+check "an added test changes no assertion" '.test_changes.assertions_changed == []'
+
+new_repo amove2
+on_base rust_tests src/a.rs
+printf '#[test]\nfn t() {\n    assert_eq!(1, 1);\n}\n' >"$REPO/src/a.rs"
+printf '#[test]\nfn u() {\n    assert_eq!(2, 2);\n}\n' >"$REPO/src/b.rs"
+commit
+check "an assertion moved to another file is not changed" '.test_changes.assertions_changed == []'
+
 # The gate itself: base-pinned risk-facts.sh, label override.
 GATE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/test-weakening.sh"
 with_facts() {
@@ -293,6 +313,12 @@ on_base with_facts
 printf '#[test]\nfn renamed() {\n    assert_eq!(1, 1);\n    assert_eq!(2, 2);\n}\n' >"$REPO/src/lib.rs"
 commit
 check_rc "gate passes a refactor that keeps every assertion" 0 gate
+
+new_repo gatechange
+on_base with_facts
+printf '#[test]\nfn t() {\n    assert_eq!(1, 1);\n    assert!(2 > 0);\n}\n' >"$REPO/src/lib.rs"
+commit
+check_rc "gate leaves an in-place assertion edit to the risk verdict" 0 gate
 
 new_repo gateneuter
 on_base with_facts

@@ -7,7 +7,7 @@
 #   {"counted_lines": N, "excluded_lines": N, "excluded_paths": [...],
 #    "always_review_hits": [...],
 #    "test_changes": {"removed_files": [...], "skip_markers_added": [...],
-#                     "assertions_removed": [...]},
+#                     "assertions_removed": [...], "assertions_changed": [...]},
 #    "ci_config_touched": bool, "manifest_or_lockfile_touched": bool}
 #
 # Lines are added plus deleted from --numstat; a binary file counts 0. Renames
@@ -37,6 +37,14 @@
 #   Go t.Error*/t.Fatal* / func Test, and fixture helpers ok/bad/check/check_rc
 #   followed by a quote. A line both removed and re-added nets to zero, and
 #   files are listed only when the whole diff removes more than it adds.
+# assertions_changed: "path: N" for each file outside docs whose diff both
+#   removes and adds assertion or test-case lines (same patterns), N the smaller
+#   count: an assertion edited in place, which assertions_removed nets to zero.
+#   Unlike assertions_removed it is never netted across files, and a line
+#   moved within one file counts as changed. Not seen: an edit to a
+#   continuation line of a multi-line assertion (only the line matching the
+#   pattern counts), and an edit made while the file is renamed (--no-renames
+#   puts the removal and the addition on different paths).
 # ci_config_touched: .github/**, .gitlab-ci.yml, .circleci/**.
 # manifest_or_lockfile_touched: a lockfile above or a manifest basename
 #   (Cargo.toml, package.json, go.mod, pyproject.toml, setup.py, setup.cfg,
@@ -231,6 +239,7 @@ trivial_re='(^|[^A-Za-z0-9_])assert!\(true\)|(^|[^A-Za-z0-9_.])assert[[:space:]]
 # Assertion or test-case lines; removing more than a file adds is a weakening.
 assert_re='(^|[^A-Za-z0-9_])assert(_[a-z]+)?!\(|#\[(tokio::)?test|(^|[^A-Za-z0-9_.])assert[ (]|self\.assert[A-Z]|def test_|(^|[^A-Za-z0-9_.])(expect|it|test)\(|t\.(Error|Errorf|Fatal|Fatalf)\(|func Test|^[[:space:]]*(ok|bad|check|check_rc)[[:space:]]+["'"'"']'
 asserts=()
+changed=()
 all_add=0
 all_del=0
 # One diff per path: the path comes from --numstat -z, never from a header that
@@ -263,6 +272,8 @@ for file in ${paths[@]+"${paths[@]}"}; do
     esac
   done < <(gitq diff -U0 --no-renames --no-color --no-ext-diff "$base...$sha" -- ":(literal)$file")
   [ "$a_del" -gt "$a_add" ] && asserts+=("$file: -$((a_del - a_add))")
+  changed_n=$((a_del < a_add ? a_del : a_add))
+  [ "$changed_n" -gt 0 ] && changed+=("$file: $changed_n")
   all_add=$((all_add + a_add))
   all_del=$((all_del + a_del))
 done
@@ -274,9 +285,9 @@ printf '  "counted_lines": %d,\n' "$counted"
 printf '  "excluded_lines": %d,\n' "$excluded"
 printf '  "excluded_paths": %s,\n' "$(json_arr ${excluded_paths[@]+"${excluded_paths[@]}"})"
 printf '  "always_review_hits": %s,\n' "$(json_arr ${review_hits[@]+"${review_hits[@]}"})"
-printf '  "test_changes": {"removed_files": %s, "skip_markers_added": %s, "assertions_removed": %s},\n' \
+printf '  "test_changes": {"removed_files": %s, "skip_markers_added": %s, "assertions_removed": %s, "assertions_changed": %s},\n' \
   "$(json_arr ${removed[@]+"${removed[@]}"})" "$(json_arr ${markers[@]+"${markers[@]}"})" \
-  "$(json_arr ${asserts[@]+"${asserts[@]}"})"
+  "$(json_arr ${asserts[@]+"${asserts[@]}"})" "$(json_arr ${changed[@]+"${changed[@]}"})"
 printf '  "ci_config_touched": %s,\n' "$ci"
 printf '  "manifest_or_lockfile_touched": %s\n' "$manifest"
 printf '}\n'
