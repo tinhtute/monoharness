@@ -54,6 +54,8 @@ Scan all seven before ranking; a category earns a finding only with evidence. A 
 
 Steering signals: a user prompt that corrects or redirects, and a structured answer that rejects the `(Recommended)` option, each mark a place where the agent's default was wrong — trace it to a category above.
 
+A signal that reads as a standing preference of the user (reply length or tone, delegation, what "done" means) needs recurrence before it becomes a finding. Digest earlier sessions from this directory only (step 1's project path, one id at a time), never another project's. Seen in two or more sessions → a finding whose home is global steering. Seen once → weak: evidence for another finding, never a rule on its own. Contradicted in another session → `fix mode: human`: ask the user which holds. The fix states the specific, non-default rule ("tables when comparing options"), never a generic one ("communicate clearly").
+
 ### Where the fix lives
 
 The implementing agent carries the most context pressure (exploration, code,
@@ -64,6 +66,7 @@ debugging); the reviewer gets a diff. Put each fix where it costs least context:
 | Check (lint, test, hook, CI) | mechanical rules | never; it runs |
 | Review surface (review playbook, judge, `CODING_STANDARDS.md`) | judgement rules | at review only |
 | `AGENTS.md` / `CLAUDE.md` | navigation pointers only | every session |
+| Global steering (`~/.claude/CLAUDE.md`, `rules/`), edited in the repo that installs it | the user's standing preferences | every session, every project |
 | Docs | reference material, reached by a pointer; extend an existing doc before writing a new one | on demand |
 | Skill | a description that should trigger, or a user-invoked command | description every session |
 
