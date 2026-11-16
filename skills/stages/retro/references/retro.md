@@ -3,7 +3,10 @@
 Output: at most 5 findings, severity-ranked, each in the schema below, exactly
 one marked `Next`. No preamble. Steps 1–5 are read-only; step 6 edits files only
 after the user approves the `Next` finding, and fixes that one finding only.
-A scout dispatched in supervisor mode follows § Supervisor mode instead.
+`retro codify` mines several sessions of this project instead of one:
+`codify.md` (next to this file) § 1 replaces step 1's session loading, and every
+other step here still applies. A scout dispatched in
+supervisor mode follows § Supervisor mode instead.
 
 A retro targets the agent's **environment** (navigation, guards, steering,
 tools, information); the session's own code is evidence, not the target. Every
@@ -22,6 +25,7 @@ finding cites evidence a reader can open: a digest line, a turn number, or
 - The digest lists sub-agent logs when they exist; digest one only when a
   finding depends on what that sub-agent did.
 - Open the raw log only to confirm a specific turn the digest points at.
+- Several sessions (`retro codify`, or a recurrence check from step 3): `codify.md` § 1.
 
 ## 2. Read the repository's guardrails before judging
 
@@ -54,7 +58,9 @@ Scan all seven before ranking; a category earns a finding only with evidence. A 
 
 Steering signals: a user prompt that corrects or redirects, and a structured answer that rejects the `(Recommended)` option, each mark a place where the agent's default was wrong — trace it to a category above.
 
-A signal that reads as a standing preference of the user (reply length or tone, delegation, what "done" means) needs recurrence before it becomes a finding. Digest earlier sessions from this directory only (step 1's project path, one id at a time), never another project's. Seen in two or more sessions → a finding whose home is global steering. Seen once → weak: evidence for another finding, never a rule on its own. Contradicted in another session → `fix mode: human`: ask the user which holds. The fix states the specific, non-default rule ("tables when comparing options"), never a generic one ("communicate clearly").
+A signal that reads as a standing preference of the user (reply length or tone, delegation, what "done" means) needs recurrence before it becomes a finding. Digest earlier sessions from this directory only (step 1's project path, one id at a time), never another project's. Seen in two or more sessions → a finding whose home is global rule. Seen once → weak: evidence for another finding, never a rule on its own. Contradicted in another session → `fix mode: human`: ask the user which holds. The fix states the specific, non-default rule ("tables when comparing options"), never a generic one ("communicate clearly").
+
+A fix that creates a new skill, script, or global rule also needs recurrence: count sessions and pick the artifact with `codify.md` §§ 2–3. A fix that edits or adds a line to a file that already exists (a review doc, a skill reference, `AGENTS.md`) counts as an existing artifact and does not.
 
 ### Where the fix lives
 
@@ -63,12 +69,13 @@ debugging); the reviewer gets a diff. Put each fix where it costs least context:
 
 | Home | Holds | Loaded |
 |---|---|---|
-| Check (lint, test, hook, CI) | mechanical rules | never; it runs |
-| Review surface (review playbook, judge, `CODING_STANDARDS.md`) | judgement rules | at review only |
-| `AGENTS.md` / `CLAUDE.md` | navigation pointers only | every session |
-| Global steering (`~/.claude/CLAUDE.md`, `rules/`), edited in the repo that installs it | the user's standing preferences | every session, every project |
-| Docs | reference material, reached by a pointer; extend an existing doc before writing a new one | on demand |
-| Skill | a description that should trigger, or a user-invoked command | description every session |
+| check (lint, test, hook, CI) | mechanical rules | never; it runs |
+| script (a skill's `scripts/` or repo `scripts/`) | a repeated deterministic command sequence | never; it runs when called |
+| review surface (review playbook, judge, `CODING_STANDARDS.md`) | judgement rules | at review only |
+| steering (`AGENTS.md` / `CLAUDE.md`) | navigation pointers only | every session |
+| global rule (`~/.claude/CLAUDE.md`, `rules/`), edited in the repo that installs it | the user's standing preferences | every session, every project |
+| docs | reference material, reached by a pointer; extend an existing doc before writing a new one | on demand |
+| skill | a description that should trigger, or a user-invoked command | description every session |
 
 A review surface past ~1,000 lines splits into docs behind pointers. A fix that
 adds a coding rule to steering read by the implementer is the wrong home.
@@ -90,7 +97,8 @@ Break ties by recurrence: a friction that will hit every future session outranks
 - evidence: {digest line / turn N / file:line}
 - mechanical | judgement: {which, and why}
 - smallest fix: {change} at {file or tool}
-- home: {check | review surface | steering | docs | skill}
+- home: {check | script | review surface | steering | global rule | docs | skill}
+- recurrence: {S} sessions ({ids}) | existing artifact
 - fix mode: guard | experiment | human
 ```
 
@@ -113,6 +121,7 @@ Pick the mode from the finding, not from preference:
   `.monows/plans/active/harness-improvement-{slug}.md`, make the one change, record
   native proof, and leave `Decision: pending fresh rerun`. If another plan is
   already active, ask before creating a second one — the repo guard allows one.
+  A new skill, script, or global rule is built the way `codify.md` §§ 3–4 says.
 - **human** — the fix needs authority, access, or a policy call you lack. Say
   what and who; change nothing.
 
@@ -128,6 +137,7 @@ authorizes that file separately.
 - mechanical: a pre-commit guard can require a fresh proof line
 - smallest fix: extend the existing proof guard in `scripts/install-git-hooks.sh`
 - home: check
+- recurrence: existing artifact
 - fix mode: guard
 </example>
 
@@ -137,12 +147,13 @@ authorizes that file separately.
 - judgement: the agent needed one section, not a check
 - smallest fix: section pointer in `AGENTS.md` Layout and Pipeline
 - home: steering
+- recurrence: 1 session (this one)
 - fix mode: experiment
 </example>
 
 ## Supervisor mode
 
-Runs on `scout`, read-only, when `work-swarm.md` § Aggregate or `orchestrate.md` step 6 dispatches it; no user waits on it. It replaces steps 1, 2 and 5 and the header's output rule; steps 3–4 apply.
+Runs on `scout`, read-only, when `work-swarm.md` § Aggregate or `orchestrate.md` step 6 dispatches it; no user waits on it. It replaces steps 1, 2 and 5 and the header's output rule; steps 3–4 apply; `codify.md` does not.
 
 - Input: the `--signals` output the Lead passed, the active plan, and the Lead's session id. For a merge signal, also `gh pr view <n> --json state,body,labels,mergeCommit,headRefOid` and the judge transcript `~/.claude/projects/<slug>/<session-id>/subagents/agent-<judge_session>.jsonl` (the directory beside the Lead's `<session-id>.jsonl`). Read nothing else.
 - Lines: `signal: error tool=<name> result=<...>`, `signal: repeat tool=<name> count=<n> input=<...>` (identical input at least 3 times), `signal: merge pr=<N|?> command=<...>`. The digest already drops exit 1 from read-only commands (a grep with no match, a diff that differs); judge whether each remaining error matters before reporting it.
