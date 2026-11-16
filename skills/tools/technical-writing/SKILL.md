@@ -1,10 +1,10 @@
 ---
-name: mono-write
-version: "1.1.0"
+name: technical-writing
+version: "2.0.0"
 description: "Polish a research or learn draft (EN/VI) so it reads naturally, and write CHANGELOG entries and release notes from a commit list. Not for UI copy, marketing or tone changes."
 ---
 
-`mono-write` does two jobs for the mono playbooks (`research`, `ship`) and `learn`. Any other writing (UI copy, marketing, tone changes, Notion reports, prose from scratch) belongs to `write` from [monoclaudian](https://github.com/tinhtute/monoclaudian): use it when it is installed; otherwise say it is not installed and stop.
+`technical-writing` does two jobs for the mono playbooks (`research`, `ship`) and `learn`. Any other writing (UI copy, marketing, tone changes, Notion reports, prose from scratch) belongs to `write` from [monoclaudian](https://github.com/tinhtute/monoclaudian): use it when it is installed; otherwise say it is not installed and stop.
 
 Defer to: `git` for commit messages and PR text.
 
