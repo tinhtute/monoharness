@@ -234,6 +234,11 @@ retires the known ones. `npx skills add` never removes a skill that was dropped 
 Trash each dropped skill by name from `~/.claude/skills/` and `~/.agents/skills/`
 before reinstalling.
 
+For this repository, `bash scripts/reinstall-all.sh` does it in one step: it pulls
+`master`, trashes the retired skills, reinstalls skills, agents, git hooks and
+`zharness`, and prints a ✓/✗ table comparing every installed file with the
+checkout. `--verify` prints only the table.
+
 ## Versions
 
 Current release: v0.33.0; see [`CHANGELOG.md`](CHANGELOG.md). Since v0.15 the
