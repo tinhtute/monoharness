@@ -100,7 +100,7 @@ its steps into a todo list, and calls the skill each step names.
 | orchestrate | standing program: coordinator decides, PR owners and workers build, verify each unit; multi-day |
 | autopilot | brainstorm → PR owner per PR → full check → fix rounds → `/loop` → stack or land via ship § Land |
 | investigation | think, hunt or how; read-only, changes nothing |
-| research | read (search, fetch) → learn → mono-write; notes only |
+| research | read (search, fetch) → learn → technical-writing; notes only |
 | ambition | ambition (depth, altitude or range) → lint the rewrite → route on request |
 | babysit | `/loop` over review threads and CI until the PR is ready |
 | ship | watzup → security-review → check → land → changelog → tag → verify → rollback |
@@ -185,8 +185,8 @@ are optional extensions.
 
 `poteto` sits at `skills/poteto`; the other skills live in three groups: `stages`
 (the six workflow skills plus grill, wayfinder and retro), `reason` (think, hunt, how, arena, learn, ambition) and `tools` (git,
-librarian, mono-write, read). `retro` is gated: it runs only from a poteto playbook
-step or when the user names it. `mono-write` covers only what the playbooks need:
+librarian, read, technical-writing). `retro` is gated: it runs only from a poteto playbook
+step or when the user names it. `technical-writing` covers only what the playbooks need:
 polishing a research draft and writing CHANGELOG entries and release notes.
 
 General-purpose skills outside the workflow (the full `write`, diagram, prompt,

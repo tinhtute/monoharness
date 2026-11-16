@@ -4,7 +4,7 @@
 
 `playbooks/hillclimb.md` and `pause.md` adapt poteto-mode playbooks from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, MIT, Copyright 2026 Lauren Tan).
 
-`skills/reason/how` adapts the `how` skill from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, MIT, Copyright 2026 Lauren Tan); the recurrence rule in `skills/stages/retro/references/retro.md` step 3 adapts the mining guardrails of its `automate-me` skill.
+`skills/reason/how` adapts the `how` skill from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, MIT, Copyright 2026 Lauren Tan); the recurrence rule in `skills/stages/retro/references/retro.md` step 3 and the session mining, confidence grades and draft rules in `skills/stages/retro/references/codify.md` adapt its `automate-me` skill (`ce649c0`, v0.15.42); the count thresholds and the artifact table there are ours.
 
 `playbooks/orchestrate.md` and `autopilot.md` adapt poteto-mode playbooks from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, `6b03002`, MIT, Copyright 2026 Lauren Tan).
 
@@ -28,7 +28,7 @@ Kinds:
 | playbook `swarm` | skill `swarm` | rewrite | a playbook over `work-swarm.md` that runs on `work full`; theirs is one skill | `5ce7106` 2026-11-13 |
 | playbook `autopilot` | `autopilot-full`, `autopilot-stack` | split | one file; the `full` mode decides whether it merges | `f5fdfd7` 2026-11-09 |
 | skill `ambition` | `sharpen` | rename | adds lenses and a prompt linter | `0974b3e` 2026-10-30 |
-| skill `mono-write` | `unslop`, `technical-writing` | split | covers only research drafts and changelogs | `e2adba3` 2026-11-06 |
+| skill `technical-writing` | `unslop`, `technical-writing` | split | covers only research drafts and changelogs; shares the name of their broader skill, so installing pstack beside it collides | `32b85fe` 2026-11-16 |
 | skill `arena` | `arena` | rewrite | six steps on `work-swarm.md`, plus an output template | `96d9318` 2026-10-23 |
 | skill `how` | `how` | rewrite | the main agent explains; `scout`s explore only a complex question; theirs spawns an explainer every time | `b3f6075` 2026-11-13 |
 | agent `architect` | skill `architect` | homonym | ours challenges a design read-only in one sealed report; theirs sketches types, then implements | `1cace0a` 2026-11-13 |
