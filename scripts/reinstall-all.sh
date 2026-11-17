@@ -40,11 +40,12 @@ esac
 
 cd "$REPO_DIR"
 
-# retired_dirs: paths that hold a retired harness skill, one per line. A per-skill
-# symlink is listed before its target, and each real directory once (~/.claude/skills
-# itself is often a symlink to ~/.agents/skills), so trashing them in order never
-# misses or repeats one. A link's target is listed only when it sits directly in one
-# of the two skill dirs; a target elsewhere (a dev checkout) is never trashed.
+# retired_dirs: paths that hold a retired harness skill, one per line: every per-skill
+# symlink, and each real directory once (~/.claude/skills itself is often a symlink to
+# ~/.agents/skills). Order does not matter: trashing a link leaves its target, and
+# trash removes a link whose target is already gone. A link's target is listed only
+# when it sits directly in one of the two skill dirs; a target elsewhere (a dev
+# checkout) is never trashed.
 retired_dirs() {
   local entry name marker dir real root roots=$'\n' seen=$'\n'
   for root in "$CLAUDE_DIR/skills" "$AGENTS_SKILLS_DIR"; do
