@@ -131,5 +131,15 @@ check "symlinked skills dir: retired skill trashed once" 0 "$RC" "$OUT" "✓ ski
 gone=1; [ ! -e "$AGENTS_SKILLS_DIR/mono-write" ] && [ "$(compgen -G "$STUB_TRASH/mono-write.*" | wc -l | tr -d " ")" = 1 ] && gone=0
 check "symlinked skills dir: retired skill gone" 0 "$gone" ""
 
+# 7. Per-skill symlink: ~/.claude/skills/<name> links to ~/.agents/skills/<name>;
+#    both the link and the real directory go, so verify reports nothing left.
+new_repo
+retired_skill "$AGENTS_SKILLS_DIR/mono-write" "Polish a research or learn draft (EN/VI)"
+ln -s "$AGENTS_SKILLS_DIR/mono-write" "$CLAUDE_DIR/skills/mono-write"
+run --no-pull
+check "per-skill symlink: install ok" 0 "$RC" "$OUT" "✓ skill   foo"
+gone=1; [ ! -e "$AGENTS_SKILLS_DIR/mono-write" ] && [ ! -L "$CLAUDE_DIR/skills/mono-write" ] && gone=0
+check "per-skill symlink: link and real dir gone" 0 "$gone" ""
+
 echo "passed=$PASSED failed=$FAILED"
 [ "$FAILED" = 0 ]
