@@ -141,5 +141,22 @@ check "per-skill symlink: install ok" 0 "$RC" "$OUT" "✓ skill   foo"
 gone=1; [ ! -e "$AGENTS_SKILLS_DIR/mono-write" ] && [ ! -L "$CLAUDE_DIR/skills/mono-write" ] && gone=0
 check "per-skill symlink: link and real dir gone" 0 "$gone" ""
 
+# 8. A per-skill symlink into a directory outside both skill dirs (a dev checkout):
+#    only the link goes; the target is never trashed.
+new_repo
+retired_skill "$REPO.checkout/mono-write" "Polish a research or learn draft (EN/VI)"
+ln -s "$REPO.checkout/mono-write" "$CLAUDE_DIR/skills/mono-write"
+run --no-pull
+check "outside target: install ok" 0 "$RC" "$OUT" "✓ skill   foo"
+kept=1; [ ! -L "$CLAUDE_DIR/skills/mono-write" ] && [ -f "$REPO.checkout/mono-write/SKILL.md" ] && kept=0
+check "outside target: link gone, target kept" 0 "$kept" ""
+
+# 9. A skill dir path with a space is trashed whole, not split into words.
+new_repo
+export AGENTS_SKILLS_DIR="$REPO.my agents" && mkdir -p "$AGENTS_SKILLS_DIR"
+retired_skill "$AGENTS_SKILLS_DIR/mono-write" "Polish a research or learn draft (EN/VI)"
+run --no-pull
+check "space in path: install ok" 0 "$RC" "$OUT" "retired skill trashed: $AGENTS_SKILLS_DIR/mono-write"
+
 echo "passed=$PASSED failed=$FAILED"
 [ "$FAILED" = 0 ]
