@@ -40,13 +40,17 @@ esac
 
 cd "$REPO_DIR"
 
-# retired_dirs: installed directories that hold a retired harness skill.
+# retired_dirs: installed directories that hold a retired harness skill, each real
+# directory once (~/.claude/skills is often a symlink to ~/.agents/skills).
 retired_dirs() {
-  local entry name marker dir
+  local entry name marker dir real seen=$'\n'
   for entry in "${RETIRED_SKILLS[@]}"; do
     name="${entry%%=*}" marker="${entry#*=}"
     for dir in "$CLAUDE_DIR/skills/$name" "$AGENTS_SKILLS_DIR/$name"; do
       if grep '^description:' "$dir/SKILL.md" 2>/dev/null | grep -qF -- "$marker"; then
+        real="$(cd "$dir" && pwd -P)"
+        case "$seen" in *$'\n'"$real"$'\n'*) continue ;; esac
+        seen+="$real"$'\n'
         echo "$dir"
       fi
     done

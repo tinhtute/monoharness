@@ -81,7 +81,7 @@ run --no-pull
 check "install: all rows ok" 0 "$RC" "$OUT" "✓ skill   foo" "✓ agent   bar" "✓ hook    pre-commit" "✓ cli     zharness version 9.9.9"
 trashed=1
 if [ ! -e "$CLAUDE_DIR/skills/mono-write" ] && [ ! -e "$AGENTS_SKILLS_DIR/mono-write" ] \
-  && [ "$(compgen -G "$STUB_TRASH/mono-write.*" | wc -l)" = 2 ]; then trashed=0; fi
+  && [ "$(compgen -G "$STUB_TRASH/mono-write.*" | wc -l | tr -d " ")" = 2 ]; then trashed=0; fi
 check "install: retired skill trashed from both dirs" 0 "$trashed" ""
 kept=1; [ -f "$CLAUDE_DIR/skills/mono/SKILL.md" ] && kept=0
 check "install: a same-name skill without the harness description is kept" 0 "$kept" ""
@@ -92,7 +92,7 @@ git clone -q --bare "$REPO" "$REPO.git"
 git -C "$REPO" remote add origin "$REPO.git"
 git -C "$REPO" fetch -q origin && git -C "$REPO" branch -q -u origin/master
 git clone -q "$REPO.git" "$REPO.work"
-sed -i 's|^  "mono-write=|  "old-x=Old harness skill"\n  "mono-write=|' "$REPO.work/scripts/reinstall-all.sh"
+perl -pi -e 's/^  "mono-write=/  "old-x=Old harness skill"\n  "mono-write=/' "$REPO.work/scripts/reinstall-all.sh"
 git -C "$REPO.work" -c user.name=t -c user.email=t@t commit -qam "retire old-x"
 git -C "$REPO.work" push -q origin master
 retired_skill "$CLAUDE_DIR/skills/old-x" "Old harness skill, now retired"
@@ -121,6 +121,15 @@ run --no-pull
 check "not on master: refused" 2 "$RC" "$OUT" "reinstall from master"
 run --bogus
 check "unknown flag: usage" 2 "$RC" "$OUT" "usage:"
+
+# 6. ~/.claude/skills symlinked to ~/.agents/skills: one retired dir, trashed once.
+new_repo
+rmdir "$CLAUDE_DIR/skills" && ln -s "$AGENTS_SKILLS_DIR" "$CLAUDE_DIR/skills"
+retired_skill "$AGENTS_SKILLS_DIR/mono-write" "Polish a research or learn draft (EN/VI)"
+run --no-pull
+check "symlinked skills dir: retired skill trashed once" 0 "$RC" "$OUT" "✓ skill   foo"
+gone=1; [ ! -e "$AGENTS_SKILLS_DIR/mono-write" ] && [ "$(compgen -G "$STUB_TRASH/mono-write.*" | wc -l | tr -d " ")" = 1 ] && gone=0
+check "symlinked skills dir: retired skill gone" 0 "$gone" ""
 
 echo "passed=$PASSED failed=$FAILED"
 [ "$FAILED" = 0 ]
