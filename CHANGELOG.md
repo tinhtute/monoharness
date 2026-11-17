@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- `ship.md` § Land: a needs-review PR now has a resume path. After the repository owner applies `owner-reviewed` and asks to merge in the conversation, the agent confirms the label and that the head still matches the `## Risk` SHA, waits for the `risk-verdict` run the label started, then merges as in the low-risk branch. The owner had to steer this by hand in 3 sessions.
+- `ship.md` § Land step 3 and the git skill's stacked-PR retarget use `gh api -X PATCH …/pulls/<n>` instead of `gh pr edit`, which fails on gh 2.46.0 (`Projects (classic) is being deprecated`). The body is read with `--template '{{.body}}'`, so a round trip keeps its exact bytes; `--jq .body` added a trailing newline on every edit.
 - Pre-commit guards: committing a merge no longer re-judges `## Validation` entries the other parent already committed. An entry byte-identical to one in a `MERGE_HEAD` parent's copy of the plan is old, so R8 stops rejecting its `judged_sha` as out of range; an entry written into the merge itself is still guarded. The PR and pre-push ranges start at the merge-base and already treated such entries as old; fixtures now cover them and the master push range. The hook reads the guard core from the installer on every run, so no reinstall is needed.
 - `test-risk-facts.sh`, `test-risk-verdict.sh` and `test-agent-models.sh` unset the caller's `GIT_*` environment, so re-running them as a proof from a git hook no longer creates branches, moves refs or flips `core.bare` in the calling repository.
 - `install-agents.sh` retires a `lead.md` only when it carries the old harness agent's description; a user's own `lead.md` is kept. CI covers both cases.
