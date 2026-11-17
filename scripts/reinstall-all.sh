@@ -40,15 +40,29 @@ esac
 
 cd "$REPO_DIR"
 
-# retired_dirs: installed directories that hold a retired harness skill.
+# retired_dirs: paths that hold a retired harness skill, one per line. A per-skill
+# symlink is listed before its target, and each real directory once (~/.claude/skills
+# itself is often a symlink to ~/.agents/skills), so trashing them in order never
+# misses or repeats one. A link's target is listed only when it sits directly in one
+# of the two skill dirs; a target elsewhere (a dev checkout) is never trashed.
 retired_dirs() {
-  local entry name marker dir
+  local entry name marker dir real root roots=$'\n' seen=$'\n'
+  for root in "$CLAUDE_DIR/skills" "$AGENTS_SKILLS_DIR"; do
+    root="$(cd "$root" 2>/dev/null && pwd -P)" && roots+="$root"$'\n'
+  done
   for entry in "${RETIRED_SKILLS[@]}"; do
     name="${entry%%=*}" marker="${entry#*=}"
     for dir in "$CLAUDE_DIR/skills/$name" "$AGENTS_SKILLS_DIR/$name"; do
-      if grep '^description:' "$dir/SKILL.md" 2>/dev/null | grep -qF -- "$marker"; then
+      grep '^description:' "$dir/SKILL.md" 2>/dev/null | grep -qF -- "$marker" || continue
+      real="$(cd "$dir" 2>/dev/null && pwd -P)" || real=""
+      if [ -L "$dir" ]; then
         echo "$dir"
+        case "$roots" in *$'\n'"$(dirname "$real")"$'\n'*) ;; *) continue ;; esac
       fi
+      [ -n "$real" ] || { echo "$dir"; continue; }
+      case "$seen" in *$'\n'"$real"$'\n'*) continue ;; esac
+      seen+="$real"$'\n'
+      if [ -L "$dir" ]; then echo "$real"; else echo "$dir"; fi
     done
   done
 }
@@ -78,9 +92,10 @@ if [ "$install" = 1 ]; then
     # The pull may have changed this script (a new retired skill); run the new copy.
     exec bash "$REPO_DIR/scripts/reinstall-all.sh" --no-pull
   fi
-  for dir in $(retired_dirs); do
-    step "retired skill trashed: $dir" trash "$dir"
-  done
+  retired="$(retired_dirs)" # listed in full before any trash changes what it sees
+  while IFS= read -r dir; do
+    [ -z "$dir" ] || step "retired skill trashed: $dir" trash "$dir"
+  done <<<"$retired"
   step "skills ($SKILLS_SOURCE)" npx -y skills add "$SKILLS_SOURCE" -a claude-code -g -y
   step "agents" env CLAUDE_DIR="$CLAUDE_DIR" bash scripts/install-agents.sh
   step "git hooks" bash scripts/install-git-hooks.sh --force
@@ -111,7 +126,9 @@ for src in agents/*.md; do
   else row 1 agent "$name" "differs or missing"; fi
 done
 
-for dir in $(retired_dirs); do row 1 retired "$dir" "still installed"; done
+while IFS= read -r dir; do
+  [ -z "$dir" ] || row 1 retired "$dir" "still installed"
+done <<<"$(retired_dirs)"
 
 hook="$(git rev-parse --path-format=absolute --git-path hooks)/pre-commit"
 if grep -q 'ZGUARD-CORE-BEGIN' "$hook" 2>/dev/null; then row 0 hook pre-commit
