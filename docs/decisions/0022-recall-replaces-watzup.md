@@ -12,14 +12,17 @@ The owner compared the harness skill names against pstack and asked for pstack's
 
 ## Decision
 
-Replace the `watzup` skill with `recall`, in two modes (`skills/stages/recall/references/recall.md:5`):
+Replace the `watzup` skill with `recall`, in three modes (`skills/stages/recall/references/recall.md:5`):
 
-- `recall state` runs watzup's four steps unchanged (`recall.md:18`–`:32`). `ship`, `retro` and `session-pickup` call it by name (`skills/poteto/playbooks/ship.md:22`, `retro.md:3`, `session-pickup.md:3`).
-- Full `recall [topic]` adds steps 5–8 (`recall.md:33`–`:36`). It mines the last 7 days of this repository's Claude Code transcripts through parallel read-only subagents and sweeps GitHub and every MCP source already connected in the session. It sends only topic terms to a source, never transcript text, and verifies every artifact with `git` and `gh`.
+- `recall state` runs watzup's four steps unchanged (`recall.md:19`–`:33`). `ship`, `retro` and `session-pickup` call it by name (`skills/poteto/playbooks/ship.md:22`, `retro.md:3`, `session-pickup.md:3`).
+- `recall [topic]`, the default, adds steps 5–8 at low cost. The main agent reads the newest 3 sessions of this repository's Claude Code transcripts and the last 5 merged PRs; it spawns no subagent and calls no MCP source.
+- `recall deep [topic]` runs the same steps over the last 7 days through parallel read-only subagents and sweeps GitHub and every MCP source already connected in the session. It sends only topic terms to a source, never transcript text.
 
-The owner chose each point (2026-11-19): replace rather than add beside `watzup`; a 7-day window with fan-out over ADR 0019's newest 3 sessions; MCP sources included; one PR without a plan.
+Both read only user and assistant text from a transcript, never tool results or injected skill lists, and verify every artifact with `git` and `gh`.
 
-From ADR 0019 these limits stand, because nobody overturned them. A transcript or source finding is a `lead (unverified)` until Git or GitHub confirms it, and it is never written to the plan, its Log or its Validation (`recall.md:14`). Secrets and tokens are redacted from the output. The repository stays the system of record (`AGENTS.md` Harness section).
+The owner chose each point (2026-11-19): replace rather than add beside `watzup`; a 7-day window with fan-out over ADR 0019's newest 3 sessions; MCP sources included; one PR without a plan. After the first `deep`-style run on 2026-11-19 spent three subagents on sessions whose only hits were injected skill lists, the owner made the light read the default and kept the sweep as `deep`.
+
+From ADR 0019 these limits stand, because nobody overturned them. A transcript or source finding is a `lead (unverified)` until Git or GitHub confirms it, and it is never written to the plan, its Log or its Validation (`recall.md:15`). Secrets and tokens are redacted from the output. The repository stays the system of record (`AGENTS.md` Harness section).
 
 Rejected:
 - Bare rename with the full sweep as the only mode. Every `ship` would then mine a week of transcripts to list commits since a tag.
@@ -31,7 +34,7 @@ Rejected:
 One skill answers "where did I leave off". Its cheap mode keeps the old cost for playbook steps. Cross-session decisions that never reached the repository can now be found, but only as labelled leads.
 
 Costs:
-- Full `recall` reads data outside the repository. It sends topic terms to connected third-party services, and spends several subagent runs per call.
+- `recall deep` reads data outside the repository. It sends topic terms to connected third-party services, and spends several subagent runs per call. The default reads only local transcripts and `gh`.
 - Consumer repositories keep a projected `WORKFLOW.md` that names `watzup` until a `zharness` release carries the new router (`cli/docs/embedded/WORKFLOW.md:20`).
 - Machines keep an installed `watzup` until `scripts/reinstall-all.sh` retires it (`RETIRED_SKILLS`).
 - `cli/src/installer/retirement.rs` keeps `watzup.md` in its fixed legacy-playbook inventory (ADR 0015). That entry names an old consumer playbook file, not the skill.

@@ -1,8 +1,8 @@
 ---
 name: recall
 version: "5.0.0"
-description: "Rebuild working context from Git, the plan, recent transcripts and connected sources into a cited brief; `recall state` is the quick Git-and-plan recap. Use for 'catch me up', 'where did I leave off'."
-argument-hint: "[state | <topic>] [window]"
+description: "Rebuild working context from Git, the plan, recent transcripts and merged PRs into a cited brief; `state` is Git and plan only, `deep` adds subagents and MCP sources. Use for 'where did I leave off'."
+argument-hint: "[state | deep] [<topic>] [window]"
 compatibility: Designed for Claude Code
 ---
 
