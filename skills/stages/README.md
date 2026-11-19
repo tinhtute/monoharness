@@ -1,12 +1,12 @@
 # Workflow Harness — Concept
 
-The lifecycle skill chain (`watzup, brainstorm, to-plan, work, check, git, handoff`; `git` lives in `tools/`) is a markdown-first lifecycle. The 6 spine skills are thin triggers that defer to references inside their installed skill directories. This doc locks the mental model.
+The lifecycle skill chain (`recall, brainstorm, to-plan, work, check, git, handoff`; `git` lives in `tools/`) is a markdown-first lifecycle. The 6 spine skills are thin triggers that defer to references inside their installed skill directories. This doc locks the mental model.
 
 ## 4-Layer Model
 
 - **harness** — gone as a runtime since v0.15. Markdown plus git is the system of record; the archive trail lives in the root CHANGELOG and git history (`git show 3bab3c0:docs/plans/completed/` for the pre-prune plans).
 - **workflows** — the lifecycle contract itself: `Intent → Plan → Trace → Proof → Handoff/Resume`. Tool-independent; describes what must happen, not how.
-- **skills** — the 10 `SKILL.md` files under `skills/stages/`. The 6 spine skills (`brainstorm`, `to-plan`, `work`, `check`, `handoff`, `watzup`) route to their own `references/{stage}.md`. Companions resolve within that skill; cross-stage transitions use host metadata and repository data paths use the consumer root. No binary sits between the skill and its references — `zharness` installs and updates the managed doc set and plays no part in running a stage.
+- **skills** — the 10 `SKILL.md` files under `skills/stages/`. The 6 spine skills (`brainstorm`, `to-plan`, `work`, `check`, `handoff`, `recall`) route to their own `references/{stage}.md`. Companions resolve within that skill; cross-stage transitions use host metadata and repository data paths use the consumer root. No binary sits between the skill and its references — `zharness` installs and updates the managed doc set and plays no part in running a stage.
 - **cli** — `zharness`, the Rust binary reduced to install / update / uninstall for the managed doc set. Lifecycle enforcement lives in repo scripts plus the pre-commit hook.
 
 ## Lifecycle
@@ -23,8 +23,8 @@ On the high-risk lane, `to-plan` writes the locked plan's Phases and Verificatio
 ### Proof — `check`
 `check` runs the automated gate, evaluates the required-proof matrix for the plan's lane (tiny/normal/high-risk), and appends a deterministic verdict with nested proof-command sub-bullets to the plan's Validation section; the pre-commit hook re-executes every cited proof itself at commit time and rejects false claims. Missing required proof always fails, naming the missing evidence.
 
-### Handoff/Resume — `handoff`, `watzup`
-`handoff` updates the plan's Current State and Next Action directly and, on final clean closure, records an `absorb:` line then moves the plan from `.monows/plans/active/{slug}.md` to `.monows/plans/completed/{slug}.md`. `watzup` renders a session-start recap from Git state plus the plan alone.
+### Handoff/Resume — `handoff`, `recall`
+`handoff` updates the plan's Current State and Next Action directly and, on final clean closure, records an `absorb:` line then moves the plan from `.monows/plans/active/{slug}.md` to `.monows/plans/completed/{slug}.md`. `recall` rebuilds working context: `recall state` renders a session-start recap from Git state plus the plan alone; full `recall` adds recent transcripts and connected sources as leads labeled unverified, never written to the plan (ADR 0022).
 
 `git`, `retro`, `hunt`, and `think` sit outside this spine — see mapping table below. `hunt` diagnoses a concrete symptom (and triages issue/PR queues); `think` reasons about a decision and writes nothing, handing a result worth keeping to `brainstorm lock`.
 
@@ -72,7 +72,7 @@ Defer to: {one line naming the skills this stage hands off to or resumes from}
 | `work` | Log (append-only) | skill reference + hand-edited markdown |
 | `check` | Validation (append-only): proofs, `requirements:` coverage, `rollback_point:` | skill reference + nested proof sub-bullets |
 | `handoff` | Current State and Next Action, phase closure | skill reference + absorb line + `git mv` on completion |
-| `watzup` | console recap | git + plan reads only |
+| `recall` | console recap | `state`: git + plan reads only; full: also transcripts and connected sources, leads never written to the plan |
 | `git` | no plan sections | enrichment optional, never blocking |
 | `retro` | no plan sections, except an experiment-mode `.monows/plans/active/harness-improvement-{slug}.md` | non-spine; logic `skills/stages/retro/references/retro.md`, digest `skills/stages/retro/scripts/session-digest.py`, guard mode `skills/stages/retro/references/encoding-invariants.md`, experiment mode `skills/stages/retro/references/harness-improvement.md`, recurrence and new skill/rule/script `skills/stages/retro/references/codify.md`; never blocking on a missing binary |
 | `hunt` | no plan sections | non-spine; loop and hypotheses in `skills/reason/hunt/SKILL.md`, fix/sweep `skills/reason/hunt/references/fix.md`, bisect/regression `skills/reason/hunt/references/bisect-regression.md`, triage mode `skills/reason/hunt/references/triage.md`; report-only unless a fix is requested |

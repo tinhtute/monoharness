@@ -1,6 +1,6 @@
 <svg width="960" height="1160" viewBox="0 0 960 1160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="diagram-title diagram-desc">
   <title id="diagram-title">The zharness-backed README workflow</title>
-  <desc id="diagram-desc">A top-to-bottom flowchart showing one-time setup, full, simple, and resume paths across brainstorm, to-plan, work, check, git, handoff, and watzup.</desc>
+  <desc id="diagram-desc">A top-to-bottom flowchart showing one-time setup, full, simple, and resume paths across brainstorm, to-plan, work, check, git, handoff, and recall.</desc>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
       <path d="M0 0 L8 4 L0 8 Z" fill="#4f5d75"/>
@@ -63,13 +63,13 @@
     <path data-arrow="work-to-check" class="primary-arrow" d="M480 592 V632"/>
     <path data-arrow="check-to-git" class="primary-arrow" d="M432 712 V744 H320 V784"/>
     <path data-arrow="check-to-handoff" class="primary-arrow" d="M528 712 V744 H640 V784"/>
-    <path data-arrow="handoff-to-watzup" class="route-arrow" d="M640 856 V912"/>
-    <path data-arrow="watzup-to-readiness-rail" class="route-arrow" d="M760 960 H888"/>
+    <path data-arrow="handoff-to-recall" class="route-arrow" d="M640 856 V912"/>
+    <path data-arrow="recall-to-readiness-rail" class="route-arrow" d="M760 960 H888"/>
     <line class="route-rail" x1="888" y1="432" x2="888" y2="960"/>
     <path data-arrow="readiness-to-to-plan" class="route-arrow" d="M888 432 H640"/>
     <path data-arrow="readiness-to-work" class="route-arrow" d="M888 552 H640"/>
     <path data-arrow="readiness-to-check" class="route-arrow" d="M888 672 H640"/>
-    <path data-arrow="watzup-to-git" class="route-arrow" d="M520 984 H160 V820 H200"/>
+    <path data-arrow="recall-to-git" class="route-arrow" d="M520 984 H160 V820 H200"/>
     <path data-arrow="work-simple-to-check" class="route-arrow" d="M152 592 V672 H320"/>
   </g>
 
@@ -160,10 +160,10 @@
     <text x="640" y="836" class="node-sublabel" text-anchor="middle">handoff entity + HANDOFF.md</text>
   </g>
 
-  <g data-node="watzup">
+  <g data-node="recall">
     <rect class="node-mask" x="520" y="912" width="240" height="96" rx="8"/>
     <rect class="node-soft" x="520" y="912" width="240" height="96" rx="8"/>
-    <text x="640" y="940" class="node-label" text-anchor="middle">watzup</text>
+    <text x="640" y="940" class="node-label" text-anchor="middle">recall</text>
     <text x="640" y="964" class="node-sublabel" text-anchor="middle">resume snapshot</text>
     <text x="640" y="988" class="node-note" text-anchor="middle">routes by readiness · never a gate</text>
   </g>

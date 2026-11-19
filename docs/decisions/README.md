@@ -28,9 +28,10 @@ Exception: the owner explicitly requested ADRs 0015, 0016, 0020 and 0021 before 
 | [0016](0016-lean-workflow-method-latitude.md) | Revise prompt-level method constraints; keep product and authority boundaries | Accepted decision; candidate pending B/C evaluation |
 | [0017](0017-no-project-verification-skill.md) | No project-verification skill; the evidenced gaps are executable and already gated | Accepted |
 | [0018](0018-opt-in-multi-model-review.md) | Multi-model review is an opt-in panel for `full` and high-risk checks | Accepted; policy only, tests pending |
-| [0019](0019-arena-and-transcript-recall.md) | Implementation arena and transcript recall: defer both, with limits fixed now | Accepted |
+| [0019](0019-arena-and-transcript-recall.md) | Implementation arena and transcript recall: defer both, with limits fixed now | Accepted; decision 2 superseded by [0022](0022-recall-replaces-watzup.md) |
 | [0020](0020-orchestrate-and-autopilot.md) | Port orchestrate and autopilot as `mono` playbooks; merges only through Land, owners force-push only their own branch | Accepted; implementation pending |
 | [0021](0021-consumer-verification-generator.md) | A consumer-repo verification generator is in scope; ADR 0017 covers only this repo's gates | Accepted decision; implementation pending (#292) |
+| [0022](0022-recall-replaces-watzup.md) | `recall` replaces `watzup`; transcript and source findings stay unverified leads | Accepted |
 
 ## Writing a new one
 

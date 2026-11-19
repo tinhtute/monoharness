@@ -12,4 +12,4 @@ Follow [references/handoff.md](references/handoff.md) (`.monows/WORKFLOW.md` IF 
 
 Resolve cross-stage transitions through the host's skill metadata; do not assume a shared installation parent. Resolve data paths from the consumer repository root. If a required skill or reference is unavailable, report the missing dependency and stop; retained legacy playbooks are not a fallback.
 
-Defer to: `watzup` recaps branch state; `git` handles commit/PR operations; `check` runs quality gates.
+Defer to: `recall` rebuilds working context; `git` handles commit/PR operations; `check` runs quality gates.

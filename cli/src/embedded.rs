@@ -559,8 +559,8 @@ mod tests {
                 ],
             },
             PlaybookContract {
-                name: "watzup recaps without writing",
-                path: "watzup/references/watzup.md",
+                name: "recall state recaps without writing",
+                path: "recall/references/recall.md",
                 required: &[
                     "a plan with `## Map` → also its frontier",
                     "Select the active plan by name",

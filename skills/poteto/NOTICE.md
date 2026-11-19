@@ -6,6 +6,8 @@
 
 `skills/reason/how` adapts the `how` skill from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, MIT, Copyright 2026 Lauren Tan); the recurrence rule in `skills/stages/retro/references/retro.md` step 3 and the session mining, confidence grades and draft rules in `skills/stages/retro/references/codify.md` adapt its `automate-me` skill (`ce649c0`, v0.15.42); the count thresholds and the artifact table there are ours.
 
+`skills/stages/recall` adapts the `recall` skill from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.44, `e58dd04`, MIT, Copyright 2026 Lauren Tan); its `state` mode, the transcript path and the `lead (unverified)` rule are ours.
+
 `playbooks/orchestrate.md` and `autopilot.md` adapt poteto-mode playbooks from [cursor/plugins `pstack/`](https://github.com/cursor/plugins/tree/main/pstack) (v0.15.36, `6b03002`, MIT, Copyright 2026 Lauren Tan).
 
 ## Names that differ from pstack
@@ -33,5 +35,5 @@ Kinds:
 | skill `how` | `how` | rewrite | the main agent explains; `scout`s explore only a complex question; theirs spawns an explainer every time | `b3f6075` 2026-11-13 |
 | agent `architect` | skill `architect` | homonym | ours challenges a design read-only in one sealed report; theirs sketches types, then implements | `1cace0a` 2026-11-13 |
 | skill `retro` | `reflect` | parallel | ours keeps a durable ledger and one gated fix; theirs keeps nothing | `5a25914` 2026-09-25 |
-| skill `watzup` | `ketchup`, `recall` | parallel | older name, kept | `ab26b38` 2026-05-02 |
+| skill `recall` | `recall` | rewrite | adapted from pstack 0.15.44 (`e58dd04`); adds `recall state`, the Git-and-plan recap that replaced `watzup`, reads Claude Code transcripts, and keeps transcript and source findings `lead (unverified)` until Git confirms them | `0f09ed7` 2026-11-19 |
 | skill `handoff` | playbook `pause-safely` | parallel | ours writes the plan's Current State; theirs writes a `wip:` commit and a `/tmp` note | `ab26b38` 2026-05-02 |

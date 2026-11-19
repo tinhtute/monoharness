@@ -26,6 +26,7 @@ SKILLS_SOURCE="${SKILLS_SOURCE:-git@github.com:tinhtute/monoharness.git}"
 RETIRED_SKILLS=( # "<name>=<start of its last description>"
   "mono=Entry router: match a task to one of"
   "mono-write=Polish a research or learn draft"
+  "watzup=Recap: read branch state"
 )
 LOG="$(mktemp)"
 trap 'rm -f "$LOG"' EXIT
