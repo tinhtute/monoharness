@@ -33,5 +33,5 @@ Kinds:
 | skill `how` | `how` | rewrite | the main agent explains; `scout`s explore only a complex question; theirs spawns an explainer every time | `b3f6075` 2026-11-13 |
 | agent `architect` | skill `architect` | homonym | ours challenges a design read-only in one sealed report; theirs sketches types, then implements | `1cace0a` 2026-11-13 |
 | skill `retro` | `reflect` | parallel | ours keeps a durable ledger and one gated fix; theirs keeps nothing | `5a25914` 2026-09-25 |
-| skill `watzup` | `ketchup`, `recall` | parallel | older name, kept | `ab26b38` 2026-05-02 |
+| skill `recall` | `recall` | rewrite | adapted from pstack 0.15.44 (`e58dd04`); adds `recall state`, the Git-and-plan recap that replaced `watzup`, reads Claude Code transcripts, and keeps transcript and source findings `lead (unverified)` until Git confirms them | `PENDING` 2026-11-19 |
 | skill `handoff` | playbook `pause-safely` | parallel | ours writes the plan's Current State; theirs writes a `wip:` commit and a `/tmp` note | `ab26b38` 2026-05-02 |

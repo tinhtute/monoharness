@@ -22,7 +22,7 @@ const STAGES: &[(&str, &[&str])] = &[
         ],
     ),
     ("handoff", &["handoff"]),
-    ("watzup", &["watzup"]),
+    ("recall", &["recall"]),
 ];
 
 fn install_fixture(root: &Path) -> HashMap<String, PathBuf> {

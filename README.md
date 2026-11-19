@@ -17,7 +17,7 @@ Copy the block into the consumer repository chat when you want the agent to
 install, refresh, or work with zharness.
 
 ```text
-Work in this git repository. Read https://github.com/tinhtute/monoharness/blob/master/README.md and, once they exist, this repo's AGENTS.md and .monows/WORKFLOW.md. If zharness is not on PATH or outdated, install/upgrade it with scripts/install-zharness.sh. If this repo has no .monows/WORKFLOW.md, run zharness install. Before upgrading, independently install the six workflow skills (brainstorm, to-plan, work, check, handoff, watzup) using the skills instructions below. If a required skill or reference is missing, report the dependency and stop workflow execution. If the repo is initialized or zharness install reports drifted files, run zharness update to refresh WORKFLOW and conservatively retire recorded legacy procedures (edited/unknown files and recovery data are retained; PROJECT.md is never overwritten, and an edited AGENTS.md block makes update refuse with a diff). Plans live only in .monows/plans/ — multi-session or complex work uses exactly one file at .monows/plans/active/{slug}.md, moved to .monows/plans/completed/ upon verified handoff. Small changes need no plan. zharness only manages the doc set (install/update/uninstall) — it does not run the lifecycle. Missing AGENTS.md: zharness install, do not invent the file. Claude Code reads CLAUDE.md, not AGENTS.md; if CLAUDE.md is missing, the consumer writes a thin file containing the line @AGENTS.md.
+Work in this git repository. Read https://github.com/tinhtute/monoharness/blob/master/README.md and, once they exist, this repo's AGENTS.md and .monows/WORKFLOW.md. If zharness is not on PATH or outdated, install/upgrade it with scripts/install-zharness.sh. If this repo has no .monows/WORKFLOW.md, run zharness install. Before upgrading, independently install the six workflow skills (brainstorm, to-plan, work, check, handoff, recall) using the skills instructions below. If a required skill or reference is missing, report the dependency and stop workflow execution. If the repo is initialized or zharness install reports drifted files, run zharness update to refresh WORKFLOW and conservatively retire recorded legacy procedures (edited/unknown files and recovery data are retained; PROJECT.md is never overwritten, and an edited AGENTS.md block makes update refuse with a diff). Plans live only in .monows/plans/ — multi-session or complex work uses exactly one file at .monows/plans/active/{slug}.md, moved to .monows/plans/completed/ upon verified handoff. Small changes need no plan. zharness only manages the doc set (install/update/uninstall) — it does not run the lifecycle. Missing AGENTS.md: zharness install, do not invent the file. Claude Code reads CLAUDE.md, not AGENTS.md; if CLAUDE.md is missing, the consumer writes a thin file containing the line @AGENTS.md.
 ```
 
 ## What it solves
@@ -103,10 +103,10 @@ its steps into a todo list, and calls the skill each step names.
 | research | read (search, fetch) → learn → technical-writing; notes only |
 | ambition | ambition (depth, altitude or range) → lint the rewrite → route on request |
 | babysit | `/loop` over review threads and CI until the PR is ready |
-| ship | watzup → security-review → check → land → changelog → tag → verify → rollback |
-| session-pickup | watzup → reconcile → route to the next playbook |
+| ship | recall state → security-review → check → land → changelog → tag → verify → rollback |
+| session-pickup | recall state → reconcile → route to the next playbook |
 | pause | safe boundary → handoff → `chore(wip)` commit; resume with session-pickup |
-| retro | watzup → retro → save approved lessons |
+| retro | recall state → retro → save approved lessons |
 
 A typo does not need a plan. A migration spanning sessions does: it gets one
 `.monows/plans/active/<plan>.md`, moved to `.monows/plans/completed/` after
@@ -177,7 +177,7 @@ removes managed files only; consumer-owned bytes are never deleted.
 
 ## Workflow skills and optional extensions
 
-Install **brainstorm, to-plan, work, check, handoff and watzup** independently
+Install **brainstorm, to-plan, work, check, handoff and recall** independently
 before upgrading to skill-owned procedures. Verify that the host exposes all six
 skills and can read their installed references. A missing dependency is unsupported
 for workflow execution; retained legacy files are not a fallback. Other skills

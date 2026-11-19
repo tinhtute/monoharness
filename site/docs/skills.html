@@ -49,7 +49,7 @@
       </div>
 
       <div class="strip reveal" style="margin: 28px 0;">
-        <div><b>Stages (7)</b><span>Core lifecycle: brainstorm, to-plan, work, check, handoff, watzup, plus gated retro. Router: mono.</span></div>
+        <div><b>Stages (7)</b><span>Core lifecycle: brainstorm, to-plan, work, check, handoff, recall, plus gated retro. Router: mono.</span></div>
         <div><b>Craft (2)</b><span>Precision tools: technical-writing, librarian.</span></div>
         <div><b>monoclaudian</b><span>General-purpose skills (full writing, diagrams, prompts, skill authoring, CLI design, monorepo) install from <a href="https://github.com/tinhtute/monoclaudian" target="_blank" rel="noopener">monoclaudian</a>.</span></div>
         <div><b>100% Markdown</b><span>Plain text instructions with progressive reference loading.</span></div>
@@ -133,15 +133,15 @@
 
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-            <h3 style="margin:0; font-family:var(--mono); font-size:16px;">watzup</h3>
+            <h3 style="margin:0; font-family:var(--mono); font-size:16px;">recall</h3>
             <span class="badge">workflow</span>
           </div>
           <p style="font-size:14px; color:var(--ink-soft); margin-bottom:14px;">
-            Recap session position: inspects branch state, committed and uncommitted changes, and active handoffs to recommend next actions.
+            Rebuild working context: <code>recall state</code> inspects branch state, changes and the active plan; full <code>recall</code> adds recent transcripts and connected sources, each lead labeled unverified until git or GitHub confirms it.
           </p>
           <div style="font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);">
-            <strong>Trigger:</strong> <code>/watzup</code><br>
-            <strong>Output:</strong> State summary and prioritized next steps
+            <strong>Trigger:</strong> <code>/recall</code><br>
+            <strong>Output:</strong> Capsule, tagged threads, recurring problems, one next move
           </div>
         </div>
 
@@ -250,7 +250,7 @@
         </div>
         <div class="spec-row">
           <div class="spec-idx">06</div>
-          <div class="spec-scene"><code>watzup</code></div>
+          <div class="spec-scene"><code>recall</code></div>
           <div class="spec-cell"><span class="badge">Workflow</span></div>
           <div class="spec-cell">Branch and handoff recap for immediate context recovery</div>
         </div>

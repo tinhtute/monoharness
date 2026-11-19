@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted 2026-10-24 on merge of the PR that resolves issue #157. Decisions: implementation arena deferred (no new capability); transcript recall deferred (limits fixed now so a later build is bounded).
+Accepted 2026-10-24 on merge of the PR that resolves issue #157. Decisions: implementation arena deferred (no new capability); transcript recall deferred (limits fixed now so a later build is bounded). Decision 2 superseded by [0022](0022-recall-replaces-watzup.md).
 
 ## Context
 
@@ -10,7 +10,7 @@ The retro backlog lists two candidates (`docs/research/2026-10-22-pstack-retro-5
 
 - `skills/reason/arena/SKILL.md` already exists. It is a design bakeoff: sub-agents build one artifact several ways, a rubric picks a base, and candidates live in scratch paths outside the repo (`SKILL.md:20`). It does not run implementation attempts in worktrees.
 - `work-swarm.md` already defines a **race**: N workers on one identical brief, a rule declared before spawning (`first pass`, `rank all` or `best-of`), one worktree each, and rejection of any report that does not name the tested source and its acceptance output (`work-swarm.md:8`, `:56`). The missing piece is a tie-break for `best-of` on implementation attempts.
-- Recall: `watzup` is read-only over Git and the active plan (`skills/stages/watzup/references/watzup.md`). `retro` already reads transcripts through `skills/stages/retro/scripts/session-digest.py` (`:6`). The lost-decision failure class exists in the log taxonomy (`work-full.md:21`), but the repository holds no recorded instance of it.
+- Recall: `watzup` is read-only over Git and the active plan (its reference became `recall state` in `skills/stages/recall/references/recall.md`, ADR 0022). `retro` already reads transcripts through `skills/stages/retro/scripts/session-digest.py` (`:6`). The lost-decision failure class exists in the log taxonomy (`work-full.md:21`), but the repository holds no recorded instance of it.
 
 ## Decision
 
@@ -37,4 +37,4 @@ No code, flag or skill ships, so nothing here changes behavior. The cost of defe
 
 ## Authority
 
-`docs/research/2026-10-22-pstack-retro-5.md`; `skills/reason/arena/SKILL.md:20`; `skills/stages/work/references/work-swarm.md:8`, `:56`, `:67`; `skills/stages/work/references/work-full.md:21`; `skills/stages/watzup/references/watzup.md`; `skills/stages/retro/scripts/session-digest.py:6`; `AGENTS.md` Harness section; issue #157.
+`docs/research/2026-10-22-pstack-retro-5.md`; `skills/reason/arena/SKILL.md:20`; `skills/stages/work/references/work-swarm.md:8`, `:56`, `:67`; `skills/stages/work/references/work-full.md:21`; `skills/stages/recall/references/recall.md` (was `watzup`); `skills/stages/retro/scripts/session-digest.py:6`; `AGENTS.md` Harness section; issue #157.

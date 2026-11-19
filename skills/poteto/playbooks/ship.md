@@ -19,7 +19,7 @@ In the steps below, "bottom of the stack" and "contiguous run" collapse to the s
 
 ## Steps
 
-1. `watzup` — list commits since the last published tag (the tag is the baseline, not a local version file); verdict release / skip, bump patch (fixes) / minor (feat) / major (breaking), and the key risk in one sentence.
+1. `recall state` — list commits since the last published tag (the tag is the baseline, not a local version file); verdict release / skip, bump patch (fixes) / minor (feat) / major (breaking), and the key risk in one sentence.
 2. `security-review` (Claude Code built-in) — the diff since that tag; a high-severity finding blocks the release until fixed or explicitly waived by the owner.
 3. `check full` — per PR, bottom of the stack first: record its verdict with the head SHA it covers. Also check every shipped surface: CLI `--help` and version output, install path, migrations, config defaults.
 4. Land only the contiguous verified run from the bottom: stop at the first PR without a pass; a verified PR above it waits.

@@ -10,7 +10,7 @@
 | Reference-copy bridge | Skill references available; existing WORKFLOW still routes to projections | Same old inventory and bytes; safe to pause here |
 | Completed transition | Six installed workflow skills and their selected references | WORKFLOW, AGENTS block, PROJECT scaffold; conservative legacy retirement |
 
-Install **brainstorm, to-plan, work, check, handoff and watzup** independently using the [existing skills distribution instructions](../../../README.md). Verify the host exposes each skill's metadata and reads references from its installed directory. Binary installation does not install skills. A host without this dependency set cannot execute the workflow; report the missing dependency rather than reading a leftover playbook or installing skills implicitly.
+Install **brainstorm, to-plan, work, check, handoff and recall** independently using the [existing skills distribution instructions](../../../README.md). Verify the host exposes each skill's metadata and reads references from its installed directory. Binary installation does not install skills. A host without this dependency set cannot execute the workflow; report the missing dependency rather than reading a leftover playbook or installing skills implicitly.
 
 References resolve companions from their own skill directory and consumer data from the consumer root. Cross-stage routing uses host metadata, without assuming all skills share an installation parent. Migration preserves existing stage behavior: normal work remains Goal plus `main`, skips `to-plan`, and has one independent final check.
 
@@ -34,7 +34,7 @@ Canonical skills do not read retained old instructions. A leftover file is prese
 
 Installer fixtures must cover M01–M11, including metadata after repeated update/uninstall, malformed ownership, original restoration, partial failure and symlinks. Prepare two consumers from a pinned previous released binary: one fresh install with later edits/unrelated content, and one with a preexisting playbook whose original is demonstrably captured.
 
-Separately install the candidate skills outside the source checkout. Record real host traces proving companion and cross-stage resolution, consumer-root paths and no reads of retained old instructions (M12–M14). Execute bounded behavior against an existing test; interrupt normal durable work after one verified requirement, then resume in a fresh session through watzup/work/check/handoff. Missing authenticated runtime or trace evidence is blocked, not passed.
+Separately install the candidate skills outside the source checkout. Record real host traces proving companion and cross-stage resolution, consumer-root paths and no reads of retained old instructions (M12–M14). Execute bounded behavior against an existing test; interrupt normal durable work after one verified requirement, then resume in a fresh session through recall/work/check/handoff. Missing authenticated runtime or trace evidence is blocked, not passed.
 
 Run Rust format/lint/tests, the musl binary-size gate, hook fixtures and doc-link checks. Independent final review must examine requirements, consumer artifacts and recovery, not just green command exits. Migration makes no claim about model quality or token savings.
 
