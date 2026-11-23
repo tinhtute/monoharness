@@ -51,7 +51,7 @@ lane: high-risk
     - T1 write `pr-state.sh` and its row, error-row and usage cases against a fake `gh` on `PATH` (owner: `engineer`, writes `skills/poteto/scripts/pr-state.sh`, `scripts/ci/test-skill-scripts.sh`, `scripts/ci/fixtures/skill-scripts/` only) — output: the script, an executable fake `gh` at `scripts/ci/fixtures/skill-scripts/pr-state-bin/gh` that answers PRs 1 and 2 and fails on PR 3, and three `expect "pr-state` cases — check: `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — stop_if: an existing case breaks
   - phase check: `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/validate-skills.sh`
 - phase_slug: `notes`
-  status: in-progress
+  status: checked
   - goal: R2, R3, R4, R5 | depends_on: tooling
   - surfaces: recall.md, work-swarm.md, codify.md, orchestrate.md, autopilot.md, `cli/src/embedded.rs`, `docs/research/2026-11-23-code-mode-adoption.md` | avoided: `agents/*.md`, wayfinder.md, check.md, swarm.md, work-full.md, check-risk.md, check-durable.md, `cli/docs/embedded/WORKFLOW.md`
   - escalate_when: a note would change what a step decides rather than how it gathers; a note needs to touch a pinned phrase; a procedure misbehaves in its proof session; a PR from this plan is ready to merge before the monoclaudian guard plan's PR merges
@@ -100,6 +100,7 @@ lane: high-risk
 - 2026-11-23T10:16:33Z — notes/T5 — decision — three of five R5 sessions ran in this session and are recorded in the note (work-swarm.md:15, :67, pr-state.sh on PRs 302 and 301), ids in the private memory file; recall deep and retro codify wait for the owner (T5 owner: Lead with the owner)
 
 - 2026-11-23T12:16:37Z — notes/T5 — decision — recall deep and retro codify ran in Code Mode in a Lead session with the owner (installed skills were the master copies, so the branch's notes were applied by hand); their two `- session:` lines are in note § 8, which makes 5 of 5; no session ids were written: no private memory file for them was found, so where they go waits for the owner
+- 2026-11-23T12:29:01Z — notes — decision — correction to the notes/T5 decision at 10:16:33Z: no private memory file holds the session ids (none exists in this project's memory directory); the ids are recorded nowhere, and where they go waits for the owner (notes gate request 3)
 ## Validation
 - 2026-11-23T10:12:17Z — phase `tooling` — verdict: APPROVE_WITH_REQUESTS — mode: gate
   - `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — rc=0; 3 pr-state expect cases; 52 passed, 0 failed
@@ -120,9 +121,30 @@ lane: high-risk
 - 2026-11-23T10:20:37Z — notes — decision — Code Mode fact added to note § 2: the named tooling verifier returned `teammate_spawned` and its report came as a message to the lead, not a task notification; the Lead read it from the agent transcript; later verifiers are spawned without `name`
 - 2026-11-23T10:20:37Z — notes — decision — T6 is an unplanned task from tooling request 1; it touches tooling test surfaces after the phase was checked and sits outside the notes surfaces; request 2 (parallelism unpinned) stays an accepted proof gap, taken by the Lead without the owner
 
+- 2026-11-23T12:27:28Z — phase `notes` — verdict: APPROVE_WITH_REQUESTS — mode: full
+  - `cd cli && cargo test one_plan_playbook_contract` — rc=0; embedded::tests::one_plan_playbook_contract ok; 1 passed, 86 filtered out
+  - `bash scripts/ci/validate-skills.sh && cd cli && cargo test --test skill_reference_resolution` — rc=0; 20 skill(s) valid; 2 passed, 0 failed
+  - `test "$(grep -cE '^- session: [0-9]{4}-[0-9]{2}-[0-9]{2} claude [0-9]+\.[0-9]+\.[0-9]+ ' docs/research/2026-11-23-code-mode-adoption.md)" -ge 5` — rc=0; 5 session lines in note § 8
+  - `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — rc=0; 52 passed, 0 failed (6 pr-state checks ok)
+  - `grep -q '](../scripts/pr-state.sh)' skills/poteto/playbooks/orchestrate.md && grep -q '](../scripts/pr-state.sh)' skills/poteto/playbooks/autopilot.md && bash scripts/ci/validate-skills.sh` — rc=0; 20 skill(s) valid
+  - `awk '/On Claude Code in Code Mode/{n++}END{exit !(n>=4)}' cli/src/embedded.rs && cd cli && cargo test` — rc=0; 87 lib tests passed, integration suites 2, 3 and 2 passed
+  - `awk '/On Claude Code in Code Mode/ && /(\140(scout|test-runner|verifier|worker|engineer|architect)\140|spawn|launch|dispatch)/{n++}END{exit n>0}' $(find skills -name '*.md') && test "$(awk '/^## Fan out/,/^## Aggregate/{if(/Code Mode/)n++}END{print n+0}' skills/stages/work/references/work-swarm.md)" = 0` — rc=0
+  - `test "$(grep -cE '^- session: [0-9]{4}-[0-9]{2}-[0-9]{2} claude [0-9]+\.[0-9]+\.[0-9]+ ' docs/research/2026-11-23-code-mode-adoption.md)" -ge 5 && bash scripts/ci/verify-doc-links.sh` — rc=0; doc links OK (0 findings)
+  - `cd cli && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` — rc=0
+  - `PATH="$PWD/scripts/ci/fixtures/skill-scripts/pr-state-bin:$PATH" bash skills/poteto/scripts/pr-state.sh 1 2` — rc=0; rows "1 OPEN 1111… 4 1 1 2026-11-19T16:07:50Z" and "2 MERGED 2222… 4 2 2 2026-11-20T09:05:00Z"
+  - `PATH="$PWD/scripts/ci/fixtures/skill-scripts/pr-state-bin:$PATH" bash skills/poteto/scripts/pr-state.sh 1 3; test $? -eq 1` — rc=0 (script exit 1); PR 1 row kept, then "3 ERROR GraphQL: Could not resolve to a PullRequest with the number of 3."
+  - scope: drift — T6 changed scripts/ci/test-skill-scripts.sh and the fake gh (tooling surfaces, an always-review path) after tooling was checked, logged as unplanned at plan:121; everything else is inside the notes surfaces; avoided surfaces untouched; no existing PlaybookContract pin removed; also rc=0 and not re-run as proofs: test-skill-scripts plus test-risk-facts plus test-panel-merge, test-guards (195 passed), test-pr-guards plus pr-guards.sh origin/master HEAD (8 commits), test-weakening.sh origin/master HEAD, test-agent-models, verify-doc-links; skipped: the musl size gate (plan Log baseline rc=101); live exercise pr-state.sh 302 301 gave 13/0/0 each, matching gh pr checks 302 (13 pass)
+  - proof_classes: output, unit, integration
+  - requirements: R2 met (both greps plus validate-skills; orchestrate.md:11, :14 and autopilot.md:23 link pr-state.sh, still on /loop) | R3 met (4 lines at recall.md:41, work-swarm.md:15, work-swarm.md:67, codify.md:20-22; 8 new pins plus a new codify contract; diff removes no pin; cargo test passes) | R4 met (awk rc=0; Fan out count 0; read as text, no note makes a script launch an agent, though codify.md:22 names an unbackticked scout, request 1) | R5 met on acceptance (5 session lines, the pending tick line in § 9, sources cited, doc links OK; session ids are not in the repo and no private memory file holding them was found, request 3) | success_signal met except its "no Code Mode line names an agent" clause, which R3's own "scouts briefed" text contradicts at codify.md:22 (request 1)
+  - rollback_point: 9829b89
+  - requests: 1. skills/stages/retro/references/codify.md:20-22 — "brief its scout with that path" sits on a wrapped line that R4's line-scoped awk never reads, and it names an agent against the success_signal; reword so the Lead's existing step-17 dispatch carries the path, and record the R3/success_signal wording conflict in the Log. 2. .monows/plans/active/code-mode.md:117-121 — five notes Log decision entries sit under ## Validation, not ## Log; they are committed, so append-only forbids moving them now; keep later entries under ## Log and fix this at closing compaction. 3. .monows/plans/active/code-mode.md:100 — says the session ids are "in the private memory file", but :102 says no such file was found and none exists in the project memory directory I checked; append a correcting Log decision and settle where the ids go with the owner. 4. .monows/plans/active/code-mode.md:127-128 — open_items and exact_next_action still list the T5 sessions as pending; rewrite them on the state sync. 5. skills/stages/recall/references/recall.md:41 — the returned matching regions are raw transcript text, so "never enters context" is wrong, and the note does not say whether the deep fan-out over more than two matching sessions still runs once the regions are already in the main context.
+  - judge: independent
+  - judge_model: claude-opus-5-5
+  - judged_sha: 4e9a726e96c8d6b93ddd83ed102d9bd6e4b9d305
+
 ## Current State and Next Action
 - active_phase: notes
-- lifecycle_status: in-progress
-- blockers: none for work; merge waits on the monoclaudian guard plan's PR (constraints), and that plan is not written yet
-- open_items: T5 recall deep and retro codify Code Mode sessions (owner); the pending tick line in note § 9; the phase notes gate, then the final `check full` (independent)
-- exact_next_action: with the owner, run `recall deep` and `retro codify` in Code Mode, add their two `- session:` lines, then hand the notes gate and `check full` to an independent verifier
+- lifecycle_status: checked
+- blockers: merge waits on the monoclaudian guard plan's PR (constraints), and that plan is not written yet
+- open_items: notes gate requests 1 (codify.md:20-22 names a scout), 3 (where the session ids go, owner) and 5 (recall.md:41 "never enters context"); request 2 at closing compaction; the pending tick line in note § 9
+- exact_next_action: the owner decides requests 1, 3 and 5 (1 and 5 reword pinned lines, so a re-check follows); write the monoclaudian guard plan; then the closing `handoff`
