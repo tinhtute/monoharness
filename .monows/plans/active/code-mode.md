@@ -42,7 +42,7 @@ lane: high-risk
 - recovery: each phase is one revertable commit set; reverting `notes` leaves `pr-state.sh` unused but harmless; stop and ask the owner on any `escalate_when`
 - seams: `PlaybookContract` in `cli/src/embedded.rs`; `scripts/ci/test-skill-scripts.sh` fixture cases; `validate-skills.sh`; `verify-doc-links.sh` (all existing)
 - phase_slug: `tooling`
-  status: planned
+  status: checked
   - goal: R1 | depends_on: none
   - surfaces: `skills/poteto/scripts/pr-state.sh`, `scripts/ci/test-skill-scripts.sh`, `scripts/ci/fixtures/skill-scripts/` | avoided: playbooks, stage references, `cli/`
   - escalate_when: the test needs the network, or `gh pr view --json` cannot return the check rollup in one call
@@ -51,7 +51,7 @@ lane: high-risk
     - T1 write `pr-state.sh` and its row, error-row and usage cases against a fake `gh` on `PATH` (owner: `engineer`, writes `skills/poteto/scripts/pr-state.sh`, `scripts/ci/test-skill-scripts.sh`, `scripts/ci/fixtures/skill-scripts/` only) — output: the script, an executable fake `gh` at `scripts/ci/fixtures/skill-scripts/pr-state-bin/gh` that answers PRs 1 and 2 and fails on PR 3, and three `expect "pr-state` cases — check: `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — stop_if: an existing case breaks
   - phase check: `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/validate-skills.sh`
 - phase_slug: `notes`
-  status: planned
+  status: in-progress
   - goal: R2, R3, R4, R5 | depends_on: tooling
   - surfaces: recall.md, work-swarm.md, codify.md, orchestrate.md, autopilot.md, `cli/src/embedded.rs`, `docs/research/2026-11-23-code-mode-adoption.md` | avoided: `agents/*.md`, wayfinder.md, check.md, swarm.md, work-full.md, check-risk.md, check-durable.md, `cli/docs/embedded/WORKFLOW.md`
   - escalate_when: a note would change what a step decides rather than how it gathers; a note needs to touch a pinned phrase; a procedure misbehaves in its proof session; a PR from this plan is ready to merge before the monoclaudian guard plan's PR merges
@@ -69,12 +69,59 @@ lane: high-risk
 - 2026-11-23 decision: `behavioral-evals` parked to `.monows/plans/parked/` by the owner so this map can hold the one active slot (user 2026-11-23)
 - 2026-11-23 decision: lane `normal` → `high-risk`; Q10 kept to `scout`, `test-runner` and `verifier`, so recall.md:42's MCP subagent and wayfinder's non-scout research agents keep their spawn path; the check seam is `PlaybookContract` pins plus `test-skill-scripts.sh`, no new `scripts/ci` checker (user 2026-11-23)
 - 2026-11-23 decision: verifier review (REQUEST_CHANGES, 13 findings) and the owner's answers narrowed the plan to four notes plus `pr-state.sh`, no note launches an agent, proof runs here now with the full tick recorded later, the guard plan blocks merge only, and Q4 specifics stay private (user 2026-11-23)
+- 2026-11-23T10:01:58Z — tooling — start — phase tooling started from 0a98f78 on branch docs/code-mode-plan; swarm playbook, owner directive "swarm all agents to work full" (user 2026-11-23)
+- 2026-11-23T10:01:58Z — tooling — decision — escalate_when "gh pr view --json cannot return the check rollup in one call" evaluated: not matched; `gh pr view 302 --json number,state,headRefOid,statusCheckRollup,updatedAt` returns every check run with status and conclusion in one call; the test needs no network (fake `gh` on PATH)
+- 2026-11-23T10:01:58Z — tooling — decision — notes/T2 dispatched in its own worktree alongside tooling/T1 on the owner's swarm directive: disjoint write sets, and T2 does not use pr-state.sh; phase notes stays planned and T2 stays unmerged until the tooling gate passes; T3 and T4 keep wave 2 (T3 links pr-state.sh, and wave 2 is the work-swarm R5 proof)
+- 2026-11-23T10:01:58Z — tooling — decision — the output proof adds the check-exercise failure case: PR 3 (the fake `gh` fails) must print an error row and exit 1 while PR 1 still prints its row
+- 2026-11-23T10:02:59Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a cd cli && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test rc=0
+- 2026-11-23T10:02:59Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a cd cli && cargo build --release --target x86_64-unknown-linux-musl && test "$(wc -c < target/x86_64-unknown-linux-musl/release/zharness)" -le 1850000 rc=101
+- 2026-11-23T10:02:59Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a bash scripts/ci/test-agent-models.sh rc=0
+- 2026-11-23T10:03:00Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a bash scripts/ci/test-install-zharness.sh && bash scripts/ci/test-reinstall-all.sh rc=0
+- 2026-11-23T10:03:27Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a bash scripts/ci/test-guards.sh rc=0
+- 2026-11-23T10:03:30Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a bash scripts/ci/test-pr-guards.sh && bash scripts/ci/pr-guards.sh origin/master HEAD rc=0
+- 2026-11-23T10:03:35Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a bash scripts/ci/verify-doc-links.sh rc=0
+- 2026-11-23T10:03:36Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a bash scripts/ci/validate-skills.sh rc=0
+- 2026-11-23T10:03:39Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/test-risk-facts.sh && python3 -I scripts/ci/test-panel-merge.py rc=0
+- 2026-11-23T10:03:39Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a python3 -I -B evals/risk-judge/test_report.py rc=0
+- 2026-11-23T10:03:39Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a bash scripts/ci/test-weakening.sh origin/master HEAD rc=0
+- 2026-11-23T10:03:40Z — tooling — decision — baseline: 0a98f78239f654b09c24dcabacbd6cd78f26539a bash scripts/ci/test-risk-verdict.sh rc=0
+- 2026-11-23T10:08:22Z — tooling/T1 — done — engineer (opus) on branch worktree-agent-aa52edba67dd8fef1, commit 9e94d31, fast-forwarded into docs/code-mode-plan; tested source HEAD 9e94d31 plus the plan-only dirty diff (sha256 3f287ab42f3c); red first: the three `expect "pr-state` cases failed rc=127 before the script existed (46 passed, 6 failed); green: `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` 52 passed rc=0, `bash scripts/ci/validate-skills.sh` rc=0, fake-gh output proof `1 2` rc=0 and `1 3` rc=1 with an ERROR row; changed: skills/poteto/scripts/pr-state.sh (100644), scripts/ci/test-skill-scripts.sh, scripts/ci/fixtures/skill-scripts/pr-state-bin/gh (100755); live run on PRs 302 and 301 gives 13 pass each, matching `gh pr checks 302` (13 pass); stop_if: not matched
+- 2026-11-23T10:08:22Z — tooling — decision — repeated checks count once, by the latest startedAt per workflow and check name (what `gh pr checks` shows); fixtures PR 1 and 2 pin it (engineer's design choice, header of pr-state.sh)
+- 2026-11-23T10:08:22Z — tooling — decision — skip: supervisor scout after the wave digest; its one signal is `repeat tool=Poll count=4`, the Lead waiting on two background agents, not a loop
+- 2026-11-23T10:08:22Z — notes/T2 — decision — engineer (opus) reported PASS on worktree-agent-afbf280ad2b3c03e8 commit 60b16df; the Lead re-ran its acceptance in that tree (R3 awk plus one_plan_playbook_contract ok, R4 awk rc=0, Fan out count 0, embedded.rs diff has 0 removed lines, cargo test 87 lib tests passed); held unmerged until the tooling gate passes
+- 2026-11-23T10:14:30Z — tooling — decision — gate verdict APPROVE_WITH_REQUESTS from an independent verifier (claude-opus-5-5, advisorModel fable) at 9e94d31; phase tooling set to checked; request 1 (a first-in-array counter passes the suite) goes to wave 2 as notes/T6, scope scripts/ci/test-skill-scripts.sh and the fake gh only; request 2 (parallelism not pinned) is accepted as a proof gap: a timing case would be flaky under CI load, and the judge observed 2.07 s against 4 s sequential
+- 2026-11-23T10:14:30Z — notes — start — phase notes started at 31c802d; T2 merged from worktree-agent-afbf280ad2b3c03e8 (60b16df) as 31c802d
+- 2026-11-23T10:14:30Z — notes/T2 — done — engineer (opus), branch worktree-agent-afbf280ad2b3c03e8, commit 60b16df, merged as 31c802d; red first: `cd cli && cargo test one_plan_playbook_contract` failed on the missing work-swarm phrase before the lines existed; on the combined tree 31c802d: R3 awk rc=0, R4 awk rc=0, Fan out count 0, `bash scripts/ci/test-skill-scripts.sh` 52 passed, `cd cli && cargo test` 87 lib tests passed; changed: recall.md, work-swarm.md, codify.md, cli/src/embedded.rs (6 new pins, a new codify contract, no removed lines); stop_if: not matched
+- 2026-11-23T10:14:30Z — notes — decision — work-swarm.md Separate step 1 ran in Code Mode for wave 2 (T3, T4, T6) as one script: one file in two sets, scripts/ci/test-guards.sh (it cites autopilot.md and test-skill-scripts.sh in comments); no task edits it, so it is held for the Lead and named out of scope in both briefs
+- 2026-11-23T10:16:33Z — notes/T3 — done — worker (sonnet), branch notes-t3-pr-state, commit 11922eb, merged as 989da3b; check `grep -q '](../scripts/pr-state.sh)'` on orchestrate.md and autopilot.md rc=0, validate-skills and verify-doc-links rc=0; changed orchestrate.md lines 11 and 14 (both gh mentions in the Runtime rule) and autopilot.md step 5; no red run (docs-only, the grep failed on the unedited files by construction); stop_if: not matched
+- 2026-11-23T10:16:33Z — notes/T6 — done — worker (sonnet), branch worktree-agent-ab34dd2c91520b30c, commit ac35ac2, merged as 1decea7; the gate's request 1: PR 1 in the fake gh gains an older-first rerun pair, counts 3 1 1 → 4 1 1; red: first-in-array and last-in-array mutants each fail the suite (51 passed, 1 failed), the Lead re-ran the first-in-array mutant (rc=1); green 52 passed; test-weakening rc=0; stop_if: not matched
+- 2026-11-23T10:16:33Z — notes/T4 — done — worker (sonnet), branch docs/code-mode-t4, commit 9c3a478, merged as ddbb71f; check `bash scripts/ci/verify-doc-links.sh` rc=0; no session lines, every URL from the Map's evidence; the Lead's privacy grep found one hit, the public 2.1.329 `onFailure` fact from Q1's docs, not a Q4 specific; stop_if: not matched
+- 2026-11-23T10:16:33Z — notes — decision — work-swarm.md Aggregate step 2 ran in Code Mode for both waves as one script each; first merge attempt used the worktree branch names for T3 and T4, which the workers had replaced with their own branches, so `git merge` reported up to date; the Lead read each worktree's current branch and merged those; combined tree ddbb71f: every phase-check command rc=0 except the R5 session count (3 of 5 lines, T5 pending)
+- 2026-11-23T10:16:33Z — notes/T5 — decision — three of five R5 sessions ran in this session and are recorded in the note (work-swarm.md:15, :67, pr-state.sh on PRs 302 and 301), ids in the private memory file; recall deep and retro codify wait for the owner (T5 owner: Lead with the owner)
 
 ## Validation
+- 2026-11-23T10:12:17Z — phase `tooling` — verdict: APPROVE_WITH_REQUESTS — mode: gate
+  - `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — rc=0; 3 pr-state expect cases; 52 passed, 0 failed
+  - `bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/validate-skills.sh` — rc=0; 52 passed, 0 failed; 20 skill(s) valid
+  - `PATH="$PWD/scripts/ci/fixtures/skill-scripts/pr-state-bin:$PATH" bash skills/poteto/scripts/pr-state.sh 1 2` — rc=0; rows "1 OPEN 1111… 3 1 1 2026-11-19T16:07:50Z" and "2 MERGED 2222… 4 2 2 2026-11-20T09:05:00Z", in argument order
+  - `PATH="$PWD/scripts/ci/fixtures/skill-scripts/pr-state-bin:$PATH" bash skills/poteto/scripts/pr-state.sh 1 3; test $? -eq 1` — rc=0 (script exit 1); PR 1 row kept, then "3 ERROR GraphQL: Could not resolve to a PullRequest with the number of 3."
+  - scope: on target — the diff touches only skills/poteto/scripts/pr-state.sh, scripts/ci/test-skill-scripts.sh and scripts/ci/fixtures/skill-scripts/pr-state-bin/gh; shellcheck clean; test-weakening.sh origin/master HEAD passes; judge mutation run: 7 of 9 mutants killed (first-in-array and sequential survive, requests 1-2)
+  - proof_classes: output, unit, integration
+  - requirements: R1 met (unit and integration proofs plus the output proof and its failure case; parallelism observed by the judge, 3 PRs at 2.07 s against 4 s sequential; live run on PRs 302 and 301 matches gh pr checks, 13 pass each)
+  - rollback_point: 0a98f78
+  - requests: 1. scripts/ci/fixtures/skill-scripts/pr-state-bin/gh:16-18 lists the newer rerun first, so a first-in-array counter passes the suite but gives 12/1/0 on the real PR 302 payload; add a rerun pair in older-first order checked at scripts/ci/test-skill-scripts.sh:190. 2. skills/poteto/scripts/pr-state.sh:40 parallelism is not pinned by any test (removing the & still passes); add a case or accept it as a proof gap.
+  - judge: independent
+  - judge_model: claude-opus-5-5
+  - judged_sha: 9e94d31b064d859d89061b5d308be35ef97a5d51
+- 2026-11-23T10:20:37Z — notes — decision — escalate_when evaluated, none matched: (1) "changes what a step decides": T3 swaps `gh pr view` and `gh pr checks` for pr-state.sh, whose rows carry state, head SHA and the check rollup, the inputs the tick's rules name (a verdict per head SHA, CI red or green); liveness still reads `gh`; per-check names and review state are not in the rows, so a FAIL count sends the Lead to `gh pr checks` as before; (2) pinned phrase: no pin removed, `cargo test` passes at ddbb71f; (3) misbehaving procedure: none; the merge-branch slip was the Lead's integration step, not a note's procedure; (4) merge before the guard plan: no PR is open
+- 2026-11-23T10:20:37Z — notes — decision — skip: work-swarm.md Separate step 1 for wave 1 (T1, T2); it ran before the note existed, and the plan's tasks already fixed disjoint write sets
+- 2026-11-23T10:20:37Z — notes — decision — skip: supervisor scout after the wave 2 digest (`--signals --since 2026-11-23T10:14:30Z`, rc=0); its signals are a zoxide shell warning, `repeat tool=Poll count=12` (waiting on agents), `date` x3 for Log timestamps and plan Read x3 after a context compaction; none is a loop
+- 2026-11-23T10:20:37Z — notes — decision — Code Mode fact added to note § 2: the named tooling verifier returned `teammate_spawned` and its report came as a message to the lead, not a task notification; the Lead read it from the agent transcript; later verifiers are spawned without `name`
+- 2026-11-23T10:20:37Z — notes — decision — T6 is an unplanned task from tooling request 1; it touches tooling test surfaces after the phase was checked and sits outside the notes surfaces; request 2 (parallelism unpinned) stays an accepted proof gap, taken by the Lead without the owner
 
 ## Current State and Next Action
-- active_phase: none
-- lifecycle_status: planned
+- active_phase: notes
+- lifecycle_status: in-progress
 - blockers: none for work; merge waits on the monoclaudian guard plan's PR (constraints), and that plan is not written yet
-- open_items: none
-- exact_next_action: work full phase tooling
+- open_items: T5 recall deep and retro codify Code Mode sessions (owner); the pending tick line in note § 9; the phase notes gate, then the final `check full` (independent)
+- exact_next_action: with the owner, run `recall deep` and `retro codify` in Code Mode, add their two `- session:` lines, then hand the notes gate and `check full` to an independent verifier

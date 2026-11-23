@@ -27,6 +27,7 @@ Sources: https://code.claude.com/docs/en/code-mode; https://github.com/anthropic
 - **Subagents.**
   - In the probe session, an `Agent` call from a script returned `async_launched`, and the report arrived as a task notification, not as a return value.
   - `scout` and `worker` subagents run in Code Mode with `REPL` and `Poll`.
+  - An `Agent` call from a script that sets `name` returned `teammate_spawned`. The agent sent its report as a message to the lead, which arrived neither as a return value nor as a task notification.
   - The scout's `tools.list()` held only Read, Bash, Glob and Grep. Release 2.1.328 fixed read-only subagents being offered write and edit tools.
 
 ## 3. Practice: what moves into code and what stays judgment
@@ -97,6 +98,10 @@ A separate monoclaudian guard plan owns the guard fixes. Its PR must merge befor
 ## 8. Sessions
 
 The real interactive Code Mode sessions for each adopted procedure are recorded in this section.
+
+- session: 2026-11-23 claude 2.1.330 work-swarm.md Separate step 1 (wave 2 of this plan, three tasks): one script grepped every write set and the files citing them and returned one shared file, `scripts/ci/test-guards.sh`, held for the Lead; no worker edited it
+- session: 2026-11-23 claude 2.1.330 work-swarm.md Aggregate step 2 (wave 2 of this plan, three worker trees): one script collected each tree's diff against SCOPE and each acceptance exit code and output with `.nothrow()`; all in scope, the Lead judged acceptance; the Lead's first merge of two trees took the worktree branch name, which the workers had not used, and merged nothing until the real branch names were read
+- session: 2026-11-23 claude 2.1.330 pr-state.sh on PRs 302 and 301: two rows, 13 pass 0 fail 0 pending each, matching `gh pr checks` (13 pass); a made-up PR gave an error row and exit 1
 
 ## 9. Pending
 
