@@ -407,6 +407,9 @@ mod tests {
                     "only its own PR branch, with `--force-with-lease=<branch>:<sha>` pinned to the SHA it last pushed",
                     "only after `git ls-remote` shows that SHA as the remote head",
                     "Merge accepted branches one at a time",
+                    "On Claude Code in Code Mode (`REPL` and `Poll` tools), grep every task's write set in one script",
+                    "On Claude Code in Code Mode (`REPL` and `Poll` tools), collect each worker tree's diff against SCOPE",
+                    "the acceptance judgment stays yours",
                 ],
                 forbidden: &[],
             },
@@ -570,8 +573,21 @@ mod tests {
                     "never the whole file",
                     "Read task execution status only from append-only `## Log`",
                     "the sole task execution-status source",
+                    "On Claude Code in Code Mode (`REPL` and `Poll` tools), run the filter and the topic match over every candidate session in one script",
+                    "so raw transcript text never enters context",
                 ],
                 forbidden: &["zharness resume --json"],
+            },
+            PlaybookContract {
+                name: "retro codify mines sessions as evidence",
+                path: "retro/references/codify.md",
+                required: &[
+                    "On Claude Code in Code Mode (`REPL` and `Poll` tools), digest the whole window in one script, each call with",
+                    "write each slice's digests to a scratch file",
+                    "Never read another project's directory",
+                    "(session id plus digest line or turn), not conclusions.",
+                ],
+                forbidden: &[],
             },
         ];
 

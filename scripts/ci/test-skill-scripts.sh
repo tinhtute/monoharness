@@ -34,6 +34,7 @@ lint="$root/skills/reason/ambition/scripts/lint-prompt.sh"
 ghs="$root/skills/tools/librarian/scripts/gh-search.sh"
 fetch="$root/skills/tools/read/scripts/fetch.sh"
 digest="$root/skills/stages/retro/scripts/session-digest.py"
+prs="$root/skills/poteto/scripts/pr-state.sh"
 
 # scan-staged.sh
 secret="AKIA$(printf 'A%.0s' $(seq 16))"
@@ -180,6 +181,19 @@ run python3 -I "$digest" --signals "$tmp/merge.jsonl"
 for want in "pr=? command=gh pr merge --merge && gh pr view 280" "pr=? command=gh pr merge --merge; gh pr view 281" "pr=11 command=(gh pr merge 11)" "pr=5 command=cd x && gh pr merge 5"; do
 	case "$out" in *"signal: merge $want"*) ok "session-digest --signals merge $want" ;; *) bad "session-digest --signals merge $want: $out" ;; esac
 done
+
+# pr-state.sh, against the fake gh on PATH (no network)
+prbin="$fx/pr-state-bin"
+run env PATH="$prbin:$PATH" bash "$prs" 1 2
+expect "pr-state hit: PRs 1 2" 0
+want=$'1\tOPEN\t1111111111111111111111111111111111111111\t4\t1\t1\t2026-11-19T16:07:50Z\n2\tMERGED\t2222222222222222222222222222222222222222\t4\t2\t2\t2026-11-20T09:05:00Z'
+if [ "$out" = "$want" ]; then ok "pr-state rows: latest run per check, in argument order"; else bad "pr-state rows: $out"; fi
+run env PATH="$prbin:$PATH" bash "$prs" 1 3
+expect "pr-state error row: PR 3 fails" 1
+case "$out" in "1	OPEN	"*) ok "pr-state keeps PR 1's row before the error" ;; *) bad "pr-state lost PR 1's row: $out" ;; esac
+case "$out" in *$'\n3\tERROR\t'*"Could not resolve"*) ok "pr-state prints an error row for PR 3" ;; *) bad "pr-state error row: $out" ;; esac
+run bash "$prs"
+expect "pr-state usage: no argument" 2
 
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

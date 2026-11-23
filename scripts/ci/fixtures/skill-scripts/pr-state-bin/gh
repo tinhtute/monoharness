@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Fake gh for the pr-state.sh cases in scripts/ci/test-skill-scripts.sh.
+# Answers `gh pr view <n> --json <fields>` for PRs 1 and 2 with payloads shaped
+# like real gh output; fails like gh (stderr, exit 1) for any other PR or call.
+set -euo pipefail
+if [ "${1:-}" != pr ] || [ "${2:-}" != view ] || [ "${4:-}" != --json ]; then
+	echo "fake gh: unsupported call: $*" >&2
+	exit 1
+fi
+case "${3:-}" in
+1)
+	# risk-verdict ran twice in one workflow: the newer SUCCESS is listed first.
+	# e2e ran twice too, in real gh order: the older FAILURE first, the newer
+	# SUCCESS after it. Only "latest startedAt wins" gives 4/1/1: counting every
+	# run, first in the array, and last in the array each miss on one pair.
+	cat <<'JSON'
+{"headRefOid":"1111111111111111111111111111111111111111","number":1,"state":"OPEN","statusCheckRollup":[
+{"__typename":"CheckRun","completedAt":"2026-11-19T16:05:10Z","conclusion":"SUCCESS","name":"risk-verdict","startedAt":"2026-11-19T16:05:04Z","status":"COMPLETED","workflowName":"risk-verdict"},
+{"__typename":"CheckRun","completedAt":"2026-11-19T16:02:02Z","conclusion":"SUCCESS","name":"build-test","startedAt":"2026-11-19T16:01:40Z","status":"COMPLETED","workflowName":"cli-ci"},
+{"__typename":"CheckRun","completedAt":"2026-11-19T16:01:46Z","conclusion":"FAILURE","name":"risk-verdict","startedAt":"2026-11-19T16:01:40Z","status":"COMPLETED","workflowName":"risk-verdict"},
+{"__typename":"CheckRun","completedAt":"2026-11-19T16:01:55Z","conclusion":"FAILURE","name":"e2e","startedAt":"2026-11-19T16:01:41Z","status":"COMPLETED","workflowName":"cli-ci"},
+{"__typename":"CheckRun","completedAt":"2026-11-19T16:04:30Z","conclusion":"SUCCESS","name":"e2e","startedAt":"2026-11-19T16:04:00Z","status":"COMPLETED","workflowName":"cli-ci"},
+{"__typename":"CheckRun","completedAt":"2026-11-19T16:01:50Z","conclusion":"FAILURE","name":"lint","startedAt":"2026-11-19T16:01:41Z","status":"COMPLETED","workflowName":"cli-ci"},
+{"__typename":"CheckRun","completedAt":"0001-01-01T00:00:00Z","conclusion":"","name":"doc-links","startedAt":"2026-11-19T16:01:42Z","status":"IN_PROGRESS","workflowName":"docs-ci"},
+{"__typename":"StatusContext","context":"ci/external","startedAt":"2026-11-19T16:01:43Z","state":"SUCCESS","targetUrl":""}
+],"updatedAt":"2026-11-19T16:07:50Z"}
+JSON
+	;;
+2)
+	# Two "build" jobs from different workflows are two checks, not a rerun.
+	cat <<'JSON'
+{"headRefOid":"2222222222222222222222222222222222222222","number":2,"state":"MERGED","statusCheckRollup":[
+{"__typename":"StatusContext","context":"ci/a","startedAt":"2026-11-20T09:00:00Z","state":"ERROR","targetUrl":""},
+{"__typename":"StatusContext","context":"ci/b","startedAt":"2026-11-20T09:00:01Z","state":"PENDING","targetUrl":""},
+{"__typename":"CheckRun","completedAt":"2026-11-20T09:01:00Z","conclusion":"SKIPPED","name":"deploy","startedAt":"2026-11-20T09:00:02Z","status":"COMPLETED","workflowName":"cd"},
+{"__typename":"CheckRun","completedAt":"2026-11-20T09:01:00Z","conclusion":"CANCELLED","name":"e2e","startedAt":"2026-11-20T09:00:03Z","status":"COMPLETED","workflowName":"cd"},
+{"__typename":"CheckRun","completedAt":"2026-11-20T09:01:00Z","conclusion":"NEUTRAL","name":"advice","startedAt":"2026-11-20T09:00:04Z","status":"COMPLETED","workflowName":"lint"},
+{"__typename":"CheckRun","completedAt":"0001-01-01T00:00:00Z","conclusion":"","name":"slow","startedAt":"2026-11-20T09:00:05Z","status":"QUEUED","workflowName":"lint"},
+{"__typename":"CheckRun","completedAt":"2026-11-20T09:01:00Z","conclusion":"SUCCESS","name":"build","startedAt":"2026-11-20T09:00:06Z","status":"COMPLETED","workflowName":"web"},
+{"__typename":"CheckRun","completedAt":"2026-11-20T09:01:00Z","conclusion":"SUCCESS","name":"build","startedAt":"2026-11-20T09:00:07Z","status":"COMPLETED","workflowName":"api"}
+],"updatedAt":"2026-11-20T09:05:00Z"}
+JSON
+	;;
+*)
+	echo "GraphQL: Could not resolve to a PullRequest with the number of ${3:-}. (repository.pullRequest)" >&2
+	exit 1
+	;;
+esac

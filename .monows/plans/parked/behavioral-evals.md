@@ -38,6 +38,7 @@ lane: high-risk
 
 ## Log
 - 2026-11-13 decision: `claude plugin eval` is the runner (runner and isolation questions); `--keep-temp` leaves its run dirs read-only, so cleanup runs `chmod -R u+rwx` before `trash`
+- 2026-11-23 decision: parked by the owner to run the `code-mode` map first (user 2026-11-23); resume with `git mv .monows/plans/parked/behavioral-evals.md .monows/plans/active/` once no other plan is active
 
 ## Validation
 
@@ -46,4 +47,4 @@ lane: high-risk
 - lifecycle_status: planned
 - blockers: none
 - open_items: 11 map lines
-- exact_next_action: wayfinder
+- exact_next_action: parked; resume per the 2026-11-23 Log entry, then wayfinder
