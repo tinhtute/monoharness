@@ -192,9 +192,31 @@ new_repo; with_origin
 push_change agents/bar.md upstream
 echo dirty >>"$REPO/agents/bar.md"
 run --autostash
-check "autostash + conflicting pull: refused restore" 1 "$RC" "$OUT" "could not restore the autostash"
+check "autostash + conflicting pull: refused restore" 1 "$RC" "$OUT" "could not restore the autostash" "agents/bar.md"
 kept=1; [ -n "$(git -C "$REPO" stash list)" ] && kept=0
 check "autostash + conflicting pull: stash kept" 0 "$kept" ""
+clean=1; [ -z "$(git -C "$REPO" status --porcelain --untracked-files=no)" ] && clean=0
+check "autostash + conflicting pull: tree left at the pulled commit" 0 "$clean" ""
+
+# 12. A staged edit comes back staged; a REINSTALL_ALL_STASH left in the environment, or
+#     the user's own stash on top, is never restored by a run that did not make it.
+new_repo
+echo dirty >>"$REPO/agents/bar.md" && git -C "$REPO" add agents/bar.md
+run --autostash --no-pull
+check "autostash: staged edit install ok" 0 "$RC" "$OUT" "✓ tracked changes restored"
+staged=1; [ "$(git -C "$REPO" status --porcelain --untracked-files=no)" = "M  agents/bar.md" ] && staged=0
+check "autostash: staged edit comes back staged" 0 "$staged" ""
+new_repo
+echo mine >>"$REPO/agents/bar.md" && git -C "$REPO" stash push -q -m mine
+export REINSTALL_ALL_STASH; REINSTALL_ALL_STASH="$(git -C "$REPO" rev-parse refs/stash)"
+run --bogus
+check "leftover stash env: usage error stays 2" 2 "$RC" "$OUT" "usage:"
+run --no-pull
+check "leftover stash env: clean run ok" 0 "$RC" "$OUT" "✓ agent   bar"
+untouched=1; ! grep -qF autostash <<<"$OUT" && [ "$(git -C "$REPO" stash list | wc -l | tr -d " ")" = 1 ] \
+  && [ -z "$(git -C "$REPO" status --porcelain --untracked-files=no)" ] && untouched=0
+check "leftover stash env: the user's own stash is not popped" 0 "$untouched" ""
+unset REINSTALL_ALL_STASH
 
 echo "passed=$PASSED failed=$FAILED"
 [ "$FAILED" = 0 ]

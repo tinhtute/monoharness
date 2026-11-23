@@ -30,14 +30,24 @@ RETIRED_SKILLS=( # "<name>=<start of its last description>"
   "watzup=Recap: read branch state"
 )
 LOG="$(mktemp)"
-# The stash this run made, passed to the pulled copy across its exec. It is restored on
-# exit, after the status table, so the table compares the committed files.
-STASH="${REINSTALL_ALL_STASH:-}"
+# The stash this run made, passed to the pulled copy across its exec as the internal
+# --autostash-ref argument (never from the environment). It is restored on exit, after
+# the status table, so the table compares the committed files. A restore never touches
+# a file the pull also changed: it keeps the stash and leaves the pulled tree as it is.
+STASH=""
 # shellcheck disable=SC2329 # invoked by the EXIT trap
 restore() {
   rm -f "$LOG"
   [ -n "$STASH" ] || return 0
-  if [ "$(git rev-parse -q --verify refs/stash 2>/dev/null)" = "$STASH" ] && git stash pop -q >/dev/null 2>&1; then
+  local overlap
+  overlap="$(comm -12 \
+    <({ git diff --name-only "$STASH^1" "$STASH"; git diff --name-only "$STASH^1" "$STASH^2"; } | sort -u) \
+    <(git diff --name-only "$STASH^1" HEAD | sort -u) | paste -sd ' ' -)"
+  if [ -n "$overlap" ]; then
+    echo "error: could not restore the autostash: the pull also changed $overlap; the tree is left at $(git rev-parse --short HEAD) and your changes are kept in stash $STASH (git stash pop --index once resolved)" >&2
+    exit 1
+  fi
+  if [ "$(git rev-parse -q --verify refs/stash 2>/dev/null)" = "$STASH" ] && git stash pop -q --index >/dev/null 2>&1; then
     echo "  ✓ tracked changes restored from the autostash"
   else
     echo "error: could not restore the autostash cleanly; your changes are kept in stash $STASH (git stash list)" >&2
@@ -47,18 +57,27 @@ restore() {
 trap restore EXIT
 
 usage() { echo "usage: $0 [--no-pull | --verify] [--autostash]" >&2; exit 2; }
-pull=1 install=1 autostash=0
+pull=1 install=1 autostash=0 stash_ref=""
 for arg in "$@"; do
   case "$arg" in
     --no-pull) pull=0 ;;
     --verify) pull=0 install=0 ;;
     --autostash) autostash=1 ;;
+    --autostash-ref=*) stash_ref="${arg#--autostash-ref=}" ;;
     *) usage ;;
   esac
 done
 [ "$install" = 1 ] || [ "$autostash" = 0 ] || usage
 
 cd "$REPO_DIR"
+# Only the stash on top that this script made is restored; anything else is refused.
+if [ -n "$stash_ref" ]; then
+  case "$(git log -1 --format=%s refs/stash 2>/dev/null)" in
+    *": reinstall-all autostash") [ "$(git rev-parse -q --verify refs/stash)" = "$stash_ref" ] || usage ;;
+    *) usage ;;
+  esac
+  STASH="$stash_ref"
+fi
 
 # retired_dirs: paths that hold a retired harness skill, one per line: every per-skill
 # symlink, and each real directory once (~/.claude/skills itself is often a symlink to
@@ -116,7 +135,7 @@ if [ "$install" = 1 ]; then
   if [ "$pull" = 1 ]; then
     step "git pull ($(git rev-parse --short HEAD) → origin)" git pull --ff-only -q
     # The pull may have changed this script (a new retired skill); run the new copy.
-    REINSTALL_ALL_STASH="$STASH" exec bash "$REPO_DIR/scripts/reinstall-all.sh" --no-pull
+    exec bash "$REPO_DIR/scripts/reinstall-all.sh" --no-pull ${STASH:+"--autostash-ref=$STASH"}
   fi
   retired="$(retired_dirs)" # listed in full before any trash changes what it sees
   while IFS= read -r dir; do
