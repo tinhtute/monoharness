@@ -41,8 +41,8 @@ restore() {
   [ -n "$STASH" ] || return 0
   local overlap
   overlap="$(comm -12 \
-    <({ git diff --name-only "$STASH^1" "$STASH"; git diff --name-only "$STASH^1" "$STASH^2"; } | sort -u) \
-    <(git diff --name-only "$STASH^1" HEAD | sort -u) | paste -sd ' ' -)"
+    <({ git diff --no-renames --name-only "$STASH^1" "$STASH"; git diff --no-renames --name-only "$STASH^1" "$STASH^2"; } | sort -u) \
+    <(git diff --no-renames --name-only "$STASH^1" HEAD | sort -u) | paste -sd ' ' -)"
   if [ -n "$overlap" ]; then
     echo "error: could not restore the autostash: the pull also changed $overlap; the tree is left at $(git rev-parse --short HEAD) and your changes are kept in stash $STASH (git stash pop --index once resolved)" >&2
     exit 1
@@ -70,13 +70,20 @@ done
 [ "$install" = 1 ] || [ "$autostash" = 0 ] || usage
 
 cd "$REPO_DIR"
-# Only the stash on top that this script made is restored; anything else is refused.
+# Only the stash on top that this script made is restored. A bad --autostash-ref is a
+# usage error. REINSTALL_ALL_STASH is how the 0.37.0 copy hands its stash to the copy it
+# pulls; it is trusted only with --no-pull and the same check, and ignored otherwise.
+own_stash() { # own_stash <sha>: is <sha> the top stash, made by this script?
+  [ "$(git rev-parse -q --verify refs/stash 2>/dev/null)" = "$1" ] || return 1
+  case "$(git log -1 --format=%s refs/stash)" in *": reinstall-all autostash") ;; *) return 1 ;; esac
+}
+legacy_ref="${REINSTALL_ALL_STASH:-}"
+unset REINSTALL_ALL_STASH
 if [ -n "$stash_ref" ]; then
-  case "$(git log -1 --format=%s refs/stash 2>/dev/null)" in
-    *": reinstall-all autostash") [ "$(git rev-parse -q --verify refs/stash)" = "$stash_ref" ] || usage ;;
-    *) usage ;;
-  esac
+  own_stash "$stash_ref" || usage
   STASH="$stash_ref"
+elif [ -n "$legacy_ref" ] && [ "$pull" = 0 ] && [ "$install" = 1 ] && own_stash "$legacy_ref"; then
+  STASH="$legacy_ref"
 fi
 
 # retired_dirs: paths that hold a retired harness skill, one per line: every per-skill
