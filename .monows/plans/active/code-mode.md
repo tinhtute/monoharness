@@ -99,6 +99,7 @@ lane: high-risk
 - 2026-11-23T10:16:33Z — notes — decision — work-swarm.md Aggregate step 2 ran in Code Mode for both waves as one script each; first merge attempt used the worktree branch names for T3 and T4, which the workers had replaced with their own branches, so `git merge` reported up to date; the Lead read each worktree's current branch and merged those; combined tree ddbb71f: every phase-check command rc=0 except the R5 session count (3 of 5 lines, T5 pending)
 - 2026-11-23T10:16:33Z — notes/T5 — decision — three of five R5 sessions ran in this session and are recorded in the note (work-swarm.md:15, :67, pr-state.sh on PRs 302 and 301), ids in the private memory file; recall deep and retro codify wait for the owner (T5 owner: Lead with the owner)
 
+- 2026-11-23T12:16:37Z — notes/T5 — decision — recall deep and retro codify ran in Code Mode in a Lead session with the owner (installed skills were the master copies, so the branch's notes were applied by hand); their two `- session:` lines are in note § 8, which makes 5 of 5; no session ids were written: no private memory file for them was found, so where they go waits for the owner
 ## Validation
 - 2026-11-23T10:12:17Z — phase `tooling` — verdict: APPROVE_WITH_REQUESTS — mode: gate
   - `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — rc=0; 3 pr-state expect cases; 52 passed, 0 failed
