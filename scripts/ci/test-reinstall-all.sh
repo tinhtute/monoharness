@@ -32,6 +32,7 @@ echo "npx $*" >>"$STUB_LOG"
 mkdir -p "$CLAUDE_DIR/skills"
 cp -R "$STUB_REPO/skills/stages/foo" "$CLAUDE_DIR/skills/"
 [ -z "${STUB_STALE:-}" ] || echo stale >"$CLAUDE_DIR/skills/foo/references/a.md"
+[ -z "${STUB_TOUCH:-}" ] || echo touched >"$STUB_REPO/$STUB_TOUCH"
 EOF
 cat >"$ROOT/bin/trash" <<'EOF'
 #!/usr/bin/env bash
@@ -61,7 +62,7 @@ EOF
   git -C "$REPO" add -A
   git -C "$REPO" -c user.name=t -c user.email=t@t commit -qm init
   export CLAUDE_DIR="$REPO.claude" AGENTS_SKILLS_DIR="$REPO.agents" STUB_REPO="$REPO"
-  export STUB_LOG="$REPO.npx.log" STUB_TRASH="$REPO.trash" STUB_STALE=""
+  export STUB_LOG="$REPO.npx.log" STUB_TRASH="$REPO.trash" STUB_STALE="" STUB_TOUCH=""
   mkdir -p "$CLAUDE_DIR/skills" "$AGENTS_SKILLS_DIR"
   : >"$STUB_LOG"
 }
@@ -192,9 +193,73 @@ new_repo; with_origin
 push_change agents/bar.md upstream
 echo dirty >>"$REPO/agents/bar.md"
 run --autostash
-check "autostash + conflicting pull: refused restore" 1 "$RC" "$OUT" "could not restore the autostash"
+check "autostash + conflicting pull: refused restore" 1 "$RC" "$OUT" "could not restore the autostash" "agents/bar.md"
 kept=1; [ -n "$(git -C "$REPO" stash list)" ] && kept=0
 check "autostash + conflicting pull: stash kept" 0 "$kept" ""
+clean=1; [ -z "$(git -C "$REPO" status --porcelain --untracked-files=no)" ] && clean=0
+check "autostash + conflicting pull: tree left at the pulled commit" 0 "$clean" ""
+
+# 12. A staged edit comes back staged; a REINSTALL_ALL_STASH left in the environment, or
+#     the user's own stash on top, is never restored by a run that did not make it.
+new_repo
+echo dirty >>"$REPO/agents/bar.md" && git -C "$REPO" add agents/bar.md
+run --autostash --no-pull
+check "autostash: staged edit install ok" 0 "$RC" "$OUT" "✓ tracked changes restored"
+staged=1; [ "$(git -C "$REPO" status --porcelain --untracked-files=no)" = "M  agents/bar.md" ] && staged=0
+check "autostash: staged edit comes back staged" 0 "$staged" ""
+new_repo
+echo mine >>"$REPO/agents/bar.md" && git -C "$REPO" stash push -q -m mine
+export REINSTALL_ALL_STASH; REINSTALL_ALL_STASH="$(git -C "$REPO" rev-parse refs/stash)"
+run --bogus
+check "leftover stash env: usage error stays 2" 2 "$RC" "$OUT" "usage:"
+run --no-pull
+check "leftover stash env: clean run ok" 0 "$RC" "$OUT" "✓ agent   bar"
+untouched=1; ! grep -qF autostash <<<"$OUT" && [ "$(git -C "$REPO" stash list | wc -l | tr -d " ")" = 1 ] \
+  && [ -z "$(git -C "$REPO" status --porcelain --untracked-files=no)" ] && untouched=0
+check "leftover stash env: the user's own stash is not popped" 0 "$untouched" ""
+unset REINSTALL_ALL_STASH
+
+# 13. The #304 copy hands its stash over as REINSTALL_ALL_STASH with --no-pull: the
+#     new copy restores it. A pull that renames a stashed file counts as overlap. A pop
+#     that fails for another reason (an untracked file in the way) keeps the stash.
+new_repo
+echo dirty >>"$REPO/agents/bar.md" && git -C "$REPO" stash push -q -m "reinstall-all autostash"
+export REINSTALL_ALL_STASH; REINSTALL_ALL_STASH="$(git -C "$REPO" rev-parse refs/stash)"
+run --no-pull
+unset REINSTALL_ALL_STASH
+check "#304 handoff: install ok" 0 "$RC" "$OUT" "✓ tracked changes restored"
+restored=1; grep -q dirty "$REPO/agents/bar.md" && [ -z "$(git -C "$REPO" stash list)" ] && restored=0
+check "#304 handoff: edit restored, stash dropped" 0 "$restored" ""
+new_repo
+seq 1 20 >"$REPO/agents/bar.md" && git -C "$REPO" -c user.name=t -c user.email=t@t commit -qam "longer bar"
+with_origin
+git -C "$REPO.work" mv agents/bar.md agents/baz.md && perl -pi -e 's/^10$/upstream/' "$REPO.work/agents/baz.md"
+git -C "$REPO.work" -c user.name=t -c user.email=t@t commit -qam "rename bar" && git -C "$REPO.work" push -q origin master
+perl -pi -e 's/^10$/dirty/' "$REPO/agents/bar.md"
+run --autostash
+check "autostash + renaming pull: refused restore" 1 "$RC" "$OUT" "could not restore the autostash" "agents/bar.md"
+clean=1; [ -n "$(git -C "$REPO" stash list)" ] && [ -z "$(git -C "$REPO" status --porcelain --untracked-files=no)" ] && clean=0
+check "autostash + renaming pull: stash kept, tree untouched" 0 "$clean" ""
+new_repo
+echo new >"$REPO/agents/new.md" && git -C "$REPO" add agents/new.md
+STUB_TOUCH=agents/new.md run --autostash --no-pull
+check "autostash: failed pop" 1 "$RC" "$OUT" "could not restore the autostash cleanly"
+kept=1; [ -n "$(git -C "$REPO" stash list)" ] && kept=0
+check "autostash: failed pop keeps the stash" 0 "$kept" ""
+
+# 14. A handed-over stash is never popped onto a tree with tracked changes, and a bad
+#     --autostash-ref names itself.
+new_repo
+echo kept >>"$REPO/agents/bar.md" && git -C "$REPO" stash push -q -m "reinstall-all autostash"
+echo dirty >>"$REPO/skills/stages/foo/references/a.md"
+export REINSTALL_ALL_STASH; REINSTALL_ALL_STASH="$(git -C "$REPO" rev-parse refs/stash)"
+run --no-pull
+unset REINSTALL_ALL_STASH
+check "handoff onto a dirty tree: refused" 1 "$RC" "$OUT" "the tree has tracked changes"
+kept=1; [ -n "$(git -C "$REPO" stash list)" ] && ! grep -q kept "$REPO/agents/bar.md" && kept=0
+check "handoff onto a dirty tree: stash kept, not popped" 0 "$kept" ""
+run --no-pull --autostash-ref=deadbeef
+check "bad --autostash-ref: named" 2 "$RC" "$OUT" "--autostash-ref=deadbeef is not the top stash"
 
 echo "passed=$PASSED failed=$FAILED"
 [ "$FAILED" = 0 ]
