@@ -9,13 +9,17 @@ if [ "${1:-}" != pr ] || [ "${2:-}" != view ] || [ "${4:-}" != --json ]; then
 fi
 case "${3:-}" in
 1)
-	# risk-verdict ran twice in one workflow: the newer SUCCESS is listed first,
-	# so neither "count every run" nor "last in the array wins" gives 3/1/1.
+	# risk-verdict ran twice in one workflow: the newer SUCCESS is listed first.
+	# e2e ran twice too, in real gh order: the older FAILURE first, the newer
+	# SUCCESS after it. Only "latest startedAt wins" gives 4/1/1: counting every
+	# run, first in the array, and last in the array each miss on one pair.
 	cat <<'JSON'
 {"headRefOid":"1111111111111111111111111111111111111111","number":1,"state":"OPEN","statusCheckRollup":[
 {"__typename":"CheckRun","completedAt":"2026-11-19T16:05:10Z","conclusion":"SUCCESS","name":"risk-verdict","startedAt":"2026-11-19T16:05:04Z","status":"COMPLETED","workflowName":"risk-verdict"},
 {"__typename":"CheckRun","completedAt":"2026-11-19T16:02:02Z","conclusion":"SUCCESS","name":"build-test","startedAt":"2026-11-19T16:01:40Z","status":"COMPLETED","workflowName":"cli-ci"},
 {"__typename":"CheckRun","completedAt":"2026-11-19T16:01:46Z","conclusion":"FAILURE","name":"risk-verdict","startedAt":"2026-11-19T16:01:40Z","status":"COMPLETED","workflowName":"risk-verdict"},
+{"__typename":"CheckRun","completedAt":"2026-11-19T16:01:55Z","conclusion":"FAILURE","name":"e2e","startedAt":"2026-11-19T16:01:41Z","status":"COMPLETED","workflowName":"cli-ci"},
+{"__typename":"CheckRun","completedAt":"2026-11-19T16:04:30Z","conclusion":"SUCCESS","name":"e2e","startedAt":"2026-11-19T16:04:00Z","status":"COMPLETED","workflowName":"cli-ci"},
 {"__typename":"CheckRun","completedAt":"2026-11-19T16:01:50Z","conclusion":"FAILURE","name":"lint","startedAt":"2026-11-19T16:01:41Z","status":"COMPLETED","workflowName":"cli-ci"},
 {"__typename":"CheckRun","completedAt":"0001-01-01T00:00:00Z","conclusion":"","name":"doc-links","startedAt":"2026-11-19T16:01:42Z","status":"IN_PROGRESS","workflowName":"docs-ci"},
 {"__typename":"StatusContext","context":"ci/external","startedAt":"2026-11-19T16:01:43Z","state":"SUCCESS","targetUrl":""}
