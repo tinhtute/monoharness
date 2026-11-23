@@ -43,6 +43,10 @@ restore() {
   overlap="$(comm -12 \
     <({ git diff --no-renames --name-only "$STASH^1" "$STASH"; git diff --no-renames --name-only "$STASH^1" "$STASH^2"; } | sort -u) \
     <(git diff --no-renames --name-only "$STASH^1" HEAD | sort -u) | paste -sd ' ' -)"
+  if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+    echo "error: could not restore the autostash: the tree has tracked changes; your changes are kept in stash $STASH (git stash pop --index once the tree is clean)" >&2
+    exit 1
+  fi
   if [ -n "$overlap" ]; then
     echo "error: could not restore the autostash: the pull also changed $overlap; the tree is left at $(git rev-parse --short HEAD) and your changes are kept in stash $STASH (git stash pop --index once resolved)" >&2
     exit 1
@@ -71,8 +75,9 @@ done
 
 cd "$REPO_DIR"
 # Only the stash on top that this script made is restored. A bad --autostash-ref is a
-# usage error. REINSTALL_ALL_STASH is how the 0.37.0 copy hands its stash to the copy it
-# pulls; it is trusted only with --no-pull and the same check, and ignored otherwise.
+# usage error. REINSTALL_ALL_STASH is how the first --autostash copy (#304) hands its stash
+# to the copy it pulls; it is trusted only with --no-pull and the same check, and ignored
+# otherwise. A restore onto a tree with tracked changes is always refused.
 own_stash() { # own_stash <sha>: is <sha> the top stash, made by this script?
   [ "$(git rev-parse -q --verify refs/stash 2>/dev/null)" = "$1" ] || return 1
   case "$(git log -1 --format=%s refs/stash)" in *": reinstall-all autostash") ;; *) return 1 ;; esac
@@ -80,7 +85,7 @@ own_stash() { # own_stash <sha>: is <sha> the top stash, made by this script?
 legacy_ref="${REINSTALL_ALL_STASH:-}"
 unset REINSTALL_ALL_STASH
 if [ -n "$stash_ref" ]; then
-  own_stash "$stash_ref" || usage
+  own_stash "$stash_ref" || { echo "error: --autostash-ref=$stash_ref is not the top stash this script made; your edits may be in git stash list" >&2; exit 2; }
   STASH="$stash_ref"
 elif [ -n "$legacy_ref" ] && [ "$pull" = 0 ] && [ "$install" = 1 ] && own_stash "$legacy_ref"; then
   STASH="$legacy_ref"

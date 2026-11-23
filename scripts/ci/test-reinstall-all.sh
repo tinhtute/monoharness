@@ -219,7 +219,7 @@ untouched=1; ! grep -qF autostash <<<"$OUT" && [ "$(git -C "$REPO" stash list | 
 check "leftover stash env: the user's own stash is not popped" 0 "$untouched" ""
 unset REINSTALL_ALL_STASH
 
-# 13. The 0.37.0 copy hands its stash over as REINSTALL_ALL_STASH with --no-pull: the
+# 13. The #304 copy hands its stash over as REINSTALL_ALL_STASH with --no-pull: the
 #     new copy restores it. A pull that renames a stashed file counts as overlap. A pop
 #     that fails for another reason (an untracked file in the way) keeps the stash.
 new_repo
@@ -227,9 +227,9 @@ echo dirty >>"$REPO/agents/bar.md" && git -C "$REPO" stash push -q -m "reinstall
 export REINSTALL_ALL_STASH; REINSTALL_ALL_STASH="$(git -C "$REPO" rev-parse refs/stash)"
 run --no-pull
 unset REINSTALL_ALL_STASH
-check "0.37.0 handoff: install ok" 0 "$RC" "$OUT" "✓ tracked changes restored"
+check "#304 handoff: install ok" 0 "$RC" "$OUT" "✓ tracked changes restored"
 restored=1; grep -q dirty "$REPO/agents/bar.md" && [ -z "$(git -C "$REPO" stash list)" ] && restored=0
-check "0.37.0 handoff: edit restored, stash dropped" 0 "$restored" ""
+check "#304 handoff: edit restored, stash dropped" 0 "$restored" ""
 new_repo
 seq 1 20 >"$REPO/agents/bar.md" && git -C "$REPO" -c user.name=t -c user.email=t@t commit -qam "longer bar"
 with_origin
@@ -246,6 +246,20 @@ STUB_TOUCH=agents/new.md run --autostash --no-pull
 check "autostash: failed pop" 1 "$RC" "$OUT" "could not restore the autostash cleanly"
 kept=1; [ -n "$(git -C "$REPO" stash list)" ] && kept=0
 check "autostash: failed pop keeps the stash" 0 "$kept" ""
+
+# 14. A handed-over stash is never popped onto a tree with tracked changes, and a bad
+#     --autostash-ref names itself.
+new_repo
+echo kept >>"$REPO/agents/bar.md" && git -C "$REPO" stash push -q -m "reinstall-all autostash"
+echo dirty >>"$REPO/skills/stages/foo/references/a.md"
+export REINSTALL_ALL_STASH; REINSTALL_ALL_STASH="$(git -C "$REPO" rev-parse refs/stash)"
+run --no-pull
+unset REINSTALL_ALL_STASH
+check "handoff onto a dirty tree: refused" 1 "$RC" "$OUT" "the tree has tracked changes"
+kept=1; [ -n "$(git -C "$REPO" stash list)" ] && ! grep -q kept "$REPO/agents/bar.md" && kept=0
+check "handoff onto a dirty tree: stash kept, not popped" 0 "$kept" ""
+run --no-pull --autostash-ref=deadbeef
+check "bad --autostash-ref: named" 2 "$RC" "$OUT" "--autostash-ref=deadbeef is not the top stash"
 
 echo "passed=$PASSED failed=$FAILED"
 [ "$FAILED" = 0 ]
