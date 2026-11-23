@@ -101,6 +101,7 @@ lane: high-risk
 
 - 2026-11-23T12:16:37Z — notes/T5 — decision — recall deep and retro codify ran in Code Mode in a Lead session with the owner (installed skills were the master copies, so the branch's notes were applied by hand); their two `- session:` lines are in note § 8, which makes 5 of 5; no session ids were written: no private memory file for them was found, so where they go waits for the owner
 - 2026-11-23T12:29:01Z — notes — decision — correction to the notes/T5 decision at 10:16:33Z: no private memory file holds the session ids (none exists in this project's memory directory); the ids are recorded nowhere, and where they go waits for the owner (notes gate request 3)
+- 2026-11-23T16:03:26Z — notes — decision — the owner waives the merge dependency on the monoclaudian guard plan's PR (constraints, Q8, NG4, escalate_when) for PR 303: it merges before that plan is written; the guard plan stays owed and no Q4 specifics enter this repo (user 2026-11-23)
 ## Validation
 - 2026-11-23T10:12:17Z — phase `tooling` — verdict: APPROVE_WITH_REQUESTS — mode: gate
   - `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — rc=0; 3 pr-state expect cases; 52 passed, 0 failed
@@ -145,6 +146,6 @@ lane: high-risk
 ## Current State and Next Action
 - active_phase: notes
 - lifecycle_status: checked
-- blockers: merge waits on the monoclaudian guard plan's PR (constraints), and that plan is not written yet
+- blockers: none; the owner waived the monoclaudian merge dependency for PR 303 (Log 2026-11-23T16:03:26Z)
 - open_items: notes gate requests 1 (codify.md:20-22 names a scout), 3 (where the session ids go, owner) and 5 (recall.md:41 "never enters context"); request 2 at closing compaction; the pending tick line in note § 9
 - exact_next_action: the owner decides requests 1, 3 and 5 (1 and 5 reword pinned lines, so a re-check follows); write the monoclaudian guard plan; then the closing `handoff`
