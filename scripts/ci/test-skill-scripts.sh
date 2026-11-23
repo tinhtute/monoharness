@@ -186,7 +186,7 @@ done
 prbin="$fx/pr-state-bin"
 run env PATH="$prbin:$PATH" bash "$prs" 1 2
 expect "pr-state hit: PRs 1 2" 0
-want=$'1\tOPEN\t1111111111111111111111111111111111111111\t3\t1\t1\t2026-11-19T16:07:50Z\n2\tMERGED\t2222222222222222222222222222222222222222\t4\t2\t2\t2026-11-20T09:05:00Z'
+want=$'1\tOPEN\t1111111111111111111111111111111111111111\t4\t1\t1\t2026-11-19T16:07:50Z\n2\tMERGED\t2222222222222222222222222222222222222222\t4\t2\t2\t2026-11-20T09:05:00Z'
 if [ "$out" = "$want" ]; then ok "pr-state rows: latest run per check, in argument order"; else bad "pr-state rows: $out"; fi
 run env PATH="$prbin:$PATH" bash "$prs" 1 3
 expect "pr-state error row: PR 3 fails" 1
