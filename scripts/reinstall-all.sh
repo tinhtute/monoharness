@@ -13,6 +13,7 @@
 #   bash scripts/reinstall-all.sh             # pull, retire, install, verify
 #   bash scripts/reinstall-all.sh --no-pull   # skip `git pull`
 #   bash scripts/reinstall-all.sh --verify    # only print the status table
+#   bash scripts/reinstall-all.sh --autostash # stash tracked edits for the run, restore them after
 # Env: CLAUDE_DIR (default ~/.claude), AGENTS_SKILLS_DIR (default ~/.agents/skills),
 #      SKILLS_SOURCE (default git@github.com:tinhtute/monoharness.git)
 # Exit: 0 every row ok; 1 a row failed; 2 usage error or unmet precondition.
@@ -29,15 +30,33 @@ RETIRED_SKILLS=( # "<name>=<start of its last description>"
   "watzup=Recap: read branch state"
 )
 LOG="$(mktemp)"
-trap 'rm -f "$LOG"' EXIT
+# The stash this run made, passed to the pulled copy across its exec. It is restored on
+# exit, after the status table, so the table compares the committed files.
+STASH="${REINSTALL_ALL_STASH:-}"
+# shellcheck disable=SC2329 # invoked by the EXIT trap
+restore() {
+  rm -f "$LOG"
+  [ -n "$STASH" ] || return 0
+  if [ "$(git rev-parse -q --verify refs/stash 2>/dev/null)" = "$STASH" ] && git stash pop -q >/dev/null 2>&1; then
+    echo "  ✓ tracked changes restored from the autostash"
+  else
+    echo "error: could not restore the autostash cleanly; your changes are kept in stash $STASH (git stash list)" >&2
+    exit 1
+  fi
+}
+trap restore EXIT
 
-pull=1 install=1
-case "${1:-}" in
-  "") ;;
-  --no-pull) pull=0 ;;
-  --verify) pull=0 install=0 ;;
-  *) echo "usage: $0 [--no-pull | --verify]" >&2; exit 2 ;;
-esac
+usage() { echo "usage: $0 [--no-pull | --verify] [--autostash]" >&2; exit 2; }
+pull=1 install=1 autostash=0
+for arg in "$@"; do
+  case "$arg" in
+    --no-pull) pull=0 ;;
+    --verify) pull=0 install=0 ;;
+    --autostash) autostash=1 ;;
+    *) usage ;;
+  esac
+done
+[ "$install" = 1 ] || [ "$autostash" = 0 ] || usage
 
 cd "$REPO_DIR"
 
@@ -87,12 +106,17 @@ if [ "$install" = 1 ]; then
     echo "error: on '$branch'; reinstall from master" >&2; exit 2
   fi
   if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-    echo "error: tracked changes present; commit or stash them first" >&2; exit 2
+    if [ "$autostash" = 1 ] && [ -z "$STASH" ]; then
+      step "tracked changes stashed" git stash push -q -m "reinstall-all autostash"
+      STASH="$(git rev-parse refs/stash)"
+    else
+      echo "error: tracked changes present; commit or stash them first, or pass --autostash" >&2; exit 2
+    fi
   fi
   if [ "$pull" = 1 ]; then
     step "git pull ($(git rev-parse --short HEAD) → origin)" git pull --ff-only -q
     # The pull may have changed this script (a new retired skill); run the new copy.
-    exec bash "$REPO_DIR/scripts/reinstall-all.sh" --no-pull
+    REINSTALL_ALL_STASH="$STASH" exec bash "$REPO_DIR/scripts/reinstall-all.sh" --no-pull
   fi
   retired="$(retired_dirs)" # listed in full before any trash changes what it sees
   while IFS= read -r dir; do

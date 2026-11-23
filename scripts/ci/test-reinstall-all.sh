@@ -158,5 +158,43 @@ retired_skill "$AGENTS_SKILLS_DIR/mono-write" "Polish a research or learn draft 
 run --no-pull
 check "space in path: install ok" 0 "$RC" "$OUT" "retired skill trashed: $AGENTS_SKILLS_DIR/mono-write"
 
+# 10. --autostash: a tracked edit is stashed for the run and restored after the table.
+new_repo
+echo dirty >>"$REPO/agents/bar.md"
+run --autostash --no-pull
+check "autostash: install ok" 0 "$RC" "$OUT" "✓ tracked changes stashed" "✓ agent   bar" "✓ tracked changes restored"
+restored=1; grep -q dirty "$REPO/agents/bar.md" && [ -z "$(git -C "$REPO" stash list)" ] && restored=0
+check "autostash: edit restored, stash dropped" 0 "$restored" ""
+run --autostash --verify
+check "autostash with --verify: usage" 2 "$RC" "$OUT" "usage:"
+
+# 11. --autostash across the pull: the pulled copy restores the edit; a pull that
+#     touches the same lines keeps the stash and exits 1.
+with_origin() { # with_origin: give REPO a bare origin and a second clone at REPO.work
+  git clone -q --bare "$REPO" "$REPO.git"
+  git -C "$REPO" remote add origin "$REPO.git"
+  git -C "$REPO" fetch -q origin && git -C "$REPO" branch -q -u origin/master
+  git clone -q "$REPO.git" "$REPO.work"
+}
+push_change() { # push_change <file> <line>: append a line upstream and push it
+  echo "$2" >>"$REPO.work/$1"
+  git -C "$REPO.work" -c user.name=t -c user.email=t@t commit -qam "upstream $1"
+  git -C "$REPO.work" push -q origin master
+}
+new_repo; with_origin
+push_change skills/stages/foo/references/a.md upstream
+echo dirty >>"$REPO/agents/bar.md"
+run --autostash
+check "autostash + pull: install ok" 0 "$RC" "$OUT" "✓ git pull" "✓ skill   foo" "✓ tracked changes restored"
+restored=1; grep -q dirty "$REPO/agents/bar.md" && [ -z "$(git -C "$REPO" stash list)" ] && restored=0
+check "autostash + pull: edit restored after the exec" 0 "$restored" ""
+new_repo; with_origin
+push_change agents/bar.md upstream
+echo dirty >>"$REPO/agents/bar.md"
+run --autostash
+check "autostash + conflicting pull: refused restore" 1 "$RC" "$OUT" "could not restore the autostash"
+kept=1; [ -n "$(git -C "$REPO" stash list)" ] && kept=0
+check "autostash + conflicting pull: stash kept" 0 "$kept" ""
+
 echo "passed=$PASSED failed=$FAILED"
 [ "$FAILED" = 0 ]
