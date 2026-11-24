@@ -147,6 +147,29 @@ lane: high-risk
   - judge_model: claude-opus-5-5
   - judged_sha: 4e9a726e96c8d6b93ddd83ed102d9bd6e4b9d305
 
+- 2026-11-24T08:54:10Z — phase `notes` — verdict: APPROVE_WITH_REQUESTS — mode: full
+  - `cd cli && cargo test one_plan_playbook_contract` — rc=0; embedded::tests::one_plan_playbook_contract ok; 1 passed, 86 filtered out
+  - `bash scripts/ci/validate-skills.sh && cd cli && cargo test --test skill_reference_resolution` — rc=0; 20 skill(s) valid; 2 passed
+  - `test "$(grep -cE '^- session: [0-9]{4}-[0-9]{2}-[0-9]{2} claude [0-9]+\.[0-9]+\.[0-9]+ ' docs/research/2026-11-23-code-mode-adoption.md)" -ge 5` — rc=0; 5 session lines in note § 8
+  - phase check `bash scripts/ci/validate-skills.sh && bash scripts/ci/verify-doc-links.sh && grep -q … orchestrate.md && grep -q … autopilot.md && awk <R4> $(find skills -name '*.md') && test <Fan out count> = 0 && test <session count> -ge 5 && awk <R3> cli/src/embedded.rs && cd cli && cargo test` — rc=0; 20 skills valid; doc links OK (0 findings); R3 awk count 4 (recall.md 1, work-swarm.md 2, codify.md 1); 87 lib tests plus integration suites 2, 3 and 2 passed
+  - `cd cli && cargo fmt --check && cargo clippy --all-targets -- -D warnings` — rc=0
+  - `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — rc=0; 52 passed, 0 failed
+  - `PATH="$PWD/scripts/ci/fixtures/skill-scripts/pr-state-bin:$PATH" bash skills/poteto/scripts/pr-state.sh 1 2` — rc=0; rows "1 OPEN 1111… 4 1 1" and "2 MERGED 2222… 4 2 2"
+  - `bash scripts/ci/test-weakening.sh origin/master HEAD` — rc=0; no test weakening
+  - `bash scripts/ci/pr-guards.sh origin/master HEAD` — rc=0; 1 commit checked
+  - mutation (scratch copy): recall.md with "so raw transcript text never enters context" back — `cargo test one_plan_playbook_contract` rc=101, forbidden phrase at embedded.rs:615
+  - mutation: codify.md with "brief its scout with that path" added next to the new phrase — rc=101, forbidden; the old wording alone — rc=101, missing "add that path to the slice's session ids above"
+  - mutation: origin/master recall.md and codify.md with the HEAD embedded.rs — rc=101, first on missing required "so the subagents above still read the regions and raw transcript text stays in them" (not on a forbidden phrase as Log :105 says)
+  - mutation: codify note rewrapped over 3 lines — cargo test rc=0 (survives); rewrapped with "brief its `scout` with that path" on the second line — R4 awk rc=0 (survives)
+  - scope: on target — 4 files vs origin/master: recall.md, codify.md, cli/src/embedded.rs, the plan; avoided surfaces untouched; the only pin change is T2's own required "so raw transcript text never enters context" moved to forbidden (no pre-plan pin changed); judged in a fresh read-only worktree at ea17c89 with its own target dir, mutations on a scratch copy that was deleted afterwards, both trees clean
+  - proof_classes: unit, integration, output
+  - requirements: R3 met (4 lines, each one sentence on one physical line; R3's "scouts briefed with scratch paths" still holds through the step-17 dispatch, conflict logged at plan:106) | R4 met (awk rc=0, Fan out count 0; read as text, no note launches or names an agent; "the subagents above" in recall.md:41 points back to the existing step) | R5 met on acceptance (5 session lines; private-memory clause waived by the owner per plan:107); Q10 holds; no Q2 must-stay-model-turn touched
+  - rollback_point: b595061
+  - requests: 1. .monows/plans/active/code-mode.md:105 — escalate_when "a note needs to touch a pinned phrase" matched (embedded.rs:581 moved to forbidden); the Log gives the reason but no owner tag, unlike :107-108; append a Log line recording the match and the owner's go-ahead (the owner's PR review covers it until then). 2. skills/stages/retro/references/codify.md:20, skills/stages/recall/references/recall.md:41, cli/src/embedded.rs:586-594 — one physical line is unpinned: a rewrapped codify note passes cargo test, and with "brief its `scout` with that path" on the wrapped line R4's awk still exits 0, the request-1 bypass; pin each note's full sentence as one required phrase or accept it as a proof gap. 3. docs/research/2026-11-23-code-mode-adoption.md:110 (§ 9) — recall deep with more than two matches (IDs only, then fan-out) never ran in Code Mode; list it as pending next to the tick; also § 8 :105 says the regions came back "in a second script" while the note says one script, and codify's 5-or-fewer path and any `.nothrow()` failure path never ran. 4. docs/research/2026-11-23-code-mode-adoption.md:96 — § 7 "must merge before any PR" contradicts the waivers at plan:108 and Log 2026-11-23T16:03:26Z; .monows/plans/active/code-mode.md:153 blockers cites only the PR 303 waiver; low. 5. .monows/plans/active/code-mode.md:105 — "failed on each forbidden phrase before the edits" does not reproduce as written (required asserts fire first); the forbidden-phrase mutants above cover what it meant; note only.
+  - judge: independent
+  - judge_model: claude-opus-5-5
+  - judged_sha: ea17c8965fd87d95aa063f97fabce532f8126ad2
+
 ## Current State and Next Action
 - active_phase: notes
 - lifecycle_status: checked
