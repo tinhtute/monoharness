@@ -17,9 +17,7 @@ still waits for its step 6 approval. Supervisor mode does not use this file.
   Over 5 sessions → split them into 3 slices by date and dispatch one `scout`
   per slice with the session ids; each returns patterns with evidence
   (session id plus digest line or turn), not conclusions.
-  On Claude Code in Code Mode (`REPL` and `Poll` tools), digest the whole window in one script, each call with
-  `.nothrow()`; over 5 sessions, write each slice's digests to a scratch file
-  outside the repo and brief its scout with that path.
+  On Claude Code in Code Mode (`REPL` and `Poll` tools), digest the whole window in one script, each call with `.nothrow()`; over 5 sessions, write each slice's digests to a scratch file outside the repo and add that path to the slice's session ids above.
 - Hunt these signals:
   - a user correction or redirect, and a rejected `(Recommended)` answer
   - the same command sequence (3 or more tool calls, same order) re-typed
