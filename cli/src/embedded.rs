@@ -575,6 +575,8 @@ mod tests {
                     "the sole task execution-status source",
                     "On Claude Code in Code Mode (`REPL` and `Poll` tools), run the filter and the topic match over every candidate session in one script",
                     "so the subagents above still read the regions and raw transcript text stays in them",
+                    // the whole note as one phrase, so a rewrapped line fails here
+                    "On Claude Code in Code Mode (`REPL` and `Poll` tools), run the filter and the topic match over every candidate session in one script and return only the matching regions, each with its session ID, so the rest of each transcript stays out of context; under `deep` with more than two matching sessions, return only the matching session IDs, so the subagents above still read the regions and raw transcript text stays in them.",
                 ],
                 forbidden: &[
                     "zharness resume --json",
@@ -588,6 +590,8 @@ mod tests {
                     "On Claude Code in Code Mode (`REPL` and `Poll` tools), digest the whole window in one script, each call with",
                     "write each slice's digests to a scratch file",
                     "add that path to the slice's session ids above",
+                    // the whole note as one phrase, so a rewrapped line fails here
+                    "On Claude Code in Code Mode (`REPL` and `Poll` tools), digest the whole window in one script, each call with `.nothrow()`; over 5 sessions, write each slice's digests to a scratch file outside the repo and add that path to the slice's session ids above.",
                     "Never read another project's directory",
                     "(session id plus digest line or turn), not conclusions.",
                 ],

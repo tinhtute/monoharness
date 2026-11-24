@@ -106,6 +106,10 @@ lane: high-risk
 - 2026-11-24T08:49:48Z — notes — decision — R3's codify parenthetical ("scouts briefed with scratch paths") and the success_signal ("no Code Mode line names an agent") conflict; the success_signal and R4 win: the note names no agent and the step above it, which names the scout, carries the path
 - 2026-11-24T08:49:48Z — notes — decision — notes gate request 3: no Code Mode session id is kept anywhere; the five dated `- session:` lines in note § 8 stay the evidence, and R5's private-memory-file clause is waived, its text left as is (user 2026-11-24)
 - 2026-11-24T08:49:48Z — notes — decision — the owner waives the monoclaudian merge dependency for the follow-up PR on notes gate requests 1, 3 and 5 as well; the guard plan stays owed (user 2026-11-24)
+- 2026-11-24T08:55:38Z — notes — decision — escalate_when "a note needs to touch a pinned phrase" matched: T2's required pin "so raw transcript text never enters context" moved to `forbidden`; the owner approved it by asking for request 5's fix, told that it rewords pinned lines and needs a re-check (user 2026-11-24)
+- 2026-11-24T08:55:38Z — notes — decision — correction to the Log entry at 2026-11-24T08:49:48Z: the red run with master's notes and the new `embedded.rs` fails first on a missing required phrase, since required asserts run before forbidden ones; the re-check's forbidden-phrase mutants show each forbidden pin fails on its own
+- 2026-11-24T08:55:38Z — notes — decision — re-check requests 2-4 addressed: each Code Mode note in recall.md and codify.md is pinned whole as one required phrase, so a rewrapped note fails `cargo test` (red: the codify note rewrapped over three lines, rc=101 after the pin); note § 9 lists the unexercised branches (recall deep over two matches, codify over five sessions or fewer, a failing digest); note § 7 and `blockers` name both waivers; § 8's recall line stays as recorded history
+
 ## Validation
 - 2026-11-23T10:12:17Z — phase `tooling` — verdict: APPROVE_WITH_REQUESTS — mode: gate
   - `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — rc=0; 3 pr-state expect cases; 52 passed, 0 failed
@@ -173,6 +177,6 @@ lane: high-risk
 ## Current State and Next Action
 - active_phase: notes
 - lifecycle_status: checked
-- blockers: none; the owner waived the monoclaudian merge dependency for PR 303 (Log 2026-11-23T16:03:26Z)
-- open_items: the re-check of notes gate requests 1, 3 and 5 (Log 2026-11-24T08:49:48Z); request 2 at closing compaction; the pending tick line in note § 9; the monoclaudian guard plan (owed, merge dependency waived for PRs 303 and the follow-up)
-- exact_next_action: run `check full` with an independent verifier on docs/code-mode-requests, open its PR for the owner's review; then write the monoclaudian guard plan; then the closing `handoff`
+- blockers: none; the owner waived the monoclaudian merge dependency for PR 303 (Log 2026-11-23T16:03:26Z) and for this follow-up PR (Log 2026-11-24T08:49:48Z)
+- open_items: request 2 of the 2026-11-23 notes gate at closing compaction; the pending lines in note § 9; the monoclaudian guard plan (owed)
+- exact_next_action: the follow-up PR from docs/code-mode-requests waits for the owner's review; then write the monoclaudian guard plan; then the closing `handoff`
