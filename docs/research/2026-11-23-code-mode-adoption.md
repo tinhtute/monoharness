@@ -93,7 +93,7 @@ Not made required: Code Mode is not required or the default for consumer repos (
 
 ## 7. Guard gaps
 
-A separate monoclaudian guard plan owns the guard fixes. Its PR must merge before any PR from this plan.
+A separate monoclaudian guard plan owns the guard fixes. Its PR was to merge before any PR from this plan; the owner waived that for PR 303 and for the follow-up PR on the notes gate requests, and the guard plan stays owed.
 
 ## 8. Sessions
 
@@ -108,3 +108,4 @@ The real interactive Code Mode sessions for each adopted procedure are recorded 
 ## 9. Pending
 
 - The first full `orchestrate` or `autopilot` tick in Code Mode has not run yet. It is listed here until its first later run.
+- `recall deep` with more than two matching sessions (the script returns only session IDs, then the subagent fan-out) has not run in Code Mode; the recorded session matched one. Neither has `retro codify` over 5 sessions or fewer, nor a digest that fails under `.nothrow()`.
