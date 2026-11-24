@@ -109,6 +109,8 @@ lane: high-risk
 - 2026-11-24T08:55:38Z — notes — decision — escalate_when "a note needs to touch a pinned phrase" matched: T2's required pin "so raw transcript text never enters context" moved to `forbidden`; the owner approved it by asking for request 5's fix, told that it rewords pinned lines and needs a re-check (user 2026-11-24)
 - 2026-11-24T08:55:38Z — notes — decision — correction to the Log entry at 2026-11-24T08:49:48Z: the red run with master's notes and the new `embedded.rs` fails first on a missing required phrase, since required asserts run before forbidden ones; the re-check's forbidden-phrase mutants show each forbidden pin fails on its own
 - 2026-11-24T08:55:38Z — notes — decision — re-check requests 2-4 addressed: each Code Mode note in recall.md and codify.md is pinned whole as one required phrase, so a rewrapped note fails `cargo test` (red: the codify note rewrapped over three lines, rc=101 after the pin); note § 9 lists the unexercised branches (recall deep over two matches, codify over five sessions or fewer, a failing digest); note § 7 and `blockers` name both waivers; § 8's recall line stays as recorded history
+- 2026-11-24T10:18:19Z — notes — decision — final check full request 1 addressed: the work-swarm.md:15 and :67 notes are pinned whole in `cli/src/embedded.rs`, so a rewrapped note fails `cargo test`; mutants rewrapping each note with "spawn one `scout` per set" or "launch a `verifier` per tree" on its second line gave `cargo test --lib one_plan_playbook_contract` rc=101 while the R4 awk gave rc=0; `cd cli && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` rc=0
+- 2026-11-24T10:18:19Z — notes — decision — final check full request 2 addressed at this state sync: `exact_next_action` rewritten; the 2026-11-23 request 2 entries filed under `## Validation` are handled at the closing compaction
 
 ## Validation
 - 2026-11-23T10:12:17Z — phase `tooling` — verdict: APPROVE_WITH_REQUESTS — mode: gate
@@ -173,10 +175,51 @@ lane: high-risk
   - judge: independent
   - judge_model: claude-opus-5-5
   - judged_sha: ea17c8965fd87d95aa063f97fabce532f8126ad2
+- 2026-11-24T10:15:48Z — phase `notes` — verdict: APPROVE_WITH_REQUESTS — mode: full
+  - `test "$(grep -c 'expect "pr-state' scripts/ci/test-skill-scripts.sh)" -ge 3 && bash scripts/ci/test-skill-scripts.sh` — rc=0; 52 passed, 0 failed (6 pr-state checks ok)
+  - `bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/validate-skills.sh` — rc=0; 52 passed; 20 skill(s) valid
+  - `PATH="$PWD/scripts/ci/fixtures/skill-scripts/pr-state-bin:$PATH" bash skills/poteto/scripts/pr-state.sh 1 2` — rc=0; rows "1 OPEN 1111… 4 1 1 2026-11-19T16:07:50Z" and "2 MERGED 2222… 4 2 2 2026-11-20T09:05:00Z"
+  - `PATH="$PWD/scripts/ci/fixtures/skill-scripts/pr-state-bin:$PATH" bash skills/poteto/scripts/pr-state.sh 1 3; test $? -eq 1` — rc=0 (script exit 1); PR 1's row kept, then "3 ERROR GraphQL: Could not resolve to a PullRequest with the number of 3. (repository.pullRequest)"
+  - tooling phase check `test … -ge 3 && bash scripts/ci/test-skill-scripts.sh && bash scripts/ci/validate-skills.sh` — rc=0
+  - `cd cli && cargo test one_plan_playbook_contract` — rc=0; embedded::tests::one_plan_playbook_contract ok; 1 passed, 86 filtered out
+  - `bash scripts/ci/validate-skills.sh && cd cli && cargo test --test skill_reference_resolution` — rc=0; 20 skill(s) valid; 2 passed
+  - `test "$(grep -cE '^- session: [0-9]{4}-[0-9]{2}-[0-9]{2} claude [0-9]+\.[0-9]+\.[0-9]+ ' docs/research/2026-11-23-code-mode-adoption.md)" -ge 5` — rc=0; 5 session lines in note § 8
+  - notes phase check (validate-skills && verify-doc-links && both pr-state.sh greps && R4 awk && Fan out count = 0 && session count -ge 5 && R3 awk && `cd cli && cargo test`) — rc=0
+  - R1 to R5 acceptance commands, each run verbatim from the Goal — rc=0 each
+  - `cd cli && cargo fmt --check && cargo clippy --all-targets -- -D warnings` — rc=0
+  - `bash scripts/ci/test-weakening.sh 0a98f78 HEAD` — rc=0; "no test weakening in 0a98f78...HEAD"
+  - `bash scripts/ci/verify-doc-links.sh` — rc=0; doc links OK (0 findings)
+  - also rc=0, outside the plan proofs: test-agent-models (5 agents); test-install-zharness plus test-reinstall-all (39 passed); test-guards (195 passed); test-pr-guards (25 passed) plus `pr-guards.sh 0a98f78 HEAD` (16 commits); test-risk-facts (33 passed) plus test-panel-merge (11 OK); evals/risk-judge/test_report.py (7 OK); test-risk-verdict (28 passed); shellcheck on pr-state.sh and the fake `gh` (clean)
+  - mutation (request 2; scratch copy with its own target dir): the codify note rewrapped over 3 lines gives `cargo test one_plan_playbook_contract` rc=101 at embedded.rs:611 (missing the whole-note phrase). The codify note rewrapped with "brief its `scout` with that path" on line 2 gives rc=101, while the R4 awk alone gives rc=0, so the pin is what catches it. The recall note rewrapped gives rc=101.
+  - mutation (sibling notes): the work-swarm.md:15 note rewrapped with "spawn one `scout` per set" on line 2 gives cargo test rc=0 and R4 awk rc=0, so it survives. The work-swarm.md:67 note rewrapped with "launch a `verifier` per tree" on line 2 gives rc=0 and rc=0, so it survives. Control: the same spawn text left on the note's own line is caught by R4 (rc=1).
+  - scope: on target. The plan's work matches its surfaces: pr-state.sh, the fake `gh`, test-skill-scripts.sh, the four notes, orchestrate.md, autopilot.md, embedded.rs, the research note and the plan. The range 0a98f78..HEAD also carries PRs 304 and 305 (scripts/reinstall-all.sh, scripts/ci/test-reinstall-all.sh, CHANGELOG.md; commits 8a37157, a939cce, 9ab28e6, a1d17e8), which are outside this plan. Avoided surfaces are untouched. The embedded.rs diff against 0a98f78 only adds lines; the existing forbidden "zharness resume --json" is reformatted and kept, so no pin from before the plan changed. The worktree was clean after every run, and the scratch copy was moved to the Trash.
+  - proof_classes: output, unit, integration
+  - requirements:
+    - R1 met: fixture rows, error row with rc=1, usage rc=2.
+    - R2 met: orchestrate.md:11 and :14 and autopilot.md:23 link pr-state.sh and stay on `/loop`.
+    - R3 met: 4 one-line notes; pins plus a new codify contract; R3's "scouts briefed" now happens through codify step 17's existing dispatch (Log :106).
+    - R4 met on acceptance: awk rc=0, Fan out count 0; a residual pin gap remains, see request 1.
+    - R5 met on acceptance: 5 session lines, § 9 pending lines, Q1/Q3/Q5 sources, and the Q10 rule in § 5. The private-memory-file clause is waived (Log :107), not met.
+    - Goal and NG4 merge-order clause (monoclaudian PR first): waived for PRs 303 and 306 (Log :104, :108), not met.
+    - success_signal met.
+    - The plan and the note hold no session ids (UUID grep: 0 hits) and no Q4 specifics. The hook-term grep hits only the public Q1/Q3 facts in note § 2:19-25 and § 3:48, which carry docs and issue sources; plan Q4 states only that gaps exist.
+    - The five 08:54:10Z requests are all closed:
+      - 1: Log :109.
+      - 2: closed as scoped, shown by the mutants above.
+      - 3: note § 9:111 lists the unexercised branches; § 8:105 stays as recorded history (Log :111).
+      - 4: note § 7:96 and plan :180 name both waivers.
+      - 5: corrected at Log :110.
+  - rollback_point: 0a98f78
+  - requests:
+    1. skills/stages/work/references/work-swarm.md:15 and :67, cli/src/embedded.rs:410-411. These two notes are pinned by their first words only, so a rewrapped note with a `scout` spawn or a `verifier` launch on its second line passes both `cargo test` and the R4 awk (mutants above). That is the bypass request 2 closed for recall and codify. Pin each note whole, as fd5f0f3 did, or log it as an accepted proof gap. Low.
+    2. .monows/plans/active/code-mode.md:182. `exact_next_action` still says the follow-up PR "waits for the owner's review", but b152e3d is that PR's merge. Rewrite it at the handoff state sync, together with the open item still carried at :181 (the 2026-11-23 request 2 compaction). Low.
+  - judge: independent
+  - judge_model: claude-opus-5-5
+  - judged_sha: b152e3d3781c65958c57300e58ae044b7c84a61a
 
 ## Current State and Next Action
 - active_phase: notes
 - lifecycle_status: checked
-- blockers: none; the owner waived the monoclaudian merge dependency for PR 303 (Log 2026-11-23T16:03:26Z) and for this follow-up PR (Log 2026-11-24T08:49:48Z)
-- open_items: request 2 of the 2026-11-23 notes gate at closing compaction; the pending lines in note § 9; the monoclaudian guard plan (owed)
-- exact_next_action: the follow-up PR from docs/code-mode-requests waits for the owner's review; then write the monoclaudian guard plan; then the closing `handoff`
+- blockers: none; the owner waived the monoclaudian merge dependency for PR 303 (Log 2026-11-23T16:03:26Z) and for PR 306 (Log 2026-11-24T08:49:48Z)
+- open_items: the pending lines in note § 9; the monoclaudian guard plan (owed)
+- exact_next_action: the closing `handoff` on branch docs/code-mode-close

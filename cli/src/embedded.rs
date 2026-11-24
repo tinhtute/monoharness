@@ -410,6 +410,9 @@ mod tests {
                     "On Claude Code in Code Mode (`REPL` and `Poll` tools), grep every task's write set in one script",
                     "On Claude Code in Code Mode (`REPL` and `Poll` tools), collect each worker tree's diff against SCOPE",
                     "the acceptance judgment stays yours",
+                    // each note whole as one phrase, so a rewrapped line fails here
+                    "On Claude Code in Code Mode (`REPL` and `Poll` tools), grep every task's write set in one script and return only the files that appear in more than one set.",
+                    "On Claude Code in Code Mode (`REPL` and `Poll` tools), collect each worker tree's diff against SCOPE and its acceptance exit code and output in one script, each command with `.nothrow()`; the acceptance judgment stays yours.",
                 ],
                 forbidden: &[],
             },
