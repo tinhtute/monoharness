@@ -46,6 +46,7 @@ lane: normal
 - 2026-11-27 R5 live run: tldraw MCP added at user scope and signed in; board created; first layout had a writes/install crossing, so columns were reordered (guards, skills, zh / host / plans, managed) and redrawn by per-id remove (35 removed incl. arr_skills_host-label); added a white margin path because the screenshot clipped bottom borders. Claude Code's REPL returns the screenshot as a saved file path ([Image: source: …]), not base64; SKILL.md export section updated to match.
 
 - 2026-11-27 main: committed monoclaudian 71f9e56 (branch feat/tldraw-diagram-mcp, PR https://github.com/tinhtute/monoclaudian/pull/12); R1–R4 acceptance repointed to paths relative to a monoclaudian checkout.
+- 2026-11-27 main: offline-style parity pass (owner: "fix all theo offline style"): cards left-aligned via add align:'start'; pills drawn as closed stadium paths (no oval geo in apply_ops) at x+12,y-16, w 10n+40, h 30, text at x+24,y-14 resized to scale 0.9; host and consumer rows moved 30 down so "install" stays on its shaft in black; margin_top + margin give 32px padding; plans padded with a trailing newline. Board redrawn (36 removed, 42 applied, 0 errors); PNG re-exported. Vertical text alignment and arrow bend still have no op.
 
 ## Validation
 - 2026-11-27 R1 pass: rg offline terms empty, scripts/ absent (rc=0)
@@ -55,6 +56,7 @@ lane: normal
 - 2026-11-27 monoclaudian `bash scripts/validate-skills.sh` → skills OK (6 skills)
 - 2026-11-27 R5 pass: README.md:119 cites https://www.tldraw.com/f/kSlGDIpz4cDe1Fy2IOkds; site/assets/architecture.png (2000px, from get_cluster_screenshot) present; mono-harness-architecture.tldraw trashed; verify-doc-links OK
 - 2026-11-27 R1–R4 re-run after the live fixes: pass; ops schema check 35 ops, 0 errors
+- 2026-11-27 parity pass: ops file 42 ops, schema check 0 errors; apply_ops 42 applied, 0 errors, no "beside it" label; monoclaudian validate-skills OK (6 skills); screenshot reviewed against the offline PNG
 
 ## Current State and Next Action
 - active_phase: main
