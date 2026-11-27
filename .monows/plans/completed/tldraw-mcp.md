@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 lane: normal
 ---
 # Move tldraw-diagram from tldraw offline to the tldraw MCP
@@ -50,6 +50,7 @@ lane: normal
 
 - 2026-11-27 main: committed monoclaudian 71f9e56 (branch feat/tldraw-diagram-mcp, PR https://github.com/tinhtute/monoclaudian/pull/12); R1–R4 acceptance repointed to paths relative to a monoclaudian checkout.
 - 2026-11-27 main: offline-style parity pass (owner: "fix all theo offline style"): cards left-aligned via add align:'start'; pills drawn as closed stadium paths (no oval geo in apply_ops) at x+12,y-16, w 10n+40, h 30, text at x+24,y-14 resized to scale 0.9; host and consumer rows moved 30 down so "install" stays on its shaft in black; margin_top + margin give 32px padding; plans padded with a trailing newline. Board redrawn (36 removed, 42 applied, 0 errors); PNG re-exported. Vertical text alignment and arrow bend still have no op.
+- 2026-11-27 main: merged monoclaudian #12 as 6e4750f and mono-harness #309 as 687a175 (risk-verdict: independent judge, low risk on 66f6226); plan closed
 - 2026-11-27 main: offline fallback (Q10): monoclaudian SKILL.md v2.2.0 adds routing and an Offline fallback section; scripts/tl.sh (draw, png, exec, search), scripts/ops-offline.js (interprets add/path/resize/connect/remove; closed path → oval geo; replaces only the ops' ids) and scripts/export-png.js (padding 0, scale 2); monoclaudian README row updated.
 
 ## Validation
@@ -66,8 +67,8 @@ lane: normal
 - 2026-11-27 parity pass: ops file 42 ops, schema check 0 errors; apply_ops 42 applied, 0 errors, no "beside it" label; monoclaudian validate-skills OK (6 skills); screenshot reviewed against the offline PNG
 
 ## Current State and Next Action
-- active_phase: main
-- lifecycle_status: in-progress
+- active_phase: none
+- lifecycle_status: completed
 - blockers: none
-- open_items: none
-- exact_next_action: after monoclaudian PR #12 and this PR merge, complete the plan (move to `.monows/plans/completed/`)
+- open_items: none; letting the offline fallback draw private repos stays open for the owner (Q10)
+- exact_next_action: none; the plan is closed
