@@ -29,7 +29,7 @@ lane: high-risk
 - recovery: every phase is additive data or tooling; revert the phase's commit. A fail leaves `Auto-merge: off`, which is the safe state.
 - seams: `report.py` CLI (existing; `planted` split and `gate` exit 3 are new — owner to confirm at the review gate), `planted/check.sh` (new — owner to confirm), `check-risk.md` § Judge with `skills/stages/check/scripts/risk-facts.sh` (existing), skills-ci job `risk-facts` (existing).
 - phase_slug: `report-gate`
-  status: planned
+  status: checked
   - goal: R3 | depends_on: none
   - surfaces: evals/risk-judge/report.py, evals/risk-judge/test_report.py, evals/risk-judge/README.md | avoided: labels.csv, predictions.csv, AGENTS.md, .github/**
   - escalate_when: the gate needs a rule beyond "0 misses and n ≥ 20 over test + planted".
@@ -66,12 +66,37 @@ lane: high-risk
   - phase check: the R5 acceptance command
 
 ## Log
+- 2026-11-27T16:25Z — report-gate — start — phase report-gate begins on plan/risk-judge-gate at 02bce5e; T1 run in-session by the Lead filling the engineer role (one task, no wave to fan out).
+- 2026-11-27T16:25:39Z — report-gate — decision — baseline: 02bce5e6b6efdcefa0beebba3f6ccfb53b80584f python3 -I -B evals/risk-judge/test_report.py && python3 -I -B evals/risk-judge/report.py train rc=0
+
+- 2026-11-27T16:26:53Z — report-gate/T1 — done — R3: `python3 -I -B evals/risk-judge/test_report.py` rc=0 (15 tests: the 8 new planted/stratum/gate tests went red first on argparse rejecting `planted`/`gate`, then green; the 7 existing tests unchanged); phase check `python3 -I -B evals/risk-judge/test_report.py && python3 -I -B evals/risk-judge/report.py train` rc=0; `bash scripts/ci/verify-doc-links.sh` OK. Changed: evals/risk-judge/report.py, test_report.py, README.md. Tested source: HEAD 02bce5e plus uncommitted evals/risk-judge diff sha256 5dbe510c0f84. On real data `report.py gate` exits 2 until planted/ exists (fails closed). stop_if: not matched (no existing test expectation changed). escalate_when: not matched (gate rule is exactly 0 misses and n ≥ 20 over test + planted).
 
 ## Validation
 
+- 2026-11-27T16:34Z — phase `report-gate` — verdict: APPROVE_WITH_REQUESTS — mode: gate
+  - `python3 -I -B evals/risk-judge/test_report.py` — exit 0; Ran 15 tests, OK (the 7 existing tests byte-identical to HEAD, 8 new; the 8 new error against HEAD's report.py, so they went red first)
+  - `python3 -I -B evals/risk-judge/test_report.py && python3 -I -B evals/risk-judge/report.py train` — exit 0; phase check; split=train n=35 (needs-review=5, low=30), TPR 1.000 (5/5), TNR 0.500 (15/30); train/dev/test output identical to HEAD's report.py on the committed labels
+  - `d=$(mktemp -d) && mkdir "$d/planted" && printf 'pr,label\n' > "$d/labels.csv" && { printf 'pr,label\n'; i=1; while [ $i -le 20 ]; do printf 'P%02d,needs-review\n' $i; i=$((i+1)); done; } > "$d/planted/labels.csv" && sed 's/label/prediction/' "$d/planted/labels.csv" > "$d/planted/predictions.csv" && python3 -I -B evals/risk-judge/report.py gate --labels "$d/labels.csv" --planted-dir "$d/planted" && sed 's/label/prediction/; s/^P07,needs-review/P07,low/' "$d/planted/labels.csv" > "$d/planted/predictions.csv" && { python3 -I -B evals/risk-judge/report.py gate --labels "$d/labels.csv" --planted-dir "$d/planted"; test $? -eq 3; }` — exit 0; real CLI process on a synthetic directory: 20 planted positives all caught prints gate: PASS (0 missed of needs-review=20 >= 20) rc 0; P07 flipped to low prints gate: FAIL (missed P07) rc 3
+  - `bash scripts/ci/verify-doc-links.sh` — exit 0; doc links OK (0 findings)
+  - scope: on target — the uncommitted diff of evals/risk-judge/report.py, test_report.py and README.md against 02bce5e (sha256 5dbe510c0f84306f7155410d22e51b7ec15f2dc78e957da7fffe0ff1574becda, the source the Log's T1 entry tested); the README § Metrics exit-code sentence (README.md:55) goes past T1's § Files/§ Protocol write-set but stays inside the phase surface; skills/stages/to-plan/references/to-plan.md is the owner's separate edit and was not judged
+  - proof_classes: output, unit, integration (output: the synthetic-directory gate run above, pass and failure case; unit: test_report.py; integration: the phase check, report.py on the committed labels.csv and predictions.csv)
+  - requirements: R3 met (test_report.py covers planted loading :128, the stratum line :138, gate pass at exactly 20 :164, gate on one miss in planted :170 and in the test split :176, gate on n=19 :181; 17 of 24 wrong-rule mutants of report.py fail a test (7 survive: 1 equivalent, 6 in requests 1-4), among them a <= boundary, MIN_POSITIVES 19 and 21, test-split misses ignored, planted misses ignored, a train leak, a dropped split, and exit 1 for a failing gate)
+  - rollback_point: 02bce5e6b6efdcefa0beebba3f6ccfb53b80584f (the phase is uncommitted; restoring the three files to HEAD undoes it)
+  - requests: 6 numbered below, none blocking; 1-4 should land before apply-gate wires report.py gate into skills-ci
+    - 1. evals/risk-judge/test_report.py:187-197 — test_gate_ignores_train_and_dev_labels plants only a train row; a mutant that lets dev-split labels into the gate passes all 15 tests. Add a dev needs-review row (one missed, and one that would lift n from 19 to 20). The real code ignores dev (exercised: rc 0 with a missed dev positive, rc 3 at 19 planted + 1 dev).
+    - 2. evals/risk-judge/test_report.py:155-185 — two fail-closed gate paths have no test: a missing planted/ directory (report.py:128, real rc 2) and zero labels (report.py:141-145, real rc 1). Mutants that treat missing planted files as empty, or return 0 from an empty gate, pass all 15 tests.
+    - 3. evals/risk-judge/report.py:153 — facts.get(id, True) counts a labeled planted patch with no facts.csv row as a mechanical hit, so it leaves the no-hit stratum silently (exercised: a missed P01 with no row prints stratum 1.000 (1/1) beside overall 0.500 (1/2)). Exit 2 on a labeled patch with no facts row, or pin the default with a test. The true/false check at report.py:101 is unpinned too (real rc 2 on a bad value; the mutant without it passes). Report-only: the gate still fails on that miss.
+    - 4. evals/risk-judge/report.py:129-130 and :161 — the planted: prefix keeps a planted id apart from an equal PR number (exercised both ways, rc 3), but no test pins it (the no-prefix mutant passes), and the FAIL line strips the prefix, so a numeric planted id prints like a PR number. Add a collision test.
+    - 5. evals/risk-judge/report.py:141-145 with README.md:55 — R3 reads "else 3", while gate exits 1 on zero labels and 2 on bad input. Every case is non-zero, so the R5 acceptance chain fails closed; the owner confirms this with the exit-3 seam at the review gate.
+    - 6. evals/risk-judge/test_report.py:110 — the module-level helper test_split_files would be collected by pytest (CI runs unittest directly), and :176-179 does not assert the missed PR is named. README.md:5-7 still reads "not yet gating" and "no threshold is agreed" beside the new step 7 at :44; the plan defers the README status to apply-gate (R5).
+  - proof_gaps: no class missing; the judged bytes are uncommitted, so judged_sha names the parent commit and the guard cannot bind the verdict to the diff sha256 above; gate mode is proven on synthetic data only, since report.py gate on the committed data exits 2 until planted/ exists; judge independence is testimony
+  - judge: independent
+  - judge_model: claude-fable-5-2
+  - judged_sha: 02bce5e6b6efdcefa0beebba3f6ccfb53b80584f
+
 ## Current State and Next Action
-- active_phase: none
-- lifecycle_status: planned
+- active_phase: report-gate
+- lifecycle_status: checked
 - blockers: none
-- open_items: none
-- exact_next_action: work full phase report-gate
+- open_items: check requests 1-6 in the report-gate Validation entry (APPROVE_WITH_REQUESTS); 1-4 (dev-leak test, missing-planted and zero-label gate tests, the facts.csv missing-row default at report.py:153, a planted-id collision test) land before apply-gate wires `report.py gate` into skills-ci, and no later phase lists test_report.py in its surfaces, so they need an owner; 5 (gate exits 1 on zero labels and 2 on bad input, R3 reads "else 3") is the owner's call at the review gate
+- exact_next_action: `git` commits phase report-gate (evals/risk-judge/report.py, test_report.py, README.md and this plan; never skills/stages/to-plan/references/to-plan.md), then `work` starts phase `labels`

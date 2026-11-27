@@ -14,7 +14,8 @@ Measures the check-risk judge (`skills/stages/check/references/check-risk.md`) a
 | `candidates.csv` | Merged PRs to choose from, no labels (written by `collect.py`) |
 | `predictions.csv` | The judge's verdict per labeled PR: `pr,prediction` (produced per judge run) |
 | `collect.py` | Lists merged PRs with diff stats via `gh` |
-| `report.py` | Prints TPR/TNR with n for one split |
+| `report.py` | Prints TPR/TNR with n for one split, the planted split, or the pooled `gate` |
+| `planted/` | Owner-labeled synthetic patches (`P01`…): `labels.csv`, `predictions.csv`, and `facts.csv` (`pr,mechanical_hit`, `true` when `risk-facts.sh` flags the patch) |
 | `test_report.py` | Unit tests for the report math, on synthetic data that never touches `labels.csv` |
 
 ## Label format
@@ -39,7 +40,8 @@ Label from the diff and the repository's rules, before reading the judge's verdi
 3. Splits are fixed by a seeded hash of the PR number, so a label never moves between splits: `sha256("risk-judge-v1:<pr>")`, first 8 bytes as a big-endian integer, mod 100. Below 60 is `train`, below 80 is `dev`, the rest is `test`. The seed lives in `report.py` (`SEED`); changing it re-splits everything and invalidates past results.
 4. Tune the judge prompt against `train` and `dev`. Read `test` once, when the prompt is final.
 5. Run the judge on each labeled PR as `check-risk.md` § Judge describes (fresh-context judge, the PR's `## Risk` verdict line). The LLM judge is not scriptable from this directory, so its verdicts go in `predictions.csv`: `pr,prediction` with `prediction` of `low` (verdict `low risk`) or `needs-review` (verdict `needs review`).
-6. `python3 -I evals/risk-judge/report.py <train|dev|test>` prints the report.
+6. `python3 -I evals/risk-judge/report.py <train|dev|test|planted>` prints the report. `planted` also prints the TPR of the needs-review patches with no mechanical hit, the part only the LLM judgment can catch.
+7. `python3 -I evals/risk-judge/report.py gate` pools `test` and `planted`: it exits 0 (`gate: PASS`) only when no needs-review item is missed and there are at least 20 of them (`MIN_POSITIVES`), else 3 (`gate: FAIL` naming the misses).
 
 ## Metrics
 
@@ -50,7 +52,7 @@ The positive class is `needs-review`.
 
 Issue #221 says "TNR on needs-review", which is ambiguous between the two. This README fixes the definitions above; the owner should confirm that TPR is the rate the threshold applies to.
 
-`report.py` exits 0 with a report, 1 when the split has no labels (`no labels yet (n=0)`), and 2 on bad input: a missing or malformed file, a label outside the two classes, a duplicate PR, or a labeled PR with no prediction.
+`report.py` exits 0 with a report or a passing gate, 1 when the split has no labels (`no labels yet (n=0)`), 2 on bad input (a missing or malformed file, a label outside the two classes, a duplicate PR, or a labeled PR with no prediction), and 3 on a failing gate.
 
 ## Tests
 
