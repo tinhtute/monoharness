@@ -52,7 +52,7 @@ The positive class is `needs-review`.
 
 Issue #221 says "TNR on needs-review", which is ambiguous between the two. This README fixes the definitions above; the owner should confirm that TPR is the rate the threshold applies to.
 
-`report.py` exits 0 with a report or a passing gate, 1 when the split has no labels (`no labels yet (n=0)`), 2 on bad input (a missing or malformed file, a label outside the two classes, a duplicate PR, or a labeled PR with no prediction), and 3 on a failing gate.
+`report.py` exits 0 with a report or a passing gate, 1 when the split has no labels (`no labels yet (n=0)`), 2 on bad input (a missing or malformed file, a label outside the two classes, a duplicate PR, a labeled PR with no prediction, or, once `planted/facts.csv` exists, a labeled patch with no row in it), and 3 on a failing gate.
 
 ## Tests
 

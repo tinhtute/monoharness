@@ -71,6 +71,12 @@ lane: high-risk
 
 - 2026-11-27T16:26:53Z — report-gate/T1 — done — R3: `python3 -I -B evals/risk-judge/test_report.py` rc=0 (15 tests: the 8 new planted/stratum/gate tests went red first on argparse rejecting `planted`/`gate`, then green; the 7 existing tests unchanged); phase check `python3 -I -B evals/risk-judge/test_report.py && python3 -I -B evals/risk-judge/report.py train` rc=0; `bash scripts/ci/verify-doc-links.sh` OK. Changed: evals/risk-judge/report.py, test_report.py, README.md. Tested source: HEAD 02bce5e plus uncommitted evals/risk-judge diff sha256 5dbe510c0f84. On real data `report.py gate` exits 2 until planted/ exists (fails closed). stop_if: not matched (no existing test expectation changed). escalate_when: not matched (gate rule is exactly 0 misses and n ≥ 20 over test + planted).
 
+- 2026-11-27T16:39:22Z — report-gate — decision — owner 2026-11-27 after the gate: keep the gate's exit codes (1 on zero labels, 2 on bad input, 3 on a failing gate; all non-zero, so R5 fails closed) and land check requests 1-4 in this phase before `labels`; phase back to in-progress for them (committed source 14cdded).
+
+- 2026-11-27T16:40:48Z — report-gate — done — check requests 1-4 + nits: a labeled planted patch with no facts.csv row exits 2 (was silently counted as a hit); the gate FAIL line keeps the `planted:` prefix, so a planted id equal to a PR number stays distinct; 6 new tests (dev exclusion, missing planted dir rc 2, zero labels rc 1, missing facts row rc 2, bad mechanical_hit rc 2, id collision); helper renamed make_test_split; test-split miss asserts the named id. Red first: 2 failures; then `python3 -I -B evals/risk-judge/test_report.py` rc=0 (21 tests).
+
+- 2026-11-27T16:46:47Z — report-gate — done — independent judge (claude-fable-5-2, read-only verifier) on the request fixes: APPROVE_WITH_REQUESTS, requests 1-4 each proven by a mutant-killing test. Its findings fixed: a labels.csv id that shadows a prefixed planted id (`planted:P01`) exits 2 instead of being overwritten; a facts.csv id listed twice exits 2; the test-split miss test pins the exact missed PR; the missing-row error names bare ids; README and docstring list the new rc 2 case. Mutants (shadow check off, duplicate check off) each fail the suite. `python3 -I -B evals/risk-judge/test_report.py` rc=0 (23 tests); `bash scripts/ci/verify-doc-links.sh` rc=0. Uncommitted bytes: report.py 8b1cce3f…, test_report.py dd19299b….
+
 ## Validation
 
 - 2026-11-27T16:34Z — phase `report-gate` — verdict: APPROVE_WITH_REQUESTS — mode: gate
@@ -98,5 +104,5 @@ lane: high-risk
 - active_phase: report-gate
 - lifecycle_status: checked
 - blockers: none
-- open_items: check requests 1-6 in the report-gate Validation entry (APPROVE_WITH_REQUESTS); 1-4 (dev-leak test, missing-planted and zero-label gate tests, the facts.csv missing-row default at report.py:153, a planted-id collision test) land before apply-gate wires `report.py gate` into skills-ci, and no later phase lists test_report.py in its surfaces, so they need an owner; 5 (gate exits 1 on zero labels and 2 on bad input, R3 reads "else 3") is the owner's call at the review gate
-- exact_next_action: `git` commits phase report-gate (evals/risk-judge/report.py, test_report.py, README.md and this plan; never skills/stages/to-plan/references/to-plan.md), then `work` starts phase `labels`
+- open_items: README lines 5-7 still say not yet gating (apply-gate); gate mode ignores facts.csv by design (R3)
+- exact_next_action: `git` commits the report-gate request fixes, then work starts `labels` T1

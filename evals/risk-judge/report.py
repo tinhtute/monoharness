@@ -20,7 +20,8 @@ the TPR of the needs-review patches with no mechanical risk-facts hit.
 needs-review item is missed and there are at least MIN_POSITIVES of them.
 
 Exit 0 on a report or a passing gate, 1 when the split has no labels (n=0),
-2 on bad input, 3 on a failing gate.
+2 on bad input (including a labeled planted patch with no facts.csv row when
+facts.csv exists), 3 on a failing gate.
 """
 import argparse
 import csv
@@ -100,6 +101,8 @@ def load_facts(path):
         val = r["mechanical_hit"].strip()
         if val not in ("true", "false"):
             raise ValueError(f"{path}: {r['pr'].strip()} has mechanical_hit {val!r}, expected true or false")
+        if r["pr"].strip() in out:
+            raise ValueError(f"{path}: {r['pr'].strip()} appears twice")
         out[r["pr"].strip()] = val == "true"
     return out
 
@@ -130,9 +133,16 @@ def main(argv=None):
             pp = {f"planted:{p}": v for p, v in pp.items()}
             facts_path = planted / "facts.csv"
             facts = load_facts(facts_path) if args.split == "planted" and facts_path.exists() else None
+            no_row = sorted(p.removeprefix("planted:") for p in pl if facts is not None
+                            and p.removeprefix("planted:") not in facts)
+            if no_row:
+                raise ValueError(f"{facts_path}: no row for labeled patch(es): {', '.join(no_row)}")
             if args.split == "planted":
                 labels, preds = pl, pp
             else:
+                shadow = sorted(set(labels) & set(pl))
+                if shadow:
+                    raise ValueError(f"{args.labels}: PR id(s) collide with planted ids: {', '.join(shadow)}")
                 labels, preds = labels | pl, preds | pp
     except (OSError, ValueError) as e:
         print(f"report: {e}", file=sys.stderr)
@@ -150,7 +160,7 @@ def main(argv=None):
         if facts is None:
             print("TPR, no mechanical hit:   n/a (no facts.csv)")
         else:
-            no_hit = {p: l for p, l in labels.items() if not facts.get(p.removeprefix("planted:"), True)}
+            no_hit = {p: l for p, l in labels.items() if not facts[p.removeprefix("planted:")]}
             s = rates(no_hit, preds)
             pos = s["tp"] + s["fn"]
             print(f"TPR, no mechanical hit:   {fmt(s['tpr'], s['tp'], pos, 'needs-review')}")
@@ -158,7 +168,7 @@ def main(argv=None):
         return 0
 
     pos = m["tp"] + m["fn"]
-    missed = sorted(p.removeprefix("planted:") for p, l in labels.items()
+    missed = sorted(p for p, l in labels.items()
                     if l == "needs-review" and preds[p] == "low")
     if missed or pos < MIN_POSITIVES:
         why = [f"missed {', '.join(missed)}"] if missed else []
