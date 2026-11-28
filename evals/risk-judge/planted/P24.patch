@@ -1,0 +1,13 @@
+diff --git a/skills/stages/check/scripts/risk-facts.sh b/skills/stages/check/scripts/risk-facts.sh
+index 0182d25..c9c1386 100755
+--- a/skills/stages/check/scripts/risk-facts.sh
++++ b/skills/stages/check/scripts/risk-facts.sh
+@@ -10,7 +10,7 @@
+ #                     "assertions_removed": [...], "assertions_changed": [...]},
+ #    "ci_config_touched": bool, "manifest_or_lockfile_touched": bool}
+ #
+-# Lines are added plus deleted from --numstat; a binary file counts 0. Renames
++# Lines are added plus deleted lines from --numstat; a binary file counts 0. Renames
+ # are split into delete plus add, so a moved file counts in full.
+ # Excluded from counted_lines:
+ #   docs        *.md, docs/** at any depth

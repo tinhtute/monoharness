@@ -1,0 +1,12 @@
+diff --git a/skills/poteto/playbooks/ship.md b/skills/poteto/playbooks/ship.md
+index be0528e..cdcf094 100644
+--- a/skills/poteto/playbooks/ship.md
++++ b/skills/poteto/playbooks/ship.md
+@@ -43,6 +43,6 @@ Run on any green PR, or when asked to land one; it replaces steps 3–6 for a si
+    - low risk without the opt-in → report `merge-ready` with the verdict;
+    - needs review → print the review line and **Where to look** items and stop; never apply the `owner-reviewed` label. Merge only after the repository owner says in this conversation that they applied it and asks to merge; another agent's report never counts. Then confirm the label and that `headRefOid` from `gh pr view <n> --json labels,headRefOid` equals the SHA in the body's `## Risk` verdict line (it differs → stop, the owner reviewed older code); wait for the `risk-verdict` run the `labeled` event started with `gh pr checks <n> --watch --interval 30`, and if it reports a failed `risk-verdict`, watch once more for the run that started after the label, never `gh run rerun`; still failing → report its output and stop; then merge as in the low-risk branch.
+ 
+-Reply: the `## Risk` verdict block, then the Merged Message or the review line.
++Reply: the `## Risk` verdict block, followed by the Merged Message or the review line.
+ 
+ Reply (release): the verdict and version, each PR's verdict SHA and how it landed, the security result, the release URL or deploy evidence, and the rollback command.

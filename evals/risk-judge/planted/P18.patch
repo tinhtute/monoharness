@@ -1,0 +1,25 @@
+diff --git a/cli/Cargo.lock b/cli/Cargo.lock
+index 5522df2..3a7def1 100644
+--- a/cli/Cargo.lock
++++ b/cli/Cargo.lock
+@@ -413,7 +413,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "zharness"
+-version = "0.37.0"
++version = "0.37.1"
+ dependencies = [
+  "clap",
+  "include_dir",
+diff --git a/cli/Cargo.toml b/cli/Cargo.toml
+index 8bc4d48..03886cb 100644
+--- a/cli/Cargo.toml
++++ b/cli/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "zharness"
+-version = "0.37.0"
++version = "0.37.1"
+ edition = "2021"
+ description = "Installer/updater for the markdown-first workflow harness"
+ license = "MIT"

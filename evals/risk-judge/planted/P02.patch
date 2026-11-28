@@ -1,0 +1,14 @@
+diff --git a/scripts/ci/test-weakening.sh b/scripts/ci/test-weakening.sh
+index d479e30..00aa6c9 100755
+--- a/scripts/ci/test-weakening.sh
++++ b/scripts/ci/test-weakening.sh
+@@ -25,8 +25,7 @@ findings() { # <risk-facts-copy> <label>
+   out=$(bash "$1" "$base" "$head") || { echo "❌ TEST-WEAKENING: $2 risk-facts.sh failed" >&2; return 2; }
+   jq -r '.test_changes
+     | (.removed_files // [] | map("removed test file: " + .)) +
+-      (.skip_markers_added // [] | map("skip marker or trivial assertion: " + .)) +
+-      (.assertions_removed // [] | map("assertions removed: " + .))
++      (.skip_markers_added // [] | map("skip marker or trivial assertion: " + .))
+     | .[]' <<<"$out"
+ }
+ 

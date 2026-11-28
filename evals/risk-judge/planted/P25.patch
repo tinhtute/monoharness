@@ -1,0 +1,13 @@
+diff --git a/scripts/workflow/readonly-worktree.sh b/scripts/workflow/readonly-worktree.sh
+index 9ea0df7..c43d030 100755
+--- a/scripts/workflow/readonly-worktree.sh
++++ b/scripts/workflow/readonly-worktree.sh
+@@ -5,7 +5,7 @@
+ # stay writable, outside the tree, for CARGO_TARGET_DIR and TMPDIR.
+ # Enforcement: filesystem permissions. A non-root process cannot write inside; root can.
+ set -euo pipefail
+-[ $# -eq 1 ] || { echo "usage: $0 <sha>" >&2; exit 2; }
++[ $# -eq 1 ] || { echo "usage: $(basename "$0") <sha>" >&2; exit 2; }
+ sha=$(git rev-parse --verify --quiet "$1^{commit}") || { echo "unknown commit: $1" >&2; exit 1; }
+ dir=$(mktemp -d "${TMPDIR:-/tmp}/verify-ro.XXXXXX")
+ git worktree add --detach -q "$dir/tree" "$sha" >&2

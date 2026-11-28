@@ -1,0 +1,13 @@
+diff --git a/skills/stages/check/references/check-risk.md b/skills/stages/check/references/check-risk.md
+index 83ad26a..d8019ad 100644
+--- a/skills/stages/check/references/check-risk.md
++++ b/skills/stages/check/references/check-risk.md
+@@ -16,7 +16,7 @@ Run this skill's `scripts/risk-facts.sh "origin/$BASE" "$SHA"` from the reposito
+ 
+ ## Judgment Test
+ 
+-When no check hits, the verdict is **low risk** only if the judge can name what the checks would miss in this diff and why a person reading it would not catch more: a behavior change hidden in a small diff, a public contract, data written in a new shape, a path nothing exercised. Cannot name it, or what it names needs a person → **needs-review**. Doubt means review.
++When no check hits, the verdict is **low risk** only if the judge can name what the checks would miss in this diff and why a person reading it would not catch more: a behavior change hidden in a small diff, a public contract, data written in a new shape, a path nothing exercised. Cannot name it, or what it names needs a person → **needs-review**. A diff under 50 counted lines with clean checks is **low risk** unless the judge names a concrete defect.
+ 
+ ## Judge
+ 

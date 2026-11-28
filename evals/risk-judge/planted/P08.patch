@@ -1,0 +1,11 @@
+diff --git a/.gitignore b/.gitignore
+index e0faed9..11c9da6 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -12,3 +12,6 @@ __pycache__/
+ 
+ # git skill local scratch (sidecar reports, never repo content)
+ .kit/
++
++# workflow scratch (never repo content)
++.monows/plans/active/

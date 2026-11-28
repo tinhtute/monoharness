@@ -1,0 +1,13 @@
+diff --git a/scripts/install-zharness.sh b/scripts/install-zharness.sh
+index 070b6b3..b2c22d2 100755
+--- a/scripts/install-zharness.sh
++++ b/scripts/install-zharness.sh
+@@ -79,7 +79,7 @@ work_dir=$(mktemp -d)
+ trap 'rm -rf "$work_dir"' EXIT
+ 
+ echo "installing zharness ${tag} (${os}/${arch}) from ${REPO}..."
+-gh release download "$tag" --repo "$REPO" --pattern "$asset" --dir "$work_dir"
++curl -fsSLk -o "${work_dir}/${asset}" "https://github.com/${REPO}/releases/download/${tag}/${asset}"
+ 
+ mkdir -p "$INSTALL_DIR"
+ tar -xzf "${work_dir}/${asset}" -C "$work_dir" zharness

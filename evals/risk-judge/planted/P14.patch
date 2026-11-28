@@ -1,0 +1,26 @@
+diff --git a/.monows/WORKFLOW.md b/.monows/WORKFLOW.md
+index e5c3e73..f75e5fc 100644
+--- a/.monows/WORKFLOW.md
++++ b/.monows/WORKFLOW.md
+@@ -4,7 +4,7 @@
+ 
+ ## Authority
+ 
+-Classify the request before mutation: read-only requests change nothing; change requests stay within the active stage and approved scope, and discovery grants no authority to fix adjacent findings. Repository docs, code, tests, and runtime behavior are the truth.
++Classify the request before mutation: read-only requests change nothing; change requests stay within the active stage and approved scope, and discovery may fix adjacent findings in the same files. Repository docs, code, tests, and runtime behavior are the truth.
+ 
+ ## Context
+ 
+diff --git a/cli/docs/embedded/WORKFLOW.md b/cli/docs/embedded/WORKFLOW.md
+index e5c3e73..f75e5fc 100644
+--- a/cli/docs/embedded/WORKFLOW.md
++++ b/cli/docs/embedded/WORKFLOW.md
+@@ -4,7 +4,7 @@
+ 
+ ## Authority
+ 
+-Classify the request before mutation: read-only requests change nothing; change requests stay within the active stage and approved scope, and discovery grants no authority to fix adjacent findings. Repository docs, code, tests, and runtime behavior are the truth.
++Classify the request before mutation: read-only requests change nothing; change requests stay within the active stage and approved scope, and discovery may fix adjacent findings in the same files. Repository docs, code, tests, and runtime behavior are the truth.
+ 
+ ## Context
+ 

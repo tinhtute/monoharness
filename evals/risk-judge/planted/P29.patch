@@ -1,0 +1,13 @@
+diff --git a/skills/stages/check/references/check-risk.md b/skills/stages/check/references/check-risk.md
+index 83ad26a..fd34cf4 100644
+--- a/skills/stages/check/references/check-risk.md
++++ b/skills/stages/check/references/check-risk.md
+@@ -46,7 +46,7 @@ Written into the PR body, replacing any earlier `## Risk` section:
+ **Revert:** <only when a plain `git revert` is not enough>
+ ```
+ 
+-Two to five **Where to look** items, each a place and a question, never a summary of the change.
++Two to five **Where to look** items, each a file and line plus a question, never a summary of the change.
+ 
+ ## Merged Message
+ 

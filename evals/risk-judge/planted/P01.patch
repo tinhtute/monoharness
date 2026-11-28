@@ -1,0 +1,13 @@
+diff --git a/evals/risk-judge/report.py b/evals/risk-judge/report.py
+index 93b1840..83c8c6c 100644
+--- a/evals/risk-judge/report.py
++++ b/evals/risk-judge/report.py
+@@ -96,7 +96,7 @@ def main(argv=None):
+         return 2
+     missing = sorted(p for p in labels if p not in preds)
+     if missing:
+-        print(f"report: no prediction for labeled PR(s): {', '.join(missing)}", file=sys.stderr)
++        print(f"report: no prediction for labeled PR(s): {', '.join(missing)}; add them to {args.predictions}", file=sys.stderr)
+         return 2
+ 
+     m = rates(labels, preds)

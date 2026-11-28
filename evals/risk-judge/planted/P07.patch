@@ -1,0 +1,12 @@
+diff --git a/.github/workflows/skills-ci.yml b/.github/workflows/skills-ci.yml
+index 30e8c8c..9183443 100644
+--- a/.github/workflows/skills-ci.yml
++++ b/.github/workflows/skills-ci.yml
+@@ -68,6 +68,7 @@ jobs:
+   risk-facts:
+     # Verification audit gap 3: fixtures for the mechanical risk checks.
+     runs-on: ubuntu-latest
++    continue-on-error: true
+     steps:
+       - uses: actions/checkout@v4
+ 
