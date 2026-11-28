@@ -1,0 +1,12 @@
+diff --git a/.gitignore b/.gitignore
+index e0faed9..3e33699 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -4,6 +4,7 @@ harness.db
+ harness.db-wal
+ harness.db-shm
+ __pycache__/
++.DS_Store
+ 
+ # opencode session state (tool-local, never repo content)
+ .opencode/

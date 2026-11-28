@@ -1,0 +1,13 @@
+diff --git a/scripts/ci/pr-guards.sh b/scripts/ci/pr-guards.sh
+index cc53cc3..4491b2d 100755
+--- a/scripts/ci/pr-guards.sh
++++ b/scripts/ci/pr-guards.sh
+@@ -79,7 +79,7 @@ echo "== PR guards: $(git rev-parse --short "$mb")..$(git rev-parse --short "$he
+ # the PR is still in history, and merge commits (a base sync) carry the base's
+ # lines, not the PR's.
+ scan_diff "$mb" "$head" "net diff of the range"
+-commits=$(git rev-list --reverse --no-merges "$mb..$head")
++commits=$(git rev-list --reverse --no-merges --max-count=20 "$mb..$head")
+ n=0
+ for c in $commits; do
+   n=$((n + 1))

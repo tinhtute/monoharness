@@ -1,0 +1,13 @@
+diff --git a/models.json b/models.json
+index 488106d..9ecb370 100644
+--- a/models.json
++++ b/models.json
+@@ -30,7 +30,7 @@
+     {
+       "agent": "worker",
+       "tier": "worker",
+-      "role": "mechanical edits, docs, bounded light tasks",
++      "role": "mechanical edits, docs, link fixes, bounded light tasks",
+       "effort": "medium"
+     },
+     {

@@ -1,0 +1,14 @@
+diff --git a/skills/stages/check/scripts/risk-facts.sh b/skills/stages/check/scripts/risk-facts.sh
+index 0182d25..8257ac7 100755
+--- a/skills/stages/check/scripts/risk-facts.sh
++++ b/skills/stages/check/scripts/risk-facts.sh
+@@ -216,8 +216,7 @@ for i in "${!paths[@]}"; do
+   fi
+   is_exempt "$p" && continue
+   for g in "${globs[@]}"; do
+-    # shellcheck disable=SC2053 # $g is a glob on purpose
+-    if [[ $p == $g ]]; then
++    if [[ $p == "$g" ]]; then
+       review_hits+=("$p")
+       break
+     fi

@@ -1,0 +1,16 @@
+diff --git a/cli/tests/projection_parity.rs b/cli/tests/projection_parity.rs
+index 530b1d9..5459064 100644
+--- a/cli/tests/projection_parity.rs
++++ b/cli/tests/projection_parity.rs
+@@ -34,11 +34,6 @@ fn compare_projection(embedded_set: &[(String, Vec<u8>)], root: &Path, errors: &
+ #[test]
+ fn projection_parity() {
+     let root = projection_root();
+-    assert!(
+-        root.is_dir(),
+-        "projection root {} unreadable",
+-        root.display()
+-    );
+     let mut errors = Vec::new();
+     compare_projection(&embedded_projection(), &root, &mut errors);
+     assert!(

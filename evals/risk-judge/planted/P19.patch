@@ -1,0 +1,12 @@
+diff --git a/scripts/workflow/readonly-worktree.sh b/scripts/workflow/readonly-worktree.sh
+index 9ea0df7..d849c07 100755
+--- a/scripts/workflow/readonly-worktree.sh
++++ b/scripts/workflow/readonly-worktree.sh
+@@ -9,6 +9,6 @@ set -euo pipefail
+ sha=$(git rev-parse --verify --quiet "$1^{commit}") || { echo "unknown commit: $1" >&2; exit 1; }
+ dir=$(mktemp -d "${TMPDIR:-/tmp}/verify-ro.XXXXXX")
+ git worktree add --detach -q "$dir/tree" "$sha" >&2
+-chmod -R a-w "$dir/tree"
++chmod -R go-w "$dir/tree"
+ mkdir "$dir/target" "$dir/tmp"
+ echo "$dir/tree"

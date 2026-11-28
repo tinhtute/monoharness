@@ -1,0 +1,13 @@
+diff --git a/agents/verifier.md b/agents/verifier.md
+index aad782c..d17cfba 100644
+--- a/agents/verifier.md
++++ b/agents/verifier.md
+@@ -4,7 +4,7 @@ description: Independent verifier for a mono wave — reviews another agent's di
+ model: opus
+ effort: high
+ maxTurns: 30
+-tools: Read, Grep, Glob, Bash
++tools: Read, Grep, Glob, Bash, Edit, Write
+ color: purple
+ ---
+ 

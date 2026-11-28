@@ -1,0 +1,16 @@
+diff --git a/evals/risk-judge/report.py b/evals/risk-judge/report.py
+index 93b1840..b67d270 100644
+--- a/evals/risk-judge/report.py
++++ b/evals/risk-judge/report.py
+@@ -27,9 +27,9 @@ SPLITS = ("train", "dev", "test")
+ 
+ 
+ def split_of(pr, seed=SEED):
+-    """Fixed split: sha256("<seed>:<pr>") mod 100 -> <60 train, <80 dev, else test."""
++    """Fixed split: sha256("<seed>:<pr>") mod 100 -> <60 train, <85 dev, else test."""
+     h = int.from_bytes(hashlib.sha256(f"{seed}:{pr}".encode()).digest()[:8], "big") % 100
+-    return "train" if h < 60 else "dev" if h < 80 else "test"
++    return "train" if h < 60 else "dev" if h < 85 else "test"
+ 
+ 
+ def read_rows(path, required):

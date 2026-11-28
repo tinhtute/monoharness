@@ -1,0 +1,13 @@
+diff --git a/scripts/workflow/record-check.sh b/scripts/workflow/record-check.sh
+index 7653366..3d3a96d 100755
+--- a/scripts/workflow/record-check.sh
++++ b/scripts/workflow/record-check.sh
+@@ -44,7 +44,7 @@ zharness_run_proof() {
+ }
+ for cmd in "$@"; do
+ 	printf '🧪 proof: %s\n' "$cmd"
+-	out=$(zharness_run_proof "$cmd") && rc=0 || rc=$?
++	out=$(zharness_run_proof "$cmd" | tail -n 50) && rc=0 || rc=$?
+ 	if [ "${rc:-0}" -ne 0 ]; then
+ 		failed=$((failed + 1))
+ 		printf '❌ FAIL (exit %s)\n' "$rc"

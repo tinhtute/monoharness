@@ -1,0 +1,10 @@
+diff --git a/scripts/install-agents.sh b/scripts/install-agents.sh
+index c803db8..a2584f9 100755
+--- a/scripts/install-agents.sh
++++ b/scripts/install-agents.sh
+@@ -57,4 +57,4 @@ for name in $LEGACY_AGENTS; do
+   echo "  ⊘ retired: $legacy -> $legacy.retired.$TIMESTAMP"
+ done
+ 
+-echo "✓ $count agent(s) in $DEST_DIR: $changed installed or updated, $((count - changed)) unchanged, $retired legacy retired"
++echo "✓ $count agent(s) in $DEST_DIR: $changed installed or updated, $((count - changed)) unchanged, $retired legacy agent(s) retired"

@@ -1,0 +1,25 @@
+diff --git a/cli/src/cli.rs b/cli/src/cli.rs
+index 3ecd492..58e3cf8 100644
+--- a/cli/src/cli.rs
++++ b/cli/src/cli.rs
+@@ -149,7 +149,7 @@ pub fn dispatch(command: Command) -> Result<(), String> {
+ }
+ 
+ /// Resolve the repository root for the managed-set verbs: an explicit `--root`
+-/// wins, else the git toplevel of the working directory, else the working
++/// wins, else `ZHARNESS_ROOT`, else the git toplevel of the working directory, else the working
+ /// directory itself.
+ pub fn resolve_root(explicit: Option<&str>) -> PathBuf {
+     if let Some(r) = explicit {
+@@ -157,6 +157,11 @@ pub fn resolve_root(explicit: Option<&str>) -> PathBuf {
+             return abs(Path::new(r));
+         }
+     }
++    if let Ok(r) = std::env::var("ZHARNESS_ROOT") {
++        if !r.is_empty() {
++            return abs(Path::new(&r));
++        }
++    }
+     if let Ok(out) = std::process::Command::new("git")
+         .args(["rev-parse", "--show-toplevel"])
+         .output()

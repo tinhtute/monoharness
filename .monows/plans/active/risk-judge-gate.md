@@ -37,7 +37,7 @@ lane: high-risk
     - T1 add the `planted` split and `gate` mode with tests first (owner: engineer, writes report.py, test_report.py, README.md § Files/§ Protocol only) — output: failing tests, then green — check: `python3 -I -B evals/risk-judge/test_report.py` — stop_if: an existing test changes its expectation.
   - phase check: `python3 -I -B evals/risk-judge/test_report.py && python3 -I -B evals/risk-judge/report.py train`
 - phase_slug: `labels`
-  status: planned
+  status: in-progress
   - goal: R1, R2 | depends_on: report-gate
   - surfaces: evals/risk-judge/labels.csv, evals/risk-judge/planted/** | avoided: predictions.csv, check-risk.md, AGENTS.md
   - escalate_when: the owner's planted labels yield fewer than 20 needs-review across test + planted → draft more patches before any judge runs.
@@ -77,6 +77,9 @@ lane: high-risk
 
 - 2026-11-27T16:46:47Z — report-gate — done — independent judge (claude-fable-5-2, read-only verifier) on the request fixes: APPROVE_WITH_REQUESTS, requests 1-4 each proven by a mutant-killing test. Its findings fixed: a labels.csv id that shadows a prefixed planted id (`planted:P01`) exits 2 instead of being overwritten; a facts.csv id listed twice exits 2; the test-split miss test pins the exact missed PR; the missing-row error names bare ids; README and docstring list the new rc 2 case. Mutants (shadow check off, duplicate check off) each fail the suite. `python3 -I -B evals/risk-judge/test_report.py` rc=0 (23 tests); `bash scripts/ci/verify-doc-links.sh` rc=0. Uncommitted bytes: report.py 8b1cce3f…, test_report.py dd19299b….
 
+- 2026-11-28T02:17:47Z — labels — start — T1: draft the planted patches against base 891c891 in a scratch worktree, plus planted/check.sh, BASE and intent.sha256; the intent key stays out of the repo.
+- 2026-11-28T02:22:50Z — labels — done — T1: evals/risk-judge/planted/ holds 32 patches against base 891c891 (BASE), check.sh, intent.sha256 and facts.csv; the intent key stays outside the repo until T4. Aggregates only, by design: 22 drafted risky, 10 decoys; 15 risky patches raise no mechanical hit (half rule met), 0 decoys raise one. `bash evals/risk-judge/planted/check.sh --apply-only` rc=0 (32 apply, facts.csv rewritten byte-identical). On a commit-tree of HEAD plus planted/: base risk-facts.sh counted_lines 592 (over 400; expected), no always-review, CI, manifest or test-change hits; `bash scripts/ci/test-weakening.sh` rc=0; `bash scripts/ci/pr-guards.sh` rc=0; `bash scripts/ci/verify-doc-links.sh` rc=0.
+
 ## Validation
 
 - 2026-11-27T16:34Z — phase `report-gate` — verdict: APPROVE_WITH_REQUESTS — mode: gate
@@ -101,8 +104,8 @@ lane: high-risk
   - judged_sha: 02bce5e6b6efdcefa0beebba3f6ccfb53b80584f
 
 ## Current State and Next Action
-- active_phase: report-gate
-- lifecycle_status: checked
+- active_phase: labels
+- lifecycle_status: in-progress
 - blockers: none
 - open_items: README lines 5-7 still say not yet gating (apply-gate); gate mode ignores facts.csv by design (R3)
-- exact_next_action: `git` commits the report-gate request fixes, then work starts `labels` T1
+- exact_next_action: labels T2/T3 — ní labels #263, #269, #287, #290, #302 in labels.csv and the planted patches blind in planted/labels.csv; then `bash evals/risk-judge/planted/check.sh` (full mode)

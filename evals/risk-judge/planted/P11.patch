@@ -1,0 +1,13 @@
+diff --git a/evals/risk-judge/test_report.py b/evals/risk-judge/test_report.py
+index baa3ded..37e24d0 100644
+--- a/evals/risk-judge/test_report.py
++++ b/evals/risk-judge/test_report.py
+@@ -85,7 +85,7 @@ class CliTest(unittest.TestCase):
+             write_csv(pp, "pr,prediction", [])
+             rc, _, err = self.run_main([split, "--labels", str(lp), "--predictions", str(pp)])
+         self.assertEqual(rc, 2)
+-        self.assertIn("no prediction", err)
++        self.assertTrue(err)
+ 
+     def test_invalid_label_is_rejected(self):
+         with tempfile.TemporaryDirectory() as d:

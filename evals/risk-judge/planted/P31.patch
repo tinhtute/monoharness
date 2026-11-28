@@ -1,0 +1,14 @@
+diff --git a/models.json b/models.json
+index 488106d..602f74b 100644
+--- a/models.json
++++ b/models.json
+@@ -18,7 +18,8 @@
+   ],
+   "judges": [
+     "fable",
+-    "opus"
++    "opus",
++    "sonnet"
+   ],
+   "agents": [
+     {

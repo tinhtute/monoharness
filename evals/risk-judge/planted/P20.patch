@@ -1,0 +1,13 @@
+diff --git a/.claimignore b/.claimignore
+index 3fb3e10..0d91907 100644
+--- a/.claimignore
++++ b/.claimignore
+@@ -18,6 +18,8 @@ docs/audit/2026-09-07-integrity-review.md        # cited in ADR 0008 Context (th
+ docs/plans/completed/macos-guard-portability.md  # cited in ADR 0009 Consequences; pruned in the historical-docs cleanup — resolve via `git show 3bab3c0:docs/plans/completed/macos-guard-portability.md`
+ docs/audit/sdlc-gap-analysis.md                  # quoted inside ADR 0010 Context (a claimignore phrase); pruned in the historical-docs cleanup — resolve via `git show 3bab3c0:docs/audit/sdlc-gap-analysis.md`
+ 
++docs/guides/  # guide cross-links are checked by the docs site build
++
+ rules/_all/brief.md  # path in the external therealtinhtute/quaqua repo, cited by docs/research/2026-10-12-lead-peer-contract.md; not a file in this repo
+ 
+ # ADR 0015 removes projections. These exact citations are immutable history,

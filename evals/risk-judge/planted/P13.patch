@@ -1,0 +1,21 @@
+diff --git a/cli/src/installer/uninstall.rs b/cli/src/installer/uninstall.rs
+index ad6c44f..29d7037 100644
+--- a/cli/src/installer/uninstall.rs
++++ b/cli/src/installer/uninstall.rs
+@@ -76,12 +76,10 @@ pub fn uninstall(root: &Path, out: &mut String) -> Result<(), String> {
+         own.remove(KIND_FILE, rel);
+         for mapping in [super::safe_path(rel), super::legacy_safe_path(rel)] {
+             let p = root.join(ORIGINAL_DIR).join(format!("{mapping}.orig"));
+-            if !super::retirement::symlink_parent(root, &p) {
+-                match fs::remove_file(&p) {
+-                    Ok(()) => {}
+-                    Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+-                    Err(e) => return Err(format!("remove original {}: {e}", p.display())),
+-                }
++            match fs::remove_file(&p) {
++                Ok(()) => {}
++                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
++                Err(e) => return Err(format!("remove original {}: {e}", p.display())),
+             }
+         }
+     }

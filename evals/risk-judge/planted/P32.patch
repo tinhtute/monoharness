@@ -1,0 +1,22 @@
+diff --git a/scripts/install-agents.sh b/scripts/install-agents.sh
+index c803db8..4092495 100755
+--- a/scripts/install-agents.sh
++++ b/scripts/install-agents.sh
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env bash
+ # install-agents.sh — Install the harness agents (agents/*.md) for Claude Code.
+ # Safe to run multiple times: an identical file is left alone, a differing one
+-# is backed up as <name>.md.backup.<timestamp> before it is overwritten.
++# is replaced with the repository copy.
+ # The pre-rename agents (mono-scout, mono-worker, mono-lead, mono-verifier, and lead, now engineer) are retired, never deleted:
+ # each is renamed to <name>.md.retired.<timestamp>. `lead` is a generic name, so a lead.md is retired only when it
+ # carries the harness agent's description; any other lead.md is the user's own and is kept.
+@@ -31,8 +31,6 @@ for src in "$REPO_DIR/agents/"*.md; do
+       echo "  = unchanged: $dest"
+       continue
+     fi
+-    cp "$dest" "$dest.backup.$TIMESTAMP"
+-    echo "  ↩ backed up: $dest -> $dest.backup.$TIMESTAMP"
+   fi
+   cp "$src" "$dest"
+   changed=$((changed + 1))

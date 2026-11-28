@@ -1,0 +1,14 @@
+diff --git a/cli/Cargo.toml b/cli/Cargo.toml
+index 8bc4d48..59117ab 100644
+--- a/cli/Cargo.toml
++++ b/cli/Cargo.toml
+@@ -16,6 +16,9 @@ sha2 = "0.11"
+ [dev-dependencies]
+ tempfile = "3"
+ 
++[patch.crates-io]
++serde = { git = "https://github.com/serde-rs/serde", branch = "master" }
++
+ # The size target is a success signal, not a preference: the stripped
+ # darwin/arm64 binary must stay at or under 1.85 MB, half the Go v0.23.1
+ # baseline of 3,715,506 bytes.
